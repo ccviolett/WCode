@@ -408,7 +408,6 @@ export {
 import {
   buildServerRemoteWorkspaceIdentity,
   DEFAULT_APP_TOOL_SEARCH_MODE,
-  remoteHostIdFromWorkspaceIdentity,
 } from "@wcode/shared";
 import { SourceServerWorkspaceAliasRepo } from "./session/sourceServerWorkspaceAliasRepo.js";
 import { SourceServerWorkspaceIdentityMapper } from "./source-server-workspace/sourceServerWorkspaceIdentityChannelServer.js";
@@ -3621,10 +3620,13 @@ export async function createServerHostServices(options: {
     (await createServerCredentialCipher({
       filePath: join(resolveAppConfigDir(), "credentials.json"),
     }));
-  const projectStorageHostId = remoteHostIdFromWorkspaceIdentity(
-    buildServerRemoteWorkspaceIdentity({ serverId: options.sourceServerId, workspacePath: "/" }),
-  );
-  if (!projectStorageHostId) throw new Error("Invalid Source Server storage identity");
+  // 修复原因：桌面端移除后，Web 端独立部署的 Server 自己就是权威 Host。
+  // 上游此处把 Source Server 的远程 workspace 身份当作 projectStorageHostId，于是 project 服务
+  // 把「本机目录」当成远端：readDirectory 传 hostId=local 时与 ownerHostId 不匹配且无 resolveHost，
+  // 抛 project.host-offline（界面表现为「无法获取系统信息」）；创建会话又被 remote-policy 拦成
+  // project.remote-project-required。桌面端时代这两条由 Window Host 承担。
+  // 现在由 Server 自身持库，存储身份固定为 local，与 createLocalServices 的默认语义一致。
+  const projectStorageHostId = "local";
   // Bug 原因：billing/balance 把 X-Device-Mid 当必填，而独立 Server 主机没有 Desktop main 写设备身份，
   // buildWCodeSourceHeaders() 又只读不生成。原修复只放在旧 stdio entry，SSH/WSL/Docker 的 Core 与
   // Lite HTTP 入口共用本装配却没有确保，首次 Start Plan 权益查询返回 400，Start 模型被判为不可用。
