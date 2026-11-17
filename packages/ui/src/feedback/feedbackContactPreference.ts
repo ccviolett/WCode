@@ -1,4 +1,4 @@
-const FEEDBACK_CONTACT_STORAGE_KEY = "zcode.feedback.contact";
+const FEEDBACK_CONTACT_STORAGE_KEY = "wcode.feedback.contact";
 
 function getStorage(): Storage | null {
   try {

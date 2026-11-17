@@ -7,15 +7,15 @@ import type {
   CommandAck,
   ConversationRowTarget,
   ConversationSnapshot,
-} from "@zcode/shared/zcode-protocol-v4";
-import { createUuid, isHighspeedProviderId, type ConversationSelectionText } from "@zcode/shared";
+} from "@wcode/shared/wcode-protocol-v4";
+import { createUuid, isHighspeedProviderId, type ConversationSelectionText } from "@wcode/shared";
 import {
   isConversationSelectionReference,
   setConversationSelectionReferenceScope,
 } from "@/lib/conversationSelectionReference.js";
 import { toast } from "@/components/ui/toast.js";
 import { useConfirmDialogStore } from "@/store/confirmDialogStore.js";
-import { TID_V4_COMPOSER_EDIT_SWITCH_DIALOG } from "@zcode/shared/test-ids";
+import { TID_V4_COMPOSER_EDIT_SWITCH_DIALOG } from "@wcode/shared/test-ids";
 import { logger } from "@/logger.js";
 import { parseConversationShareContext } from "@/lib/conversationShareContext.js";
 import { v4QueuedCommandText } from "@/v4/slashCommands.js";

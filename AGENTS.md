@@ -7,6 +7,8 @@
 
 ## 命令与仓库结构
 
+> 本仓库已裁剪为仅保留 Web 端：`packages/desktop` 及其专属构建 / 调试 / E2E 工具已移除。下文涉及 Desktop / Web 差异的规则描述的是共享代码（`packages/ui`、`services`、`shared`、`server`）内仍保留的条件分支，不作为继续维护桌面端的依据。
+
 开工前运行 `node scripts/check-workspace-freshness.mjs` 检查基线。Node 版本以 `mise.toml` 为准。
 
 以下命令从仓库根目录执行：
@@ -16,7 +18,6 @@
 | 类型检查         | `pnpm typecheck`                                          |
 | Lint             | `pnpm lint` / `pnpm lint:fix`                             |
 | 格式检查         | `pnpm fmt:check`                                          |
-| 桌面开发         | `pnpm dev:desktop`                                        |
 | Web 开发         | `pnpm dev:web`                                            |
 | 提交前检查       | `pnpm verify:pre-push`（工作区、Lint、schema 与架构检查） |
 | 架构检查         | `pnpm architecture:check --changed`                       |
@@ -28,12 +29,11 @@ App 业务单测已退役，不新增或恢复 App 业务单测 test/spec 或 `c
 
 测试入口以目标包当前的 `package.json` 和实际测试文件为准，不假定存在统一的单测或 E2E 命令。
 
-- `packages/desktop`：Electron main、host、renderer。
 - `packages/web`、`packages/server`：Web 客户端与服务端。
 - `packages/ui`：共享 React 组件、hooks 与 Zustand store。
 - `packages/services`：业务服务；`packages/rpc`：RPC 框架。
 - `packages/shared`：共享协议与类型；`packages/client`：Agent 客户端 SDK。
-- `apps/zcode-cli`：Agent CLI 与运行时。
+- `apps/wcode-cli`：Agent CLI 与运行时。
 - `CONTEXT.md`：插件商店领域词汇；修改相关 UI 前阅读。
 - `DESIGN.md`：UI 设计规范；修改 UI 前阅读。
 
@@ -53,14 +53,14 @@ App 业务单测已退役，不新增或恢复 App 业务单测 test/spec 或 `c
 ## UI 与平台边界
 
 - 遵守 `DESIGN.md`，复用已有组件，兼顾桌面与手机 Web 的布局、交互、主题和国际化。
-- 组件通过 `packages/ui/src/hooks/` 访问服务；平台操作通过 `IPlatformService`（`packages/shared/src/platform.ts`），不直接调用 `window.zcode`。
+- 组件通过 `packages/ui/src/hooks/` 访问服务；平台操作通过 `IPlatformService`（`packages/shared/src/platform.ts`），不直接调用 `window.wcode`。
 - 通过依赖注入处理 Desktop、Web、本地和远程环境的差异，并兼顾 Windows、macOS 和 Linux。
 - Zustand 状态位于 `packages/ui/src/store/`。广播同步的主题、语言等字段需要防止回环；UI 局部状态不应被误当作服务端事实。
 - hooks 中含 JSX 的文件使用 `.tsx`。
 
 ## 进程、协议与远程控制
 
-- Desktop app 通过 stdio 与 Agent 通信。协议改动同步更新 `packages/shared/src/zcode-protocol/index.ts`，提供严格类型与运行时校验。
+- Desktop app 通过 stdio 与 Agent 通信。协议改动同步更新 `packages/shared/src/wcode-protocol/index.ts`，提供严格类型与运行时校验。
 - Main 负责窗口、原生操作、进程调度和消息转发，不承载 task/session 业务状态。
 - 每个窗口使用一个 window-scoped Local Host；本地 workspace 共享该 Host。远程 workspace 由窗口内的连接注册表管理，不另建 Desktop Remote Host。
 - 手机远控连接桌面已有 Host attachment，复用会话运行时；不为手机另起 Agent、Local Host 或远程会话。
@@ -78,7 +78,7 @@ App 业务单测已退役，不新增或恢复 App 业务单测 test/spec 或 `c
 
 ## 日志
 
-- UI 使用 `packages/ui/src/logger.ts`，不直接使用 `console.log` 或 `window.zcode?.log`。
+- UI 使用 `packages/ui/src/logger.ts`，不直接使用 `console.log` 或 `window.wcode?.log`。
 - Agent/session/runtime 相关服务日志使用 `createServiceLogger(scope)`（`packages/services/src/logger/serviceLogger.ts`）。
 - `debug` 用于协议原始数据、流式 chunk 和逐条工具更新等高频诊断，生产环境不落盘。
 - `info` 用于进程和会话生命周期、权限结果、一次性初始化等生产可用事件。

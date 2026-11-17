@@ -1,5 +1,5 @@
 {
-  "name": "@zcode/shared",
+  "name": "@wcode/shared",
   "private": true,
   "type": "module",
   "imports": {
@@ -20,10 +20,10 @@
     "./config-schema": "./src/config-schema.ts",
     "./node": "./src/node.ts",
     "./sqlite-migrations": "./src/sqlite-migrations/index.ts",
-    "./zcodeEndpoint": "./src/zcodeEndpoint.ts",
+    "./wcodeEndpoint": "./src/wcodeEndpoint.ts",
     "./workspaceFileSearch": "./src/workspaceFileSearch.ts",
     "./workspaceFileEntriesCodec": "./src/workspaceFileEntriesCodec.ts",
-    "./zcode-protocol-v4": "./src/zcode-protocol-v4/index.ts",
+    "./wcode-protocol-v4": "./src/wcode-protocol-v4/index.ts",
     "./mcp-apps": "./src/mcp-apps/index.ts",
     "./extension-host": "./src/extension-host/index.ts",
     "./workspace-hook-discovery": "./src/workspace-hook-discovery.ts",
@@ -46,8 +46,8 @@
   },
   "dependencies": {
     "@napi-rs/keyring": "2.1.2",
-    "@zcode/model-option-map": "workspace:*",
-    "@zcode/session-control": "workspace:*",
+    "@wcode/model-option-map": "workspace:*",
+    "@wcode/session-control": "workspace:*",
     "zod": "4.6.5"
   },
   "devDependencies": {

@@ -13,8 +13,8 @@ import {
   type DataSyncModelOverrideSummary,
   type ModelSelection,
   type SubagentDataSyncPayload,
-} from "@zcode/shared";
-import { migrateSubagentStateFile, migrateUserSubagentMarkdown } from "@zcode/shared/node";
+} from "@wcode/shared";
+import { migrateSubagentStateFile, migrateUserSubagentMarkdown } from "@wcode/shared/node";
 import {
   pathExists,
   readJsonObjectFileForUpdate,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { IFileService } from "@zcode/services";
-import { browserPreviewSourceUrl } from "@zcode/shared";
+import type { IFileService } from "@wcode/services";
+import { browserPreviewSourceUrl } from "@wcode/shared";
 import {
   buildCssVariableTweakControls,
   DESIGN_PAGE_LIMITS,
@@ -12,7 +12,7 @@ import {
   type DesignRuntimeEvent,
   type DesignSelectedElement,
   type PageElementRect,
-} from "@zcode/design-runtime";
+} from "@wcode/design-runtime";
 import {
   DESIGN_STYLE_CSS_NAMES,
   toDesignPageKey,
@@ -24,7 +24,7 @@ import {
 } from "@/browser-use/useBrowserDesignRuntime.js";
 import { useBrowserDesignSourceWriter } from "@/browser-use/useBrowserDesignSourceWriter.js";
 import { toast } from "@/components/ui/toast.js";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useWCodeIntl } from "@/i18n/IntlProvider.js";
 import {
   createWebElementContextId,
   dispatchWebElementContextAddToChat,
@@ -37,7 +37,7 @@ import { useWorkspaceServicesResolution } from "@/hooks/useWorkspaceServices.js"
 import { requestPluginStoreOpen } from "@/lib/pluginStoreNavigation.js";
 import { useScopedPluginManagementStore } from "@/store/pluginManagementStore.js";
 
-const DESIGN_PLUGIN_ID = "design@zcode-plugins-official";
+const DESIGN_PLUGIN_ID = "design@wcode-plugins-official";
 
 // 设计工具的状态 owner（docs/browser-use/2026-11-03-browser-design-mode-spec.md）：每个浏览器 tab 一份。
 // 选中集合以页面运行时上报的为准（宿主只镜像）；选中的元素作为网页元素引用进输入框；
@@ -51,7 +51,7 @@ export interface DesignChipTarget {
 
 function isLocalPage(url: string): boolean {
   try {
-    // 本机 HTML 在 webview 里是 zcode-html:// 预览地址，先还原成源 file:// 再判断
+    // 本机 HTML 在 webview 里是 wcode-html:// 预览地址，先还原成源 file:// 再判断
     const { hostname, protocol } = new URL(browserPreviewSourceUrl(url));
     return (
       protocol === "file:" ||
@@ -65,7 +65,7 @@ function isLocalPage(url: string): boolean {
 }
 
 /**
- * 设计工具自动出现的条件：页面带 `data-zcode-design`；或是本机页面（file:// / localhost）且有
+ * 设计工具自动出现的条件：页面带 `data-wcode-design`；或是本机页面（file:// / localhost）且有
  * :root CSS 变量、data-variant 方案或 section.slide。普通网站很多也声明 :root 变量，所以只对本机页面看这几项。
  */
 export function shouldAutoShowDesignTools(signals: DesignPageSignals, pageUrl: string): boolean {
@@ -131,7 +131,7 @@ export function useBrowserDesignMode({
   webview: DesignRuntimeWebview | null;
   webviewGeneration: number;
 }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useWCodeIntl();
   const pageKey = toDesignPageKey(currentUrl);
   // 元素引用的 workspaceKey 在本地也有值，不能把它当远程身份，否则本地查询会走断连代理。
   const {

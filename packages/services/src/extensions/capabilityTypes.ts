@@ -1,5 +1,5 @@
-import type { IDisposable } from "@zcode/rpc";
-import type { ExtensionError } from "@zcode/shared/extension-host";
+import type { IDisposable } from "@wcode/rpc";
+import type { ExtensionError } from "@wcode/shared/extension-host";
 
 // 能力网关与各后端共用的调用类型（docs/plugins/extension-host.md §7.2、§17.3）。单独成文件，
 // 后端不必依赖网关本身（否则网关 → 后端 → 网关成环）。

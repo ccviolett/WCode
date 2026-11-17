@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { Emitter, type Event } from "@zcode/rpc";
+import { Emitter, type Event } from "@wcode/rpc";
 import {
   ExtensionError,
   type ExtensionGrant,
   type ExtensionGrantState,
-} from "@zcode/shared/extension-host";
+} from "@wcode/shared/extension-host";
 import type { ServiceLogger } from "#src/logger/serviceLogger.js";
 import type {
   ExtensionGrantRequest,

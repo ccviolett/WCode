@@ -1,7 +1,7 @@
-export const WORKBENCH_SESSION_DRAG_MIME = "application/x-zcode-session";
+export const WORKBENCH_SESSION_DRAG_MIME = "application/x-wcode-session";
 
 export interface WorkbenchSessionDragPayload {
-  readonly kind: "zcode/session";
+  readonly kind: "wcode/session";
   readonly workspacePath: string;
   readonly workspaceIdentity?: string;
   readonly remoteSessionId?: string;
@@ -49,14 +49,14 @@ export function parseWorkbenchSessionDragPayload(
     const parsed = JSON.parse(raw);
     if (
       !isRecord(parsed) ||
-      parsed.kind !== "zcode/session" ||
+      parsed.kind !== "wcode/session" ||
       typeof parsed.workspacePath !== "string" ||
       typeof parsed.sessionId !== "string"
     ) {
       return null;
     }
     return {
-      kind: "zcode/session",
+      kind: "wcode/session",
       workspacePath: parsed.workspacePath,
       workspaceIdentity:
         typeof parsed.workspaceIdentity === "string" ? parsed.workspaceIdentity : undefined,

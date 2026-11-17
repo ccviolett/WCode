@@ -4,27 +4,27 @@ import type {
   IntegratedTerminalShellOption,
   IntegratedTerminalShellSelection,
   LocalePreference,
-  ZCodeInteractionBehavior,
-} from "@zcode/shared";
+  WCodeInteractionBehavior,
+} from "@wcode/shared";
 import {
   appToolSearchModeSchema,
   DEFAULT_APP_TOOL_SEARCH_MODE,
   LOCALE_NATIVE_NAMES,
   SUPPORTED_LOCALES,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import {
   TID_SETTINGS_ASK_USER_QUESTION_AUTO_RESOLUTION_SWITCH,
   TID_SETTINGS_NATIVE_SEARCH_SWITCH,
   TID_SETTINGS_TOOL_SEARCH_SELECT,
   TID_SETTINGS_TOOL_SEARCH_OPTION,
-} from "@zcode/shared/test-ids";
+} from "@wcode/shared/test-ids";
 import { useState, useCallback, useEffect } from "react";
-import type { IPlatformService } from "@zcode/shared";
+import type { IPlatformService } from "@wcode/shared";
 import {
   TID_SETTINGS_LOCALE_SELECT_ITEM,
   TID_SETTINGS_LOCALE_SELECT_TRIGGER,
   testId,
-} from "@zcode/shared/test-ids";
+} from "@wcode/shared/test-ids";
 import {
   Select,
   SelectContent,
@@ -37,7 +37,7 @@ import { Input } from "@/components/ui/input.js";
 import { Button } from "@/components/ui/button.js";
 import { SettingsGroupCard, SettingsRow } from "@/settings/SettingsPageParts.js";
 import { DataBaseDirControl } from "@/settings/DataBaseDirControl.js";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useWCodeIntl } from "@/i18n/IntlProvider.js";
 import { useOptionalServices } from "@/hooks/useServices.js";
 import { ProactiveSuggestionsSetting } from "@/settings/ProactiveSuggestionsSetting.js";
 import { PluginAutoRecommendationSetting } from "@/settings/PluginAutoRecommendationSetting.js";
@@ -52,14 +52,14 @@ import {
   type SettingsSectionId,
 } from "@/settings/settingsPageConfig.js";
 
-export type { Locale, LocalePreference } from "@zcode/shared";
+export type { Locale, LocalePreference } from "@wcode/shared";
 export { type SettingsSectionId };
 export { createSettingsPageConfig, resolveSettingsSectionForPlatform };
 export { SETTINGS_SECTION_GROUPS, SETTINGS_SECTIONS };
 export { isSettingsSectionAvailable };
 
 const TASK_AUTO_ARCHIVE_DAY_OPTIONS = [3, 7, 14, 30] as const;
-const ZCODE_INTERACTION_BEHAVIOR_OPTIONS: readonly ZCodeInteractionBehavior[] = ["queue", "guide"];
+const WCODE_INTERACTION_BEHAVIOR_OPTIONS: readonly WCodeInteractionBehavior[] = ["queue", "guide"];
 
 /**
  * 归档偏好与归档列表集中展示，设置值和保存动作继续由 SettingsPage 持有。
@@ -76,7 +76,7 @@ export function TaskAutoArchiveSettings({
   onTaskAutoArchiveEnabledChange: (enabled: boolean) => Promise<void>;
   onTaskAutoArchiveOlderThanDaysChange: (days: number) => Promise<void>;
 }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useWCodeIntl();
   return (
     <SettingsGroupCard>
       <SettingsRow
@@ -235,7 +235,7 @@ export function GeneralSectionContent({
   onAutoDownloadAndInstallUpdatesChange: (enabled: boolean) => Promise<void>;
   onOpenOnboardingDialog: () => void;
 }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useWCodeIntl();
   const hasServices = Boolean(useOptionalServices());
   // 部分 SSR 单测会用精简 props 直接渲染本组件，新增终端设置项后旧 helper 未必同步传值。
   // 这里把运行时缺省值兜到“继承系统 profile”，避免 undefined.trim() 把无关测试打断。
@@ -795,13 +795,13 @@ export function AgentBehaviorSectionContent({
   nativeSearchEnhancementsEnabled,
   messageStreamShowReasoning,
   messageStreamShowTodos,
-  zcodeInteractionBehavior,
+  wcodeInteractionBehavior,
   askUserQuestionAutoResolutionEnabled = true,
   modelIoFullRetentionEnabled = false,
   onNativeSearchEnhancementsEnabledChange,
   onMessageStreamShowReasoningChange,
   onMessageStreamShowTodosChange,
-  onZCodeInteractionBehaviorChange,
+  onWCodeInteractionBehaviorChange,
   onAskUserQuestionAutoResolutionEnabledChange = async () => {},
   onModelIoFullRetentionEnabledChange = async () => {},
 }: {
@@ -810,17 +810,17 @@ export function AgentBehaviorSectionContent({
   nativeSearchEnhancementsEnabled: boolean;
   messageStreamShowReasoning: boolean;
   messageStreamShowTodos: boolean;
-  zcodeInteractionBehavior: ZCodeInteractionBehavior;
+  wcodeInteractionBehavior: WCodeInteractionBehavior;
   askUserQuestionAutoResolutionEnabled?: boolean;
   modelIoFullRetentionEnabled?: boolean;
   onNativeSearchEnhancementsEnabledChange: (enabled: boolean) => Promise<void>;
   onMessageStreamShowReasoningChange: (enabled: boolean) => Promise<void>;
   onMessageStreamShowTodosChange: (enabled: boolean) => Promise<void>;
-  onZCodeInteractionBehaviorChange: (behavior: ZCodeInteractionBehavior) => Promise<void>;
+  onWCodeInteractionBehaviorChange: (behavior: WCodeInteractionBehavior) => Promise<void>;
   onAskUserQuestionAutoResolutionEnabledChange?: (enabled: boolean) => Promise<void>;
   onModelIoFullRetentionEnabledChange?: (enabled: boolean) => Promise<void>;
 }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useWCodeIntl();
   const hasServices = Boolean(useOptionalServices());
 
   return (
@@ -888,26 +888,26 @@ export function AgentBehaviorSectionContent({
 
       <SettingsGroupCard>
         <SettingsRow
-          searchId="settings.zcodeInteractionBehavior"
-          label={intl.formatMessage({ id: "settings.zcodeInteractionBehavior" })}
+          searchId="settings.wcodeInteractionBehavior"
+          label={intl.formatMessage({ id: "settings.wcodeInteractionBehavior" })}
           description={intl.formatMessage({
-            id: "settings.zcodeInteractionBehaviorDescription",
+            id: "settings.wcodeInteractionBehaviorDescription",
           })}
           control={
             <Select
-              value={zcodeInteractionBehavior}
+              value={wcodeInteractionBehavior}
               onValueChange={(value) => {
-                void onZCodeInteractionBehaviorChange(value as ZCodeInteractionBehavior);
+                void onWCodeInteractionBehaviorChange(value as WCodeInteractionBehavior);
               }}
             >
               <SelectTrigger size="lg" className="w-[260px] min-w-0 justify-between">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ZCODE_INTERACTION_BEHAVIOR_OPTIONS.map((behavior) => (
+                {WCODE_INTERACTION_BEHAVIOR_OPTIONS.map((behavior) => (
                   <SelectItem key={behavior} value={behavior}>
                     {intl.formatMessage({
-                      id: `settings.zcodeInteractionBehavior.option.${behavior}`,
+                      id: `settings.wcodeInteractionBehavior.option.${behavior}`,
                     })}
                   </SelectItem>
                 ))}

@@ -1,0 +1,23 @@
+<svg width="400" height="320" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g opacity="0.15" filter="url(#filter0_f_wcode)">
+<path d="M53.92 11.33 L135.68 319.00 L200.00 136.75 L264.32 319.00 L346.08 11.33 L307.21 1.00 L258.90 182.80 L200.00 15.91 L141.10 182.80 L92.79 1.00 Z" fill="url(#paint0_wcode)"/>
+</g>
+<path d="M53.92 11.33 L135.68 319.00 L200.00 136.75 L264.32 319.00 L346.08 11.33 L307.21 1.00 L258.90 182.80 L200.00 15.91 L141.10 182.80 L92.79 1.00 Z" stroke="url(#paint1_wcode)"/>
+<defs>
+<filter id="filter0_f_wcode" x="40" y="0" width="320" height="330" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="1.2" result="effect1_foregroundBlur_wcode"/>
+</filter>
+<linearGradient id="paint0_wcode" x1="200" y1="0" x2="200" y2="320" gradientUnits="userSpaceOnUse">
+<stop stop-color="#444444" stop-opacity="0.6"/>
+<stop offset="0.5" stop-color="#2A2A2A" stop-opacity="0.3"/>
+<stop offset="1" stop-color="#1A1A1A" stop-opacity="0.1"/>
+</linearGradient>
+<linearGradient id="paint1_wcode" x1="200" y1="0" x2="200" y2="320" gradientUnits="userSpaceOnUse">
+<stop stop-color="#444444" stop-opacity="0.6"/>
+<stop offset="0.5" stop-color="#2A2A2A" stop-opacity="0.3"/>
+<stop offset="1" stop-color="#1A1A1A" stop-opacity="0.1"/>
+</linearGradient>
+</defs>
+</svg>

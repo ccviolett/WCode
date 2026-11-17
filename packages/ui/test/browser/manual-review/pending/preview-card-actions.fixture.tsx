@@ -1,18 +1,18 @@
 import { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { IServiceAccessor } from "@zcode/services";
-import type { IPlatformService } from "@zcode/shared";
+import type { IServiceAccessor } from "@wcode/services";
+import type { IPlatformService } from "@wcode/shared";
 import { AssistantPreviewCards } from "@/AssistantPreviewCards.js";
 import { MessageChangeSummaryPanel } from "@/MessageChangeSummaryPanel.js";
 import { PlatformProvider } from "@/hooks/usePlatform.js";
 import { ServiceProvider } from "@/hooks/useServices.js";
 import { TabStoreProvider } from "@/store/TabStoreProvider.js";
-import { ZCodeIntlProvider } from "@/i18n/IntlProvider.js";
+import { WCodeIntlProvider } from "@/i18n/IntlProvider.js";
 import "@/styles.css";
 
 const params = new URLSearchParams(location.search);
 const locale = params.get("locale") === "en-US" ? "en-US" : "zh-CN";
-localStorage.setItem("zcode-locale-preference", locale);
+localStorage.setItem("wcode-locale-preference", locale);
 const theme = params.get("theme");
 document.documentElement.className =
   theme === "light"
@@ -87,7 +87,7 @@ function Fixture() {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <ZCodeIntlProvider initialLocale={locale}>
+  <WCodeIntlProvider initialLocale={locale}>
     <ServiceProvider services={services}>
       <PlatformProvider platform={platform}>
         <TabStoreProvider>
@@ -95,5 +95,5 @@ createRoot(document.getElementById("root")!).render(
         </TabStoreProvider>
       </PlatformProvider>
     </ServiceProvider>
-  </ZCodeIntlProvider>,
+  </WCodeIntlProvider>,
 );

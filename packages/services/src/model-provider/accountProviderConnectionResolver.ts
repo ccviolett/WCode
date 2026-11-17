@@ -11,16 +11,16 @@ import type {
   AccountProviderConnectionResult,
   ProviderConfigSnapshot,
   ProviderSource,
-} from "@zcode/provider";
-import { AccountProviderService, createAccountProviderConfigResolver } from "@zcode/provider";
+} from "@wcode/provider";
+import { AccountProviderService, createAccountProviderConfigResolver } from "@wcode/provider";
 import {
   resolveStartPlanFamilyFromOAuthProvider,
   type ApiClient,
   type ProviderFamilyConnectionSelectionSettings,
   type ProviderFamilyDomain,
-  type ZCodeAccountAccess,
-  type ZCodeProviderAccountAccess,
-} from "@zcode/shared";
+  type WCodeAccountAccess,
+  type WCodeProviderAccountAccess,
+} from "@wcode/shared";
 import type {
   CodingPlanAvailabilityProvider,
   CodingPlanAvailabilityResult,
@@ -407,13 +407,13 @@ export function createCodingPlanFamilyAvailabilityResolver(
  * 每次请求重新读取当前选择；只有 family 与 mode 兼容时才返回动态访问事实。
  */
 export async function resolveCurrentAccountAccess(input: {
-  readonly access: ZCodeProviderAccountAccess;
+  readonly access: WCodeProviderAccountAccess;
   readonly readSettings: () => Promise<AccountProviderConnectionSettings>;
   readonly loadAccountIdentity: (family: ProviderFamilyDomain) => Promise<string | null>;
   readonly loadStartPlanMaterial: (
     family: ProviderFamilyDomain,
   ) => Promise<OAuthStartPlanMaterial | null>;
-}): Promise<ZCodeAccountAccess | null> {
+}): Promise<WCodeAccountAccess | null> {
   const settings = await input.readSettings();
   const { accountType, mode } = input.access;
   if (mode === "start-plan") {

@@ -5,8 +5,8 @@ import type {
   SaveProjectInput,
   VirtualProject,
 } from "#src/project-storage/contract.js";
-import { ServiceChannels } from "@zcode/shared";
-import type { FileEntry } from "@zcode/shared";
+import { ServiceChannels } from "@wcode/shared";
+import type { FileEntry } from "@wcode/shared";
 import { createServiceDescriptor } from "#src/descriptors.js";
 import type { ProjectDataDeleteResult, ProjectDataMeasure } from "#src/project/data/contract.js";
 export type {

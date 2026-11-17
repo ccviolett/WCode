@@ -1,12 +1,12 @@
 {
-  "name": "@zcode-dev/plugin-api",
+  "name": "@wcode-dev/plugin-api",
   "version": "1.4.0",
-  "description": "Type definitions for ZCode plugin extensions.",
+  "description": "Type definitions for WCode plugin extensions.",
   "keywords": [
     "extension",
     "plugin",
     "types",
-    "zcode"
+    "wcode"
   ],
   "license": "Apache-2.0",
   "files": [

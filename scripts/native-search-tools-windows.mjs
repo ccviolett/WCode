@@ -70,7 +70,7 @@ export function buildNativeSearchToolsWindows({
     arch: config.arch,
     outputDir,
   });
-  const workDir = mkdtempSync(join(tmpdir(), "zcode-native-search-build-"));
+  const workDir = mkdtempSync(join(tmpdir(), "wcode-native-search-build-"));
   const cmakeBuildDir = join(workDir, "cmake-build");
   const cmakeOutputDir = join(workDir, "cmake-output");
   const env = {
@@ -79,7 +79,7 @@ export function buildNativeSearchToolsWindows({
     LC_ALL: "C",
   };
 
-  console.log("==> ZCode native search build");
+  console.log("==> WCode native search build");
   console.log(`    target:  ${plan.platformKey}`);
   console.log(`    output:  ${plan.outputDir}`);
   console.log(`    workdir: ${workDir}`);
@@ -109,14 +109,14 @@ export function buildNativeSearchToolsWindows({
         config.generator,
         "-A",
         config.generatorArchitecture,
-        `-DZCODE_BUILD_PATH=${toCmakePath(workDir)}`,
-        `-DZCODE_UGREP_OUTPUT_DIR=${toCmakePath(cmakeOutputDir)}`,
-        `-DZCODE_UGREP_SOURCE_DIR=${toCmakePath(sources.ugrep)}`,
-        `-DZCODE_PCRE2_SOURCE_DIR=${toCmakePath(sources.pcre2)}`,
-        `-DZCODE_ZLIB_SOURCE_DIR=${toCmakePath(sources.zlib)}`,
-        `-DZCODE_BZIP2_SOURCE_DIR=${toCmakePath(sources.bzip2)}`,
-        `-DZCODE_ZSTD_SOURCE_DIR=${toCmakePath(sources.zstd)}`,
-        `-DZCODE_BROTLI_SOURCE_DIR=${toCmakePath(sources.brotli)}`,
+        `-DWCODE_BUILD_PATH=${toCmakePath(workDir)}`,
+        `-DWCODE_UGREP_OUTPUT_DIR=${toCmakePath(cmakeOutputDir)}`,
+        `-DWCODE_UGREP_SOURCE_DIR=${toCmakePath(sources.ugrep)}`,
+        `-DWCODE_PCRE2_SOURCE_DIR=${toCmakePath(sources.pcre2)}`,
+        `-DWCODE_ZLIB_SOURCE_DIR=${toCmakePath(sources.zlib)}`,
+        `-DWCODE_BZIP2_SOURCE_DIR=${toCmakePath(sources.bzip2)}`,
+        `-DWCODE_ZSTD_SOURCE_DIR=${toCmakePath(sources.zstd)}`,
+        `-DWCODE_BROTLI_SOURCE_DIR=${toCmakePath(sources.brotli)}`,
       ],
       { env, quiet },
     );

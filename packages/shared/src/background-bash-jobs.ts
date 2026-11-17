@@ -1,42 +1,42 @@
 import {
-  collectVisibleZCodeBackgroundTaskControlItems,
-  getZCodeBackgroundTaskControlItemElapsedMs,
-  isActiveZCodeBackgroundTaskControlItem,
-  parseZCodeBackgroundTaskControlItems,
-  type ZCodeBackgroundTaskControlItem,
-  type ZCodeBackgroundTaskControlStatus,
+  collectVisibleWCodeBackgroundTaskControlItems,
+  getWCodeBackgroundTaskControlItemElapsedMs,
+  isActiveWCodeBackgroundTaskControlItem,
+  parseWCodeBackgroundTaskControlItems,
+  type WCodeBackgroundTaskControlItem,
+  type WCodeBackgroundTaskControlStatus,
 } from "./background-task-controls.js";
 
-export type ZCodeBackgroundBashJobStatus = ZCodeBackgroundTaskControlStatus;
-export type ZCodeBackgroundBashJob = ZCodeBackgroundTaskControlItem & {
+export type WCodeBackgroundBashJobStatus = WCodeBackgroundTaskControlStatus;
+export type WCodeBackgroundBashJob = WCodeBackgroundTaskControlItem & {
   taskKind: "bash";
 };
 
-export function parseZCodeBackgroundBashJobs(value: unknown): ZCodeBackgroundBashJob[] {
-  return parseZCodeBackgroundTaskControlItems(value).filter(isBackgroundBashJob);
+export function parseWCodeBackgroundBashJobs(value: unknown): WCodeBackgroundBashJob[] {
+  return parseWCodeBackgroundTaskControlItems(value).filter(isBackgroundBashJob);
 }
 
-export function isActiveZCodeBackgroundBashJob(job: ZCodeBackgroundBashJob): boolean {
-  return isActiveZCodeBackgroundTaskControlItem(job);
+export function isActiveWCodeBackgroundBashJob(job: WCodeBackgroundBashJob): boolean {
+  return isActiveWCodeBackgroundTaskControlItem(job);
 }
 
-export function getZCodeBackgroundBashJobElapsedMs(
-  job: ZCodeBackgroundBashJob,
+export function getWCodeBackgroundBashJobElapsedMs(
+  job: WCodeBackgroundBashJob,
   now = Date.now(),
 ): number {
-  return getZCodeBackgroundTaskControlItemElapsedMs(job, now);
+  return getWCodeBackgroundTaskControlItemElapsedMs(job, now);
 }
 
-export function collectVisibleZCodeBackgroundBashJobs(
-  jobs: readonly ZCodeBackgroundBashJob[],
+export function collectVisibleWCodeBackgroundBashJobs(
+  jobs: readonly WCodeBackgroundBashJob[],
   now = Date.now(),
   thresholdMs = 30_000,
-): Array<ZCodeBackgroundBashJob & { elapsedMs: number }> {
-  return collectVisibleZCodeBackgroundTaskControlItems(jobs, now, thresholdMs) as Array<
-    ZCodeBackgroundBashJob & { elapsedMs: number }
+): Array<WCodeBackgroundBashJob & { elapsedMs: number }> {
+  return collectVisibleWCodeBackgroundTaskControlItems(jobs, now, thresholdMs) as Array<
+    WCodeBackgroundBashJob & { elapsedMs: number }
   >;
 }
 
-function isBackgroundBashJob(job: ZCodeBackgroundTaskControlItem): job is ZCodeBackgroundBashJob {
+function isBackgroundBashJob(job: WCodeBackgroundTaskControlItem): job is WCodeBackgroundBashJob {
   return job.taskKind === "bash";
 }

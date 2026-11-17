@@ -1,4 +1,4 @@
-import type { Event } from "@zcode/rpc";
+import type { Event } from "@wcode/rpc";
 import type {
   ManagedWorktreeCreation,
   ManagedWorktreeCreationSettlement,
@@ -6,9 +6,9 @@ import type {
   ManagedWorktreeError,
   ManagedWorktreeStartRefs,
   RemoveManagedWorktreeResult,
-} from "@zcode/shared";
-import { ServiceChannels } from "@zcode/shared";
-import type { CommandEnvelope } from "@zcode/shared/zcode-protocol-v4";
+} from "@wcode/shared";
+import { ServiceChannels } from "@wcode/shared";
+import type { CommandEnvelope } from "@wcode/shared/wcode-protocol-v4";
 import { createServiceDescriptor } from "#src/descriptors.js";
 
 export interface ManagedWorktreeGroup {

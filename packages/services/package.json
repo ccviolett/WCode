@@ -1,5 +1,5 @@
 {
-  "name": "@zcode/services",
+  "name": "@wcode/services",
   "private": true,
   "type": "module",
   "imports": {
@@ -19,12 +19,12 @@
   "dependencies": {
     "@agentclientprotocol/sdk": "^0.21.1",
     "@larksuiteoapi/node-sdk": "1.64.0",
-    "@zcode/provider": "workspace:*",
-    "@zcode/provider-node": "workspace:*",
-    "@zcode/rpc": "workspace:*",
-    "@zcode/session-control": "workspace:*",
-    "@zcode/shared": "workspace:*",
-    "@zcode/zcode-cua": "workspace:*",
+    "@wcode/provider": "workspace:*",
+    "@wcode/provider-node": "workspace:*",
+    "@wcode/rpc": "workspace:*",
+    "@wcode/session-control": "workspace:*",
+    "@wcode/shared": "workspace:*",
+    "@wcode/wcode-cua": "workspace:*",
     "chokidar": "4.0.3",
     "croner": "^10.0.1",
     "ignore": "^5.3.2",

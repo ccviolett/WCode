@@ -1,4 +1,4 @@
-import type { SessionLifecycleSnapshot } from "@zcode/shared";
+import type { SessionLifecycleSnapshot } from "@wcode/shared";
 import { logger } from "@/logger.js";
 import type { ConversationTransport } from "@/v4/transport.js";
 

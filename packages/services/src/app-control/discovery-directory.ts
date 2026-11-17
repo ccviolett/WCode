@@ -1,4 +1,4 @@
-import { SessionControlError } from "@zcode/session-control/contracts";
+import { SessionControlError } from "@wcode/session-control/contracts";
 import type { IProjectService } from "#src/project/contract.js";
 import type {
   IRemoteProjectService,

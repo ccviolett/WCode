@@ -1,20 +1,20 @@
 import { Terminal } from "lucide-react";
-import type { UserCommand, ZCodeCommand } from "@zcode/shared";
-import { isPluginCommand, isUserCommand } from "@zcode/shared";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import type { UserCommand, WCodeCommand } from "@wcode/shared";
+import { isPluginCommand, isUserCommand } from "@wcode/shared";
+import { useWCodeIntl } from "@/i18n/IntlProvider.js";
 import { Switch } from "@/components/ui/switch.js";
 import { settingsResourceRowInteraction } from "@/settings/settingsResourceRowInteraction.js";
 import { PluginStoreAvatar } from "@/settings/PluginStoreAvatar.js";
 import type { StorePluginItem } from "@/settings/pluginStoreListing.js";
 
-export function isEditableUserCommand(command: ZCodeCommand): command is UserCommand {
-  return isUserCommand(command) && command.location.source === "zcode";
+export function isEditableUserCommand(command: WCodeCommand): command is UserCommand {
+  return isUserCommand(command) && command.location.source === "wcode";
 }
 
 interface CommandCardProps {
-  command: ZCodeCommand;
-  onEdit?: (command: ZCodeCommand) => void;
-  onToggle?: (command: ZCodeCommand, enabled: boolean) => void;
+  command: WCodeCommand;
+  onEdit?: (command: WCodeCommand) => void;
+  onToggle?: (command: WCodeCommand, enabled: boolean) => void;
   isOperating?: boolean;
   pluginIconItem?: Pick<StorePluginItem, "name" | "listing">;
 }
@@ -26,7 +26,7 @@ export function CommandCard({
   isOperating,
   pluginIconItem,
 }: CommandCardProps) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useWCodeIntl();
   const canEdit = isEditableUserCommand(command);
   const editable = canEdit && Boolean(onEdit) && !isOperating;
 

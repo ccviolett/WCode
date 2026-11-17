@@ -1,5 +1,5 @@
-import type { ComposerInitialConfig } from "@/store/zcodeSessionStoreTypes.js";
-import type { ModelSelectionView } from "@zcode/services";
+import type { ComposerInitialConfig } from "@/store/wcodeSessionStoreTypes.js";
+import type { ModelSelectionView } from "@wcode/services";
 import { readComposerRecent, resolveDraftInitialModelSelection } from "@/lib/composerRecent.js";
 import {
   readV4ComposerDraft,

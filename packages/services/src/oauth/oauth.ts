@@ -8,9 +8,9 @@ import type {
   OAuthSessionState,
   OAuthStartResponse,
   UserInfo,
-} from "@zcode/shared";
-import { ServiceChannels } from "@zcode/shared";
-import type { Event } from "@zcode/rpc";
+} from "@wcode/shared";
+import { ServiceChannels } from "@wcode/shared";
+import type { Event } from "@wcode/rpc";
 import { createServiceDescriptor } from "../descriptors.js";
 
 /**

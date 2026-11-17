@@ -1,14 +1,14 @@
-import type { RequestVerificationReason } from "@zcode/shared";
+import type { RequestVerificationReason } from "@wcode/shared";
 import { createHash } from "node:crypto";
 import {
   BIGMODEL_PROVIDER_ID,
   type OAuthProviderId,
   type ProviderFamilyDomain,
   type ProjectAccessTokenMaterial,
-  type ZCodeAccountAccess,
-  type ZCodeProviderAccountAccess,
+  type WCodeAccountAccess,
+  type WCodeProviderAccountAccess,
   ZAI_PROVIDER_ID,
-} from "@zcode/shared";
+} from "@wcode/shared";
 
 export interface AccountRequestAuthMaterial {
   /** 私有传输字段兼容旧命名；套餐 OAuth 实际传入短期 Project Token。 */
@@ -21,7 +21,7 @@ export interface AccountRequestAuthMaterial {
 export interface AccountRequestAuthInput {
   providerId: string;
   modelId?: string;
-  accountAccess: ZCodeProviderAccountAccess | ZCodeAccountAccess;
+  accountAccess: WCodeProviderAccountAccess | WCodeAccountAccess;
   expectedAccountScope?: string;
   rejectedProjectTokenFingerprint?: string;
   reason: RequestVerificationReason | "off-peak" | "usage";
@@ -29,7 +29,7 @@ export interface AccountRequestAuthInput {
 
 export interface AccountAccessIdentityInput {
   providerId: string;
-  accountAccess: ZCodeProviderAccountAccess | ZCodeAccountAccess;
+  accountAccess: WCodeProviderAccountAccess | WCodeAccountAccess;
 }
 
 export class AccountRequestCredentialUnavailableError extends Error {
@@ -40,31 +40,31 @@ export class AccountRequestCredentialUnavailableError extends Error {
 }
 
 export interface AccountRequestAuthResolver {
-  resolveAccessCurrent(access: ZCodeProviderAccountAccess): Promise<ZCodeAccountAccess | null>;
+  resolveAccessCurrent(access: WCodeProviderAccountAccess): Promise<WCodeAccountAccess | null>;
   resolveCurrent(input: AccountRequestAuthInput): Promise<AccountRequestAuthMaterial>;
   assertCurrent(input: AccountAccessIdentityInput): Promise<void>;
 }
 
 interface AccountProviderRequestAuthServiceOptions {
   resolveCurrentAccountAccess(
-    access: ZCodeProviderAccountAccess,
-  ): Promise<ZCodeAccountAccess | null>;
+    access: WCodeProviderAccountAccess,
+  ): Promise<WCodeAccountAccess | null>;
   loadOAuthTokenSet(providerId: OAuthProviderId): Promise<{
     accessToken?: string | null;
-    zcodeJwtToken?: string | null;
+    wcodeJwtToken?: string | null;
     sessionRevision?: string | null;
     accountIdentity?: string;
-    zcodeUserId?: string;
+    wcodeUserId?: string;
   } | null>;
-  /** Start 只用共享 ZCode JWT；不经过付费套餐的家族 token set。 */
-  loadStartPlanZcodeJwt(family: ProviderFamilyDomain): Promise<string | null>;
+  /** Start 只用共享 WCode JWT；不经过付费套餐的家族 token set。 */
+  loadStartPlanWcodeJwt(family: ProviderFamilyDomain): Promise<string | null>;
   loadIndividualPlanMaterial(
     providerId: string,
     family: ProviderFamilyDomain,
     rejectedProjectTokenFingerprint?: string,
   ): Promise<ProjectAccessTokenMaterial | null>;
   resolveTeamPlanMaterial(
-    access: Extract<ZCodeAccountAccess, { planKind: "team-coding-plan" }>,
+    access: Extract<WCodeAccountAccess, { planKind: "team-coding-plan" }>,
     rejectedProjectTokenFingerprint?: string,
   ): Promise<ProjectAccessTokenMaterial | null>;
 }
@@ -76,7 +76,7 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
     this.#options = options;
   }
 
-  resolveAccessCurrent(access: ZCodeProviderAccountAccess): Promise<ZCodeAccountAccess | null> {
+  resolveAccessCurrent(access: WCodeProviderAccountAccess): Promise<WCodeAccountAccess | null> {
     return this.#options.resolveCurrentAccountAccess(access);
   }
 
@@ -88,7 +88,7 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
     if (access.planKind === "start-plan") {
       // Bug 原因：曾从家族 token set 取 JWT，国内无关联账号没有家族材料，Start 调用拿不到凭据。
       return {
-        apiKey: requireApiKey(await this.#options.loadStartPlanZcodeJwt(access.family), providerId),
+        apiKey: requireApiKey(await this.#options.loadStartPlanWcodeJwt(access.family), providerId),
       };
     }
 
@@ -122,7 +122,7 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
     };
   }
 
-  async #scope(access: ZCodeAccountAccess): Promise<string> {
+  async #scope(access: WCodeAccountAccess): Promise<string> {
     const login = await this.#options.loadOAuthTokenSet(resolveOAuthProviderId(access.family));
     if (!login?.accessToken?.trim())
       throw new AccountRequestCredentialUnavailableError(access.family);
@@ -135,10 +135,10 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
             ? [access.organizationId, access.projectId, access.productId]
             : null,
           login.accessToken.trim(),
-          login.zcodeJwtToken?.trim() ?? null,
+          login.wcodeJwtToken?.trim() ?? null,
           login.sessionRevision ?? null,
           login.accountIdentity ?? null,
-          login.zcodeUserId ?? null,
+          login.wcodeUserId ?? null,
         ]),
       )
       .digest("hex");
@@ -151,8 +151,8 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
   }
 
   #resolveAccess(
-    access: ZCodeProviderAccountAccess | ZCodeAccountAccess,
-  ): Promise<ZCodeAccountAccess | null> {
+    access: WCodeProviderAccountAccess | WCodeAccountAccess,
+  ): Promise<WCodeAccountAccess | null> {
     return "mode" in access
       ? this.#options.resolveCurrentAccountAccess(access)
       : Promise.resolve(access);

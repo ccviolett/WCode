@@ -1,23 +1,23 @@
 import {
   createLocalServices,
   getAppConfigDir,
-  type ZCodeAgentCommandResolver,
-} from "@zcode/services/node";
-import { createServerCredentialCipher } from "@zcode/shared/credential-security";
+  type WCodeAgentCommandResolver,
+} from "@wcode/services/node";
+import { createServerCredentialCipher } from "@wcode/shared/credential-security";
 import { join } from "node:path";
-import type { IChannel } from "@zcode/rpc";
+import type { IChannel } from "@wcode/rpc";
 import {
   parseServiceAuthorityMode,
-  ZCODE_REMOTE_HTTP_PROXY_ENV_KEY,
-  ZCODE_REMOTE_NO_PROXY_ENV_KEY,
-  ZCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY,
-} from "@zcode/shared";
+  WCODE_REMOTE_HTTP_PROXY_ENV_KEY,
+  WCODE_REMOTE_NO_PROXY_ENV_KEY,
+  WCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY,
+} from "@wcode/shared";
 
 export interface CreateStdioServicesOptions {
   topicResourceRelayChannel?: () => IChannel;
   env?: Record<string, string | undefined>;
-  zcodeBuiltinProviderConfigFilePath: string;
-  zcodeAgentCommandResolver?: ZCodeAgentCommandResolver;
+  wcodeBuiltinProviderConfigFilePath: string;
+  wcodeAgentCommandResolver?: WCodeAgentCommandResolver;
 }
 
 export interface RemoteAgentNetworkOptions {
@@ -28,12 +28,12 @@ export interface RemoteAgentNetworkOptions {
 export function resolveRemoteAgentNetworkFromEnv(
   env: Record<string, string | undefined>,
 ): RemoteAgentNetworkOptions | undefined {
-  if (env[ZCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY]?.trim() !== "1") {
+  if (env[WCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY]?.trim() !== "1") {
     return undefined;
   }
   return {
-    httpProxy: env[ZCODE_REMOTE_HTTP_PROXY_ENV_KEY]?.trim() || undefined,
-    noProxy: env[ZCODE_REMOTE_NO_PROXY_ENV_KEY]?.trim() || undefined,
+    httpProxy: env[WCODE_REMOTE_HTTP_PROXY_ENV_KEY]?.trim() || undefined,
+    noProxy: env[WCODE_REMOTE_NO_PROXY_ENV_KEY]?.trim() || undefined,
   };
 }
 
@@ -50,10 +50,10 @@ export async function createStdioServices(options: CreateStdioServicesOptions) {
   // 测试注入 resolver 只用于在 spawn 前观察最终命令，不改变生产默认 resolver。
   const services = createLocalServices({
     credentialCipherProvider,
-    zcodeBuiltinProviderConfigFilePath: options.zcodeBuiltinProviderConfigFilePath,
+    wcodeBuiltinProviderConfigFilePath: options.wcodeBuiltinProviderConfigFilePath,
     topicResourceRelayChannel: options.topicResourceRelayChannel,
     serviceAuthorityMode: authorityModeParseResult.mode,
-    zcodeAgentCommandResolver: options.zcodeAgentCommandResolver,
+    wcodeAgentCommandResolver: options.wcodeAgentCommandResolver,
     remoteAgentNetwork,
   });
 

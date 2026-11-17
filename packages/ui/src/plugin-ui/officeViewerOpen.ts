@@ -13,7 +13,7 @@ import { decodeFilePathUriEscapes, isAbsoluteFilePath, joinFilePath } from "@/li
 const OFFICE_VIEWER_SURFACE_ROUTES = [
   {
     extensions: [".xlsx"],
-    pluginId: "spreadsheets@zcode-plugins-official",
+    pluginId: "spreadsheets@wcode-plugins-official",
     surfaceId: "spreadsheets",
   },
 ] as const;

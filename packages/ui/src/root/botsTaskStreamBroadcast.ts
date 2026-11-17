@@ -1,18 +1,18 @@
 import {
   BOT_TASK_STREAM_BROADCAST_CHANNEL,
-  type ZCodeStreamEvent,
+  type WCodeStreamEvent,
   type BotTaskStreamBroadcastPayload,
-} from "@zcode/shared";
-import type { BroadcastMessage } from "@zcode/services";
+} from "@wcode/shared";
+import type { BroadcastMessage } from "@wcode/services";
 import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
 import type { WindowTabState } from "@/store/tabStore.js";
 import { isWorkspaceTab } from "@/store/tabStore.js";
 
-function isZCodeStreamEvent(value: unknown): value is ZCodeStreamEvent {
+function isWCodeStreamEvent(value: unknown): value is WCodeStreamEvent {
   if (typeof value !== "object" || value === null) {
     return false;
   }
-  const event = value as Partial<ZCodeStreamEvent>;
+  const event = value as Partial<WCodeStreamEvent>;
   return typeof event.type === "string" && typeof event.taskId === "string";
 }
 
@@ -29,7 +29,7 @@ function isBotTaskStreamBroadcastPayload(
     typeof value.updatedAt === "number" &&
     (value.workspaceIdentity === undefined ||
       typeof value.workspaceIdentity === "string") &&
-    isZCodeStreamEvent(value.event) &&
+    isWCodeStreamEvent(value.event) &&
     value.event.taskId === value.taskId
   );
 }

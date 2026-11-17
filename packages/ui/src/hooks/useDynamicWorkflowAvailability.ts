@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import type { ICodingPlanSubscriptionService, IZCodeAgentService } from "@zcode/services";
-import type { DynamicWorkflowMode } from "@zcode/shared";
+import type { ICodingPlanSubscriptionService, IWCodeAgentService } from "@wcode/services";
+import type { DynamicWorkflowMode } from "@wcode/shared";
 import { logger } from "@/logger.js";
 import {
   useDynamicWorkflowAvailabilityStore,
@@ -45,10 +45,10 @@ export function useDynamicWorkflowAvailabilityLoader(
 export function useDynamicWorkflowUserModeSync(params: {
   settingsLoaded: boolean;
   userMode: DynamicWorkflowMode | undefined;
-  zcodeAgentService: Pick<IZCodeAgentService, "syncDynamicWorkflowUserMode">;
+  wcodeAgentService: Pick<IWCodeAgentService, "syncDynamicWorkflowUserMode">;
   codingPlanSubscriptionService: ICodingPlanSubscriptionService;
 }): void {
-  const { settingsLoaded, userMode, zcodeAgentService, codingPlanSubscriptionService } = params;
+  const { settingsLoaded, userMode, wcodeAgentService, codingPlanSubscriptionService } = params;
   const reload = useDynamicWorkflowAvailabilityStore((state) => state.reload);
   const observedRef = useRef<{ userMode: DynamicWorkflowMode | undefined } | null>(null);
   const chainRef = useRef<Promise<void>>(Promise.resolve());
@@ -59,7 +59,7 @@ export function useDynamicWorkflowUserModeSync(params: {
     if (observed === null || observed.userMode === userMode) return;
     chainRef.current = chainRef.current.then(async () => {
       try {
-        await zcodeAgentService.syncDynamicWorkflowUserMode(userMode ? { mode: userMode } : {});
+        await wcodeAgentService.syncDynamicWorkflowUserMode(userMode ? { mode: userMode } : {});
       } catch (error) {
         logger.warn("[dynamic-workflow] 用户选择同步到 Host 失败", {
           error: error instanceof Error ? error.message : String(error),
@@ -67,5 +67,5 @@ export function useDynamicWorkflowUserModeSync(params: {
       }
       await reload(codingPlanSubscriptionService);
     });
-  }, [codingPlanSubscriptionService, reload, settingsLoaded, userMode, zcodeAgentService]);
+  }, [codingPlanSubscriptionService, reload, settingsLoaded, userMode, wcodeAgentService]);
 }
