@@ -1617,9 +1617,14 @@ modules:
     owner: agent
 
 global:
-  # 临时时间戳（2026-09-10）：unmanaged-new-file 只约束此日期之后首次入库的文件。
+  # 临时时间戳（2026-11-18）：unmanaged-new-file 只约束此日期之后首次入库的文件。
   # 基于领先 staging 很多的分支开工时，merge-base 之前的"新增"文件不应被追溯。
-  newFilesEnforcedSince: "2026-09-10"
+  #
+  # WCode fork 例外说明：re-fork 提交（2026-11-17）把全仓目录/包名从 zcode 改为 wcode，
+  # git 把这些文件视为"首次入库"，导致 unmanaged-new-file 对既有文件误报。
+  # 该规则的本意是约束新写的代码，而不是阻止仓库改名；因此基线推进到 re-fork 提交之后，
+  # 使 fork 之前的存量文件不再被追溯，fork 之后新增的文件仍受约束。
+  newFilesEnforcedSince: "2026-11-18"
   acceptedUpstreamCommits: []
   maxFileLines: 800
   maxContractLines: 300
