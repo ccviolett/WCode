@@ -44,6 +44,14 @@ export const serverRemoteInfoSchema = z.object({
     processResourceTelemetry: z.boolean().optional(),
     remoteConversationTelemetry: z.boolean().optional(),
   }),
+  /** 本机模式 / 服务器模式：由 Server 依据客户端来源判定，供 UI 决定本机专属入口。 */
+  deployment: z
+    .object({
+      mode: z.enum(["local", "server"]),
+      reason: z.string().trim().min(1),
+    })
+    .strict()
+    .optional(),
 });
 
 export const serverRemoteInfoOutputSchema = z
@@ -69,6 +77,14 @@ export const serverRemoteInfoOutputSchema = z
         remoteConversationTelemetry: z.boolean().optional(),
       })
       .strict(),
+  /** 本机模式 / 服务器模式：由 Server 依据客户端来源判定，供 UI 决定本机专属入口。 */
+  deployment: z
+    .object({
+      mode: z.enum(["local", "server"]),
+      reason: z.string().trim().min(1),
+    })
+    .strict()
+    .optional(),
   })
   .strict();
 

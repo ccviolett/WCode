@@ -11,8 +11,9 @@ import type {
   IntranetProbeTcpTarget,
   IntranetProbeTcpTargetResult,
   SystemInfo,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import type { ISystemService } from "./system.js";
+import type { HostEditor, HostPathActionResult } from "./systemHostReveal.js";
 import { listIntegratedTerminalShellOptions } from "./integratedTerminalShells.js";
 
 const DEFAULT_PROBE_TIMEOUT_MS = 800;
@@ -52,6 +53,12 @@ interface CreateSystemServiceOptions {
   tcpProbe?: (params: TcpProbeParams) => Promise<number>;
   serviceProbe?: (params: ServiceProbeParams) => Promise<ServiceProbeResult>;
   now?: () => number;
+  /** 由装配层注入的宿主机能力；缺省时 revealPath 一律返回不可用。 */
+  canRevealPath?: () => boolean;
+  revealPath?: (path: string) => Promise<HostPathActionResult>;
+  openPath?: (path: string) => Promise<HostPathActionResult>;
+  listEditors?: () => HostEditor[];
+  openInEditor?: (editorId: string, path: string) => Promise<HostPathActionResult>;
 }
 
 interface ServiceProbeParams {
@@ -226,7 +233,7 @@ async function probeServiceEndpoint(params: ServiceProbeParams): Promise<Service
   try {
     const response = await fetch(params.url, {
       method: "GET",
-      headers: params.token ? { "x-zcode-intranet-token": params.token } : undefined,
+      headers: params.token ? { "x-wcode-intranet-token": params.token } : undefined,
       signal: controller.signal,
     });
     if (!response.ok) {
@@ -350,7 +357,36 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
 
   return {
     async info(): Promise<SystemInfo> {
-      return { homedir: homedir(), platform: process.platform };
+      // canRevealPath 让客户端决定是否显示「在 Finder 中打开」：
+      // headless / 无 GUI 的 Server 上该入口没有意义。
+      return options.canRevealPath?.()
+        ? { homedir: homedir(), platform: process.platform, canRevealPath: true }
+        : { homedir: homedir(), platform: process.platform };
+    },
+
+    async revealPath(path: string): Promise<HostPathActionResult> {
+      if (!options.revealPath) {
+        return { success: false, error: "host-reveal-unavailable" };
+      }
+      return options.revealPath(path);
+    },
+
+    async openPath(path: string): Promise<HostPathActionResult> {
+      if (!options.openPath) {
+        return { success: false, error: "host-reveal-unavailable" };
+      }
+      return options.openPath(path);
+    },
+
+    async listEditors(): Promise<HostEditor[]> {
+      return options.listEditors?.() ?? [];
+    },
+
+    async openInEditor(editorId: string, path: string): Promise<HostPathActionResult> {
+      if (!options.openInEditor) {
+        return { success: false, error: "host-reveal-unavailable" };
+      }
+      return options.openInEditor(editorId, path);
     },
 
     async listIntegratedTerminalShells(): Promise<IntegratedTerminalShellOption[]> {

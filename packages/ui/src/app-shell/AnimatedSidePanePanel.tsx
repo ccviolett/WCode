@@ -3,7 +3,7 @@ import type { CreateTaskRequest } from "@/app-shell/types.js";
 import { ServiceProvider, useComposerClientNamespace } from "@/hooks/useServices.js";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
-import type { IServiceAccessor } from "@zcode/services";
+import type { IServiceAccessor } from "@wcode/services";
 import {
   closestCenter,
   DndContext,
@@ -19,10 +19,10 @@ import {
   isRemoteWorkspaceIdentity,
   type BrowserViewScreenshotSurfacePreparePayload,
   type GitChangeSourceId,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import { FileManagerPane } from "@/WorkspaceFileTree.js";
 import type { FileManagerTarget } from "@/lib/workspaceSidePane.js";
-import { useZCodeSessionStore } from "@/store/zcodeSessionStore.js";
+import { useWCodeSessionStore } from "@/store/wcodeSessionStore.js";
 import { composerScopeKey, resolveComposerScope } from "@/v4/composer/composerDraftStore.js";
 import { SidePaneTerminalPane } from "@/SidePaneTerminalPane.js";
 import { useIsOfficeMode } from "@/hooks/useInterfaceMode.js";
@@ -115,7 +115,7 @@ import {
 import { inferMediaPreview, type CodeViewerSource } from "@/lib/codeViewer.js";
 import type { MessageFileLinkTarget } from "@/components/ai-elements/message.js";
 import { getVisibleSidePaneTabs } from "@/lib/workspaceSidePane.js";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useWCodeIntl } from "@/i18n/IntlProvider.js";
 import {
   BugIcon,
   ChevronRightIcon,
@@ -476,15 +476,18 @@ export function AnimatedSidePanePanel({
   });
   const pluginUiWorkspaceKey =
     pluginUiTarget.workspaceIdentity?.trim() || pluginUiTarget.workspacePath;
-  const { intl, locale } = useZCodeIntl();
+  const { intl, locale } = useWCodeIntl();
   const isOfficeMode = useIsOfficeMode();
+  // 文件树此前把「能否用本机文件管理器」绑在 isDesktop 上，Web 端该值恒为 false，
+  // 导致「在 Finder 中打开」一直被禁用；改用平台能力，与相邻的「使用默认应用打开」同源。
+  const platform = usePlatform();
   const developerToolsEnabled = useDeveloperToolsVisibility();
   const isMobileTextInputViewport = useIsMobileTextInputViewport();
   const isDragCollapsible = !isVisible;
   const isResizeDisabled = !isVisible;
   const workspaceKey = workspaceIdentity?.trim() || workspaceAbsPath;
   const composerClientNamespace = useComposerClientNamespace();
-  const draftProjectId = useZCodeSessionStore(
+  const draftProjectId = useWCodeSessionStore(
     (state) => state.workspaces[workspaceKey]?.draftProjectId,
   );
   const draftScopeKey = composerScopeKey(
@@ -1320,7 +1323,7 @@ export function AnimatedSidePanePanel({
                                   }
                             }
                             mobileOverlay={mobileOverlay}
-                            canOpenLocalFileManager={Boolean(isDesktop)}
+                            canOpenLocalFileManager={Boolean(platform.canOpenLocalFiles)}
                             onNavigate={(source) => onNavigateFileManager(tab.id, source)}
                             onClose={() => onCloseTab(tab.id)}
                             workspacePath={taskCwd ?? workspaceAbsPath}

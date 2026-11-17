@@ -2,7 +2,7 @@
 import { loadEndpointEnv } from "./load-endpoint-env.mjs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmod, cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, readdir, readFile, rm, stat, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import {
@@ -154,6 +154,25 @@ async function buildOutputs(skipBuild) {
   run("pnpm", ["--filter", "@wcode/web", "build"]);
 }
 
+/**
+ * 发行包剔除 sourcemap：web 产物里 .map 占一半以上体积，终端用户不需要。
+ * 保留文件内容不变，只删 .map；残留的 sourceMappingURL 注释在缺文件时会被浏览器忽略。
+ */
+async function stripSourceMaps(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  let removed = 0;
+  for (const entry of entries) {
+    const fullPath = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) {
+      removed += await stripSourceMaps(fullPath);
+    } else if (entry.name.endsWith(".map")) {
+      await unlink(fullPath);
+      removed += 1;
+    }
+  }
+  return removed;
+}
+
 async function stageWCodePackage({ packageRoot, version }) {
   const webDist = resolve(root, "packages", "web", "dist");
   const serverDist = resolve(root, "packages", "server", "dist");
@@ -196,12 +215,23 @@ async function stageWCodePackage({ packageRoot, version }) {
   await copyRuntimeNodeModules(packageRoot);
   await patchNodePtyPrebuilds(packageRoot);
 
+  // 发行前统一剔除 sourcemap：必须放在 TUI 运行时与 node_modules 拷贝之后，
+  // 否则后两步会把依赖包里的 .map 重新带进来。终端用户不需要这些调试产物。
+  const strippedSourceMaps = await stripSourceMaps(packageRoot);
+  console.log(`[wcode] stripped ${strippedSourceMaps} source map files from the release`);
+
   await mkdir(resolve(packageRoot, "bin"), {
     recursive: true,
   });
   const runner = resolve(packageRoot, "bin", "wcode.mjs");
   await cp(resolve(root, "scripts/wcode-distribution/runner.mjs"), runner);
   await chmod(runner, 0o755);
+
+  // 分发本分支代码必须随附 Apache-2.0 要求的许可证、声明与修改说明，
+  // 以及与该依赖集匹配的第三方许可原文；只放在源码仓库里不满足二进制分发义务。
+  for (const file of ["LICENSE", "NOTICE.md", "CHANGES.md", "THIRD-PARTY-NOTICES.md"]) {
+    await cp(resolve(root, file), resolve(packageRoot, file));
+  }
 
   await writeFile(
     resolve(packageRoot, "package.json"),

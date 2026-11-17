@@ -1,3 +1,5 @@
+import { useHostRevealCapability } from "@/hooks/useHostRevealCapability.js";
+
 interface TaskActionMenuItemProps {
   children: React.ReactNode;
   "data-testid"?: string;
@@ -82,6 +84,8 @@ export function TaskActionMenuContent({
   onOpenProviderConfig: () => void;
 }) {
   const taskTargetActionsDisabled = disableTaskActions || disableTaskTargetActions;
+  // Server 无图形文件管理器（headless / 非 GUI / 开关关闭）时隐藏入口，避免点了没反应。
+  const canRevealInFileManager = useHostRevealCapability();
 
   return (
     <>
@@ -141,7 +145,7 @@ export function TaskActionMenuContent({
         </Item>
       ) : null}
       <Separator />
-      {!hideMobileUnsupportedActions ? (
+      {!hideMobileUnsupportedActions && canRevealInFileManager ? (
         <Item
           disabled={disableTaskActions}
           title={disableTaskActions ? disabledReason : undefined}
@@ -177,7 +181,7 @@ export function TaskActionMenuContent({
         title={taskTargetActionsDisabled ? disabledReason : undefined}
         onSelect={onCopyTaskLogPath}
       >
-        {/* Bugfix: ZCode Agent 的日志路径可能先按运行时约定得出，当前日期文件尚未落盘。
+        {/* Bugfix: WCode Agent 的日志路径可能先按运行时约定得出，当前日期文件尚未落盘。
             复制动作只依赖路径字符串，不能把 exists=false 当成不可复制，否则菜单会表现成“不能点”。 */}
         {intl.formatMessage({ id: "appHeader.copyLogPath" })}
       </Item>
@@ -210,7 +214,7 @@ export function TaskActionMenuContent({
       {onViewModelTrajectory ? (
         <>
           <Separator />
-          {/* 调用轨迹查看：从 ~/.zcode/cli 的 model-io 还原该 task 的模型请求/响应/工具调用，
+          {/* 调用轨迹查看：从 ~/.wcode/cli 的 model-io 还原该 task 的模型请求/响应/工具调用，
               在右侧边栏可视化。只依赖 taskId（即 sessionId），不依赖快照文件是否落盘。 */}
           <Item
             disabled={taskTargetActionsDisabled || !activeSessionId}

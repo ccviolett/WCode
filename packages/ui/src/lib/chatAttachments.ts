@@ -3,9 +3,9 @@ import { nanoid } from "nanoid";
 import {
   VIDEO_INPUT_MAX_BYTES,
   type CreateTempTextAttachmentResult,
-  type ZCodePromptAttachment,
-} from "@zcode/shared";
-import { PROTOCOL_V4_LIMITS } from "@zcode/shared/zcode-protocol-v4";
+  type WCodePromptAttachment,
+} from "@wcode/shared";
+import { PROTOCOL_V4_LIMITS } from "@wcode/shared/wcode-protocol-v4";
 import {
   MissingInlineImageContentError,
   MissingInlinePdfContentError,
@@ -163,7 +163,7 @@ function estimateDecodedBase64Bytes(dataBase64: string) {
 }
 
 export function restoreChatComposerAttachment(
-  attachment: ZCodePromptAttachment,
+  attachment: WCodePromptAttachment,
 ): ChatComposerAttachment {
   const mimeType = normalizeComposerMimeType(
     attachment.mimeType || inferAttachmentMimeType(attachment.filename),
@@ -309,7 +309,7 @@ export function revokeChatComposerAttachment(attachment: ChatComposerAttachment)
 
 export async function serializeChatComposerAttachment(
   attachment: ChatComposerAttachment,
-): Promise<ZCodePromptAttachment> {
+): Promise<WCodePromptAttachment> {
   const mimeType = normalizeComposerMimeType(
     attachment.mimeType || inferAttachmentMimeType(attachment.filename),
   );
@@ -426,11 +426,23 @@ export async function serializeChatComposerAttachment(
     attachment.file && isTextLikeAttachment(attachment)
       ? await readAttachmentText(attachment.file)
       : undefined;
+  // 无本地路径时的普通二进制文件（zip/docx/xlsx 等）：协议里的 file.dataBase64 就是为
+  // 这种环境保留的兼容回退。此前只处理文本，导致 Web 端这类文件无内容可发，
+  // 发送时被 uploadComposerAttachment 判为 null 并报「附件缺少可读取内容」。
+  const inlineBase64 =
+    textContent === undefined && attachment.file
+      ? attachment.sizeBytes > PROTOCOL_V4_LIMITS.attachmentMaxBytes
+        ? (() => {
+            throw new Error("proto.payloadTooLarge");
+          })()
+        : await readAttachmentBase64(attachment)
+      : undefined;
   return {
     kind: "file",
     filename: attachment.filename,
     mimeType,
     sizeBytes: attachment.sizeBytes,
+    ...(inlineBase64 !== undefined ? { dataBase64: inlineBase64 } : {}),
     ...(textContent !== undefined ? { textContent } : {}),
     ...(attachment.sourceKind
       ? { sourceKind: attachment.sourceKind, messageCount: attachment.messageCount }
@@ -450,7 +462,7 @@ async function readAttachmentBase64(attachment: ChatComposerAttachment): Promise
   return dataUrl.slice(base64MarkerIndex + 1);
 }
 
-export function getChatAttachmentPreviewUrl(attachment: ZCodePromptAttachment): string | null {
+export function getChatAttachmentPreviewUrl(attachment: WCodePromptAttachment): string | null {
   if (!attachment.dataBase64) {
     return null;
   }

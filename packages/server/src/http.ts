@@ -2,12 +2,13 @@
 import { randomUUID } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
 import { hostname } from "node:os";
-import { resolveServerOsUser } from "@zcode/shared/node";
+import { resolveServerOsUser } from "@wcode/shared/node";
 import * as nodePath from "node:path";
 import { basename, extname, resolve } from "node:path";
 import { Hono, type Context } from "hono";
 import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
+import { getConnInfo } from "@hono/node-server/conninfo";
 import type { WebSocket } from "ws";
 import {
   Emitter,
@@ -17,32 +18,32 @@ import {
   ChannelClient,
   LoggingChannelServer,
   type ISocket,
-} from "@zcode/rpc";
-import type { TopicResourcePeers } from "@zcode/services/node";
-import { TOPIC_RESOURCE_RELAY_CHANNEL } from "@zcode/shared";
+} from "@wcode/rpc";
+import type { TopicResourcePeers } from "@wcode/services/node";
+import { TOPIC_RESOURCE_RELAY_CHANNEL } from "@wcode/shared";
 import {
   ServiceCollection,
-  IZCodeAgentService,
-  createZCodeAgentConnectionScope,
+  IWCodeAgentService,
+  createWCodeAgentConnectionScope,
   IBotsService,
   IProviderProvisioningTargetService,
-} from "@zcode/services";
+} from "@wcode/services";
 import {
   botProviders,
   formatLogPrefix,
   serverRemoteInfoOutputSchema,
   SERVER_REMOTE_PROTOCOL_VERSION,
-  ZCODE_RPC_HOST_CAPABILITY_HEADER,
-  ZCODE_COMPATIBILITY_MANIFEST,
-  ZCODE_VERSION,
+  WCODE_RPC_HOST_CAPABILITY_HEADER,
+  WCODE_COMPATIBILITY_MANIFEST,
+  WCODE_VERSION,
   type BotProvider,
   type ServerRemoteInfo,
   type ServerRemoteWorkspaceInfo,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import {
   SourceServerWorkspaceIdentityChannelServer,
   type SourceServerWorkspaceIdentityMapper,
-} from "@zcode/services/node";
+} from "@wcode/services/node";
 import { createHostCapabilityStore } from "./hostCapability.js";
 
 function wrapWebSocket(ws: WebSocket): ISocket {
@@ -85,7 +86,7 @@ function wrapWebSocket(ws: WebSocket): ISocket {
 }
 
 const log = (...args: unknown[]) =>
-  console.log(formatLogPrefix("zcode-server:http", process.pid), ...args);
+  console.log(formatLogPrefix("wcode-server:http", process.pid), ...args);
 
 function setupChannelServer(
   ws: WebSocket,
@@ -102,14 +103,14 @@ function setupChannelServer(
   const server = workspaceIdentityMapper
     ? new SourceServerWorkspaceIdentityChannelServer(loggedServer, workspaceIdentityMapper)
     : loggedServer;
-  const agentService = services.getOptional(IZCodeAgentService);
+  const agentService = services.getOptional(IWCodeAgentService);
   const reverseClient =
     clientMode === "desktop-continuous" && resourcePeers ? new ChannelClient(protocol) : undefined;
   const peer = reverseClient
     ? resourcePeers?.attach(reverseClient.getChannel(TOPIC_RESOURCE_RELAY_CHANNEL))
     : undefined;
   const connectionScope = agentService
-    ? createZCodeAgentConnectionScope(peer ? peer.wrapAgent(agentService) : agentService, {
+    ? createWCodeAgentConnectionScope(peer ? peer.wrapAgent(agentService) : agentService, {
         connectionId: `server-ws-${randomUUID()}`,
         clientMode,
         role: clientMode === "desktop-continuous" ? "trusted-host-relay" : "terminal-client",
@@ -117,7 +118,7 @@ function setupChannelServer(
     : undefined;
   const overrides = new Map<string, unknown>();
   if (connectionScope) {
-    overrides.set(IZCodeAgentService.channelName, connectionScope.service);
+    overrides.set(IWCodeAgentService.channelName, connectionScope.service);
   }
   // Provisioning 携带跨 Environment 凭据，只允许 Desktop trusted host 使用；普通 Web
   // remote/replayable 客户端即使知道频道名，也不能获得 target 写入接口。
@@ -162,7 +163,7 @@ function readTrimmedEnv(name: string): string | undefined {
 
 export function resolveHttpServerId(options: HttpServerOptions = {}): string {
   return (
-    options.serverId?.trim() || readTrimmedEnv("ZCODE_SERVER_ID") || hostname() || "zcode-server"
+    options.serverId?.trim() || readTrimmedEnv("WCODE_SERVER_ID") || hostname() || "wcode-server"
   );
 }
 
@@ -170,7 +171,7 @@ function resolveServerWorkspaces(options: HttpServerOptions): ServerRemoteWorksp
   if (options.workspaces) {
     return options.workspaces;
   }
-  const workspacePath = readTrimmedEnv("ZCODE_SERVER_WORKSPACE") || process.cwd();
+  const workspacePath = readTrimmedEnv("WCODE_SERVER_WORKSPACE") || process.cwd();
   return [
     {
       path: workspacePath,
@@ -179,17 +180,62 @@ function resolveServerWorkspaces(options: HttpServerOptions): ServerRemoteWorksp
   ];
 }
 
-function createServerInfo(options: HttpServerOptions): ServerRemoteInfo {
+/**
+ * 判定本次请求来自本机还是远端。
+ *
+ * 只有「浏览器与服务在同一台机器」时，在文件管理器中定位、用默认应用打开这类操作才有意义；
+ * 远端访问时它们会在服务器上执行，用户看不到结果。判定取保守策略：
+ * - 显式配置优先（WCODE_DEPLOYMENT_MODE）；
+ * - 出现代理转发头视为远端（反向代理会让所有请求看起来都来自回环，不能据此判本机）；
+ * - 其余按对端地址是否为回环判断。
+ */
+function detectDeployment(c: Context): { mode: "local" | "server"; reason: string } {
+  const override = readTrimmedEnv("WCODE_DEPLOYMENT_MODE")?.toLowerCase();
+  if (override === "local" || override === "server") {
+    return { mode: override, reason: "由 WCODE_DEPLOYMENT_MODE 指定" };
+  }
+  const forwarded = c.req.header("x-forwarded-for") ?? c.req.header("forwarded");
+  if (forwarded?.trim()) {
+    return { mode: "server", reason: "检测到代理转发头，按远端访问处理" };
+  }
+  let address: string | undefined;
+  try {
+    address = getConnInfo(c).remote?.address;
+  } catch {
+    address = undefined;
+  }
+  if (isLoopbackAddress(address)) {
+    return { mode: "local", reason: `客户端来自本机回环地址 ${address}` };
+  }
+  return { mode: "server", reason: `客户端来自 ${address ?? "未知地址"}` };
+}
+
+function isLoopbackAddress(address: string | undefined): boolean {
+  if (!address) return false;
+  const normalized = address.toLowerCase();
+  return (
+    normalized === "::1" ||
+    normalized === "localhost" ||
+    normalized.startsWith("127.") ||
+    normalized.startsWith("::ffff:127.") ||
+    normalized === "::ffff:7f00:1"
+  );
+}
+
+function createServerInfo(
+  options: HttpServerOptions,
+  deployment?: { mode: "local" | "server"; reason: string },
+): ServerRemoteInfo {
   return serverRemoteInfoOutputSchema.parse({
     serverId: resolveHttpServerId(options),
-    ...(options.name?.trim() || readTrimmedEnv("ZCODE_SERVER_NAME")
-      ? { name: options.name?.trim() || readTrimmedEnv("ZCODE_SERVER_NAME") }
+    ...(options.name?.trim() || readTrimmedEnv("WCODE_SERVER_NAME")
+      ? { name: options.name?.trim() || readTrimmedEnv("WCODE_SERVER_NAME") }
       : {}),
-    version: ZCODE_VERSION,
+    version: WCODE_VERSION,
     protocolVersion: SERVER_REMOTE_PROTOCOL_VERSION,
-    authRequired: options.authRequired ?? Boolean(readTrimmedEnv("ZCODE_SERVER_TOKEN")),
+    authRequired: options.authRequired ?? Boolean(readTrimmedEnv("WCODE_SERVER_TOKEN")),
     workspaces: resolveServerWorkspaces(options),
-    compatibility: ZCODE_COMPATIBILITY_MANIFEST,
+    compatibility: WCODE_COMPATIBILITY_MANIFEST,
     migration: { failedPathCount: options.migrationFailedPathCount ?? 0 },
     identity: { osUser: resolveServerOsUser(), hostname: hostname() },
     capabilities: {
@@ -199,10 +245,11 @@ function createServerInfo(options: HttpServerOptions): ServerRemoteInfo {
       processResourceTelemetry: true,
       remoteConversationTelemetry: true,
     },
+    ...(deployment ? { deployment } : {}),
   });
 }
 
-const zcodeLiteTokenCookieName = "zcode_lite_token";
+const wcodeLiteTokenCookieName = "wcode_lite_token";
 
 const staticMimeTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -242,6 +289,39 @@ function parseCookieHeader(header: string | undefined): Map<string, string> {
   return cookies;
 }
 
+/** 浏览器文档导航：只有这类请求适合用 302 换掉 URL 里的 token。 */
+function isDocumentNavigation(c: Context): boolean {
+  if (c.req.method !== "GET") return false;
+  return (c.req.header("accept") ?? "").includes("text/html");
+}
+
+/** 反向代理终止 TLS 时同样要写 Secure 标记，避免 Cookie 走明文回传。 */
+function isSecureRequest(c: Context): boolean {
+  if (new URL(c.req.url).protocol === "https:") return true;
+  return (c.req.header("x-forwarded-proto") ?? "").toLowerCase().startsWith("https");
+}
+
+function buildSessionCookie(c: Context, token: string): string {
+  const secure = isSecureRequest(c) ? "; Secure" : "";
+  return `${wcodeLiteTokenCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax${secure}`;
+}
+
+/**
+ * 一次性令牌换会话：
+ * - `?token=` 命中时写入 HttpOnly Cookie；文档导航再 302 到去掉 token 的同一 URL，
+ *   使令牌不留在浏览器历史与 Referer 里。
+ * - WS/API 无法跟随重定向，命中查询串令牌时直接放行本次请求（后续请求靠 Cookie）。
+ */
+function takeQueryToken(c: Context, token: string): "redirect" | "accepted" | null {
+  const url = new URL(c.req.url);
+  const candidate = url.searchParams.get("token");
+  if (candidate !== token) return null;
+  c.header("Set-Cookie", buildSessionCookie(c, token));
+  if (!isDocumentNavigation(c)) return "accepted";
+  url.searchParams.delete("token");
+  return "redirect";
+}
+
 function hasValidLiteToken(c: Context, token: string): boolean {
   const authorization = c.req.header("authorization");
   if (
@@ -250,15 +330,7 @@ function hasValidLiteToken(c: Context, token: string): boolean {
   ) {
     return true;
   }
-  const url = new URL(c.req.url);
-  if (url.searchParams.get("token") === token) {
-    c.header(
-      "Set-Cookie",
-      `${zcodeLiteTokenCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`,
-    );
-    return true;
-  }
-  return parseCookieHeader(c.req.header("cookie")).get(zcodeLiteTokenCookieName) === token;
+  return parseCookieHeader(c.req.header("cookie")).get(wcodeLiteTokenCookieName) === token;
 }
 
 function isTokenProtectedPath(pathname: string): boolean {
@@ -353,8 +425,17 @@ export function createHttpServer(
   const authToken = options.authToken?.trim();
   if (authToken) {
     app.use("*", async (c, next) => {
+      // 先处理 ?token=：它对静态页同样生效，否则用户带着令牌打开首页时
+      // 会在未受保护路径上被直接放行，Cookie 永远写不进去。
+      const exchanged = takeQueryToken(c, authToken);
+      if (exchanged === "redirect") {
+        const url = new URL(c.req.url);
+        url.searchParams.delete("token");
+        return c.redirect(url.toString(), 302);
+      }
+
       const pathname = new URL(c.req.url).pathname;
-      const validToken = hasValidLiteToken(c, authToken);
+      const validToken = exchanged === "accepted" || hasValidLiteToken(c, authToken);
       if (!isTokenProtectedPath(pathname) || validToken) {
         await next();
         return;
@@ -363,7 +444,7 @@ export function createHttpServer(
     });
   }
 
-  app.get("/api/server-info", (c) => c.json(createServerInfo(options)));
+  app.get("/api/server-info", (c) => c.json(createServerInfo(options, detectDeployment(c))));
   app.post("/api/rpc-host-capability", (c) => c.json(hostCapabilities.issue()));
 
   // 普通 `/ws` 永远是 terminal-client；浏览器/任意客户端设置旧 mode header
@@ -394,7 +475,7 @@ export function createHttpServer(
     },
   }));
   app.use("/ws/host", async (c, next) => {
-    const capability = c.req.header(ZCODE_RPC_HOST_CAPABILITY_HEADER);
+    const capability = c.req.header(WCODE_RPC_HOST_CAPABILITY_HEADER);
     if (!hostCapabilities.consume(capability)) {
       return c.json({ error: "Invalid or expired host capability" }, 401);
     }
@@ -423,7 +504,7 @@ export function createHttpServer(
         rawBody = { payload: rawBodyText };
       }
     }
-    const webhookSecret = c.req.header("x-zcode-bot-secret");
+    const webhookSecret = c.req.header("x-wcode-bot-secret");
     const botId = c.req.param("botId");
     const result = await botsService.handleProviderCallbackResponse(provider, {
       ...(typeof rawBody === "object" && rawBody !== null ? rawBody : { payload: rawBody }),

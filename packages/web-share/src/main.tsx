@@ -22,7 +22,7 @@ import {
   ConversationShareManageClient,
   ConversationShareManageLoader,
 } from "../../web/src/share-manage/index.js";
-import { resolveWebRemoteControlInitialTheme } from "../../web/src/web-remote-control/adapters/webRemoteControlThemeSeed.js";
+import { resolveWebThemePreference } from "../../web/src/webThemePreference.js";
 import { createWebAuthService } from "../../web/src/auth/webAuthService.js";
 import {
   WEB_ZAI_OAUTH_CONFIG,
@@ -46,8 +46,8 @@ const root = {
 const webAuthService = createWebAuthService();
 
 function resolveThemePreference(): Theme {
-  const saved = localStorage.getItem("zcode-theme");
-  return resolveWebRemoteControlInitialTheme({ storedTheme: saved, defaultTheme: "zai-light" });
+  // 分享页是公开落地页：未设置过主题时固定浅色，显式选择过的主题仍然沿用。
+  return resolveWebThemePreference("zai-light");
 }
 
 // Share 是独立入口，不会经过完整 Web 的 bootstrap；必须在渲染前同步根主题 class，
@@ -76,18 +76,18 @@ function renderCallback(): void {
 }
 
 const endpointOrigin =
-  import.meta.env.VITE_ZCODE_BASE_URL?.trim().replace(/\/+$/u, "") || window.location.origin;
+  import.meta.env.VITE_WCODE_BASE_URL?.trim().replace(/\/+$/u, "") || window.location.origin;
 const mockMode =
   import.meta.env.DEV && import.meta.env.VITE_CONVERSATION_SHARE_PREVIEW_MOCK === "true";
 const getMockToken = () =>
-  mockMode && window.sessionStorage.getItem("zcode:share:mock-auth") === "owner"
+  mockMode && window.sessionStorage.getItem("wcode:share:mock-auth") === "owner"
     ? "mock-owner-token"
     : null;
-const getAccessToken = () => getMockToken() ?? webAuthService.getZCodeJwtToken();
+const getAccessToken = () => getMockToken() ?? webAuthService.getWCodeJwtToken();
 
 function startLogin(provider: WebOAuthProviderId): void {
   if (mockMode) {
-    window.sessionStorage.setItem("zcode:share:mock-auth", "owner");
+    window.sessionStorage.setItem("wcode:share:mock-auth", "owner");
     window.location.reload();
     return;
   }
@@ -100,13 +100,13 @@ function startLogin(provider: WebOAuthProviderId): void {
 }
 
 function logout(): void {
-  if (mockMode) window.sessionStorage.removeItem("zcode:share:mock-auth");
+  if (mockMode) window.sessionStorage.removeItem("wcode:share:mock-auth");
   void webAuthService.logout();
 }
 
 async function renderManage(locale: "zh-CN" | "en-US"): Promise<void> {
   document.documentElement.lang = locale;
-  document.title = locale === "zh-CN" ? "我的分享 · ZCode" : "My shares · ZCode";
+  document.title = locale === "zh-CN" ? "我的分享 · WCode" : "My shares · WCode";
   const client = mockMode
     ? new (
         await import("../../web/src/share-manage/mockConversationShareManageClient.js")
@@ -127,7 +127,7 @@ async function renderManage(locale: "zh-CN" | "en-US"): Promise<void> {
 async function renderShare(): Promise<void> {
   const locale = resolveConversationShareRouteLocale(window.location.pathname);
   document.documentElement.lang = locale;
-  document.title = locale === "zh-CN" ? "ZCode 会话分享" : "ZCode Conversation Share";
+  document.title = locale === "zh-CN" ? "WCode 会话分享" : "WCode Conversation Share";
 
   const shareCode = resolveConversationShareCodeFromPath(window.location.pathname);
   if (!shareCode) {

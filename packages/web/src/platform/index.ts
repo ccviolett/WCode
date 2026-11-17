@@ -6,8 +6,8 @@ import {
   type IPlatformService,
   type RemoteTarget,
   type WebRemoteControlStatus,
-} from "@zcode/shared";
-import { playTaskNotificationSound } from "@zcode/ui";
+} from "@wcode/shared";
+import { playTaskNotificationSound } from "@wcode/ui";
 import { resolveWebCommunityUrl, resolveWebHelpConfig } from "#src/communityUrl.js";
 import type { WebRemoteControlPlatformProxy } from "#src/platform/contract.js";
 import { saveBrowserFile } from "#src/platform/saveBrowserFile.js";
@@ -19,12 +19,39 @@ async function resolveFeedbackUrl(): Promise<string | undefined> {
 
 export function createWebPlatform(options?: {
   externalWebRemoteControlProxy?: WebRemoteControlPlatformProxy;
+  /**
+   * 在 Server 所在机器的文件管理器中定位路径。
+   * Web 端不再有 Electron，能力由服务端 system.revealPath 提供；
+   * 未注入（如手机远控）时保持不可用。
+   */
+  revealPath?: (path: string) => Promise<{ success: boolean; error?: string }>;
+  /** 用 Server 默认应用打开文件或目录。 */
+  openPath?: (path: string) => Promise<{ success: boolean; error?: string }>;
+  /** Server 上可用的编辑器；为空时编辑器入口自然不出现。 */
+  listEditors?: () => Promise<readonly { id: string; name: string }[]>;
+  /** 用指定编辑器打开路径。 */
+  openInEditor?: (editorId: string, path: string) => Promise<{ success: boolean; error?: string }>;
+  /**
+   * Server 是否具备图形文件管理器 / 默认应用打开能力。
+   * 桌面端时代恒为 true；Web 端取决于 Server 所在机器，启动时探测一次。
+   */
+  canOpenLocalFiles?: boolean;
 }): IPlatformService {
   const platformProxy = options?.externalWebRemoteControlProxy;
 
+  // getInstalledEditors 会在多个菜单渲染路径里被调用，缓存一次结果即可；
+  // 服务端编辑器安装状态在会话内不会变化。
+  let editorsPromise: Promise<{ id: string; name: string }[]> | undefined;
+  const resolveEditors = () => {
+    if (!options?.listEditors) return Promise.resolve<{ id: string; name: string }[]>([]);
+    editorsPromise ??= options.listEditors().then((editors) => [...editors]);
+    return editorsPromise;
+  };
+
   return {
     canSelectFilePath: false,
-    canOpenLocalFiles: false,
+    // 不再是"Web 一律不能"：Server 可能与浏览器同机且有 GUI。
+    canOpenLocalFiles: options?.canOpenLocalFiles === true,
     saveFile: saveBrowserFile,
     // Web 端无法打开系统目录选择框
     selectDirectory: () => Promise.resolve(null),
@@ -50,7 +77,7 @@ export function createWebPlatform(options?: {
       _context?: {
         workspacePath: string;
         workspaceIdentity?: string;
-        connectTrigger?: import("@zcode/shared").RemoteWorkspaceConnectTrigger;
+        connectTrigger?: import("@wcode/shared").RemoteWorkspaceConnectTrigger;
       },
     ) {
       if (platformProxy) {
@@ -123,7 +150,7 @@ export function createWebPlatform(options?: {
       window.open(feedbackUrl, "_blank", "noopener,noreferrer");
     },
     openCommunity: async () => {
-      // openCommunity() 不带参数；ZCodeIntlProvider 会把当前界面语言同步到 <html lang>，
+      // openCommunity() 不带参数；WCodeIntlProvider 会把当前界面语言同步到 <html lang>，
       // 这里按界面语言解析，再收敛成中/英（社群链接只配了中英）。以前要求 lang 精确等于 "en-US"，
       // Web+Server 的 index.html 是 lang="en"，英/日/俄/韩都会被当成中文。
       const locale = toZhOrEnLocale(resolveLocaleFromLanguageTag(document.documentElement.lang));
@@ -137,9 +164,16 @@ export function createWebPlatform(options?: {
       const communityUrl = await resolveWebCommunityUrl(locale);
       return typeof communityUrl === "string" && communityUrl.length > 0;
     },
-    openInFileManager: () =>
-      Promise.resolve({ success: false, error: "Not supported in web mode" }),
-    openExternalFile: () => Promise.resolve({ success: false, error: "Not supported in web mode" }),
+    // 桌面端时代由 Electron shell 打开本机 Finder；现在改为请求 Server 在它所在机器执行。
+    // 服务端会校验路径必须位于已登记 workspace 根目录内。
+    openInFileManager: (path) =>
+      options?.revealPath
+        ? options.revealPath(path)
+        : Promise.resolve({ success: false, error: "Not supported in web mode" }),
+    openExternalFile: (path) =>
+      options?.openPath
+        ? options.openPath(path)
+        : Promise.resolve({ success: false, error: "Not supported in web mode" }),
     registerOAuthState: (_payload) => {},
     onOAuthCallback: () => () => {},
     onPaymentCallback: () => () => {},
@@ -220,10 +254,19 @@ export function createWebPlatform(options?: {
     acknowledgePostUpdateReleaseNotes: () => Promise.resolve(),
     skipUpdateVersion: () => Promise.resolve(),
     quitAndInstallUpdate: () => Promise.resolve(),
-    getInstalledEditors: () => Promise.resolve([]),
+    getInstalledEditors: async () =>
+      (await resolveEditors()).map((editor) => ({
+        id: editor.id,
+        name: editor.name,
+        // Web 端拿不到本机图标；UI 会退回文字入口。
+        iconDataUrl: "",
+      })),
     getFileApplications: () => Promise.resolve([]),
     openFileWithApplication: () => Promise.resolve({ success: false, error: "not_supported" }),
-    openInEditor: () => Promise.resolve({ success: false, error: "Not supported in web mode" }),
+    openInEditor: (editorId, path) =>
+      options?.openInEditor
+        ? options.openInEditor(editorId, path)
+        : Promise.resolve({ success: false, error: "Not supported in web mode" }),
     executeDesktopCommand: () => Promise.resolve(),
     setApplicationLocale: (_locale) => Promise.resolve(),
     setTitleBarTheme: () => Promise.resolve(),

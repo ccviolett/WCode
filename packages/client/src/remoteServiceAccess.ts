@@ -1,5 +1,5 @@
-import { IGenUiService } from "@zcode/services";
-import { ProxyChannel, type IChannelClient } from "@zcode/rpc";
+import { IGenUiService } from "@wcode/services";
+import { ProxyChannel, type IChannelClient } from "@wcode/rpc";
 import {
   IFileService,
   IMediaPreviewService,
@@ -11,9 +11,9 @@ import {
   IOnboardingRecordService,
   ICredentialService,
   IBroadcastService,
-  IZCodeTaskService,
-  IZCodeAgentService,
-  IZCodeSessionService,
+  IWCodeTaskService,
+  IWCodeAgentService,
+  IWCodeSessionService,
   IProjectService,
   IManagedWorktreeService,
   ITaskGroupService,
@@ -66,7 +66,7 @@ import {
   IWindowProjectChangesService,
   type WindowProjectDirectoryServices,
   type IServiceAccessor,
-} from "@zcode/services";
+} from "@wcode/services";
 
 /**
  * RemoteServiceAccess — 通过 ChannelClient 自动创建类型安全的服务代理
@@ -85,10 +85,14 @@ export class RemoteServiceAccess implements IServiceAccessor {
   readonly onboardingRecordService: IOnboardingRecordService;
   readonly credentialService: ICredentialService;
   readonly broadcastService: IBroadcastService;
-  readonly zcodeTaskService: IZCodeTaskService;
-  readonly windowControllerService: IWindowControllerService;
-  readonly zcodeAgentService: IZCodeAgentService;
-  readonly zcodeSessionService: IZCodeSessionService;
+  readonly wcodeTaskService: IWCodeTaskService;
+  /**
+   * 跨工作区任务聚合控制器。只有桌面 Window Host 提供该通道；
+   * Web / 独立 Server 没有它，调用方必须回退到 wcodeTaskService。
+   */
+  readonly windowControllerService?: IWindowControllerService;
+  readonly wcodeAgentService: IWCodeAgentService;
+  readonly wcodeSessionService: IWCodeSessionService;
   readonly taskGroupService: ITaskGroupService;
   readonly projectService: IProjectService;
   readonly managedWorktreeService?: IManagedWorktreeService;
@@ -151,6 +155,8 @@ export class RemoteServiceAccess implements IServiceAccessor {
       extensionsService?: boolean;
       managedWorktreeService?: boolean;
       windowProjectDirectory?: boolean;
+      /** 仅桌面 Window Host 具备 window-controller 通道。 */
+      windowControllerService?: boolean;
     } = {},
   ) {
     // 远端工作区的 project 必须保留 Source 语义；只有显式能力才创建完整窗口目录组。
@@ -199,14 +205,19 @@ export class RemoteServiceAccess implements IServiceAccessor {
     this.broadcastService = ProxyChannel.toService<IBroadcastService>(
       channelClient.getChannel(IBroadcastService.channelName),
     );
-    this.zcodeTaskService = ProxyChannel.toService<IZCodeTaskService>(
-      channelClient.getChannel(IZCodeTaskService.channelName),
+    this.wcodeTaskService = ProxyChannel.toService<IWCodeTaskService>(
+      channelClient.getChannel(IWCodeTaskService.channelName),
     );
-    this.windowControllerService = ProxyChannel.toService<IWindowControllerService>(
-      channelClient.getChannel(IWindowControllerService.channelName),
-    );
-    this.zcodeAgentService = ProxyChannel.toService<IZCodeAgentService>(
-      channelClient.getChannel(IZCodeAgentService.channelName),
+    // 与 sourceServerManagementService 同理：ProxyChannel 是惰性的，不看服务端是否注册
+    // 都会构造出「看似存在」的对象，optional 合同要到首次调用才失败。Web / 独立 Server
+    // 没有 desktop Window Host，必须显式缺席，让调用方走 wcodeTaskService 回退。
+    this.windowControllerService = options.windowControllerService
+      ? ProxyChannel.toService<IWindowControllerService>(
+          channelClient.getChannel(IWindowControllerService.channelName),
+        )
+      : undefined;
+    this.wcodeAgentService = ProxyChannel.toService<IWCodeAgentService>(
+      channelClient.getChannel(IWCodeAgentService.channelName),
     );
     this.remoteProjectService = ProxyChannel.toService<IRemoteProjectService>(
       channelClient.getChannel(IRemoteProjectService.channelName),
@@ -223,8 +234,8 @@ export class RemoteServiceAccess implements IServiceAccessor {
           channelClient.getChannel(IManagedWorktreeService.channelName),
         )
       : undefined;
-    this.zcodeSessionService = ProxyChannel.toService<IZCodeSessionService>(
-      channelClient.getChannel(IZCodeSessionService.channelName),
+    this.wcodeSessionService = ProxyChannel.toService<IWCodeSessionService>(
+      channelClient.getChannel(IWCodeSessionService.channelName),
     );
     this.cuaPermissionService = ProxyChannel.toService<ICuaPermissionService>(
       channelClient.getChannel(ICuaPermissionService.channelName),
