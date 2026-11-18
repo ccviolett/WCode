@@ -327,6 +327,11 @@ CREATE TABLE turn_usage (
         primary key(session_id, turn_id)
       );
 
+CREATE TABLE wcode_database_identity (
+      scope TEXT PRIMARY KEY,
+      identity TEXT NOT NULL
+    );
+
 CREATE TABLE workflow_activity (
         id text primary key,
         run_id text not null references workflow_run(id) on delete cascade,
@@ -415,11 +420,6 @@ CREATE TABLE workflow_run (
         time_updated integer not null,
         time_completed integer
       );
-
-CREATE TABLE wcode_database_identity (
-      scope TEXT PRIMARY KEY,
-      identity TEXT NOT NULL
-    );
 
 CREATE INDEX dwf_actor_run_idx on dwf_actor(run_id);
 
