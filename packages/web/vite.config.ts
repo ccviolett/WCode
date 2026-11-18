@@ -73,7 +73,8 @@ export default defineConfig(({ mode }) => {
       ],
     },
     server: {
-      port: 5173,
+      // 使用 5183 而非上游默认 5173：与其它 Vite 项目错开，且与 WCode 既有文档/书签一致。
+      port: 5183,
       proxy: {
         // Web 登录本地调试时，OAuth token 交换必须先命中线上同源接口。
         // 该专用代理放在 `/api` 通配代理之前，避免被转发到本地 server 导致 404。
