@@ -74,6 +74,10 @@
 - `build:wcode` 组装发行包时剔除全部 `.map`（终端用户不需要调试产物，体积明显下降）。
 - 发行包根目录自动随附 `LICENSE`、`NOTICE.md`、`CHANGES.md`、`THIRD-PARTY-NOTICES.md`。
 - `build:wcode` 随 `agent/wcode.cjs` 一并校验并打包 `agent/packages/bundled-skills`（`dynamic-workflows` 内置技能包），确保脱离源码目录运行时 `/workflow` 与工作流工具链的技能门可用。
+- 新增面向终端用户的三种零源码部署方式与自动发版链路：
+  - `build:wcode` 新增 `--layout flat` / `--flat` 支持 GitHub Releases 扁平资产；`install.sh` 支持扁平/嵌套双布局、SHA-256 校验，以及宿主机缺少 Node 24 时自动下载隔离私有 Node 24.14.0（不污染系统全局 Node）；`runner.mjs` 在 `wcode --web` 中支持继承 `WCODE_SERVER_AUTH_TOKEN` 环境变量且不回显明文。
+  - 新增 Linux 常驻服务部署模板（`deploy/systemd/wcode.service`、`deploy/systemd/wcode.env.example`、`deploy/nginx/wcode.conf`、`deploy/caddy/Caddyfile`）及完整部署说明 `deploy/README.md`。
+  - 新增面向容器/云端隔离场景的多阶段 `Dockerfile`、`docker-compose.yml` 与 GitHub Actions 自动发版流水线 `.github/workflows/release.yml`（同时发布 GitHub Releases 与 GHCR 多架构镜像）。
 - 删除桌面端遗留的 `package-lock.json`（pnpm 项目不使用），lockfile 与 workspace 链接按 `@wcode`
   作用域重建。
 - 依赖集变化：不再包含 Electron、WebdriverIO、`@arms/rum-electron` 等桌面依赖。

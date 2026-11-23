@@ -20,14 +20,14 @@ WCode 面向 **本地浏览器、局域网与云服务器自托管** 场景，�
 
 ## 相对 ZCode 的核心优化
 
-| 维度                         | 上游 ZCode                                                                          | WCode 优化                                                                                                                                                                                                                                                                                                       |
-| ---------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **运行形态与体积**           | 包含 Electron 桌面端、`packages/desktop`、`/remote` 桌面远控及大量桌面构建/E2E 依赖 | **纯 Web + 独立 HTTP/WS Server + Agent CLI/TUI**；彻底移除桌面端、`/remote` 远控及 Electron/WDIO/`@arms/rum-electron` 等依赖，`window-controller` 降为可选能力                                                                                                                                                   |
-| **Web 独立运行与宿主机能力** | Web 侧文件定位/打开能力依赖桌面宿主或各入口分散判断；默认固定暗色主题               | 服务端自动判定 `deployment.mode`（`local` / `server`）；同机图形宿主开放 `realpath` 白名单保护（覆盖全部已登记项目根）的 Finder/资源管理器定位、默认应用与 VS Code 打开，远端访问自动隐藏本机专属入口；默认主题跟随系统外观；Web 开发默认端口 `5183`                                                             |
-| **服务端安全鉴权**           | 非回环访问需手动管理长期令牌，URL 携带令牌易留存在浏览器历史与 Referer              | 监听非回环地址且未配固定令牌时自动生成**一次性访问令牌**，首次打开写入 `HttpOnly` 会话 Cookie（TLS 反代下自动追加 `Secure`）并 `302` 清除 URL 中的 token；兼容 `Authorization: Bearer` 与 `WCODE_SERVER_AUTH_TOKEN`                                                                                              |
-| **Web 端动态工作流（DWF）**  | 离线/无远端下发时默认关闭或依赖远端开关；产物打开偏桌面 `file://` 路径              | 离线/无远端下发时缺省模式改为 `onDemand`（默认保留 `/workflow` 与「自动化 › 工作流」入口，且不污染普通对话工具集）；HTML 产物本机可直开系统浏览器、远端平滑回退文件树定位；发行包内置 `bundled-skills`；附带中文全景定义与边界图解指南                                                                           |
-| **统一轻量发行包**           | 桌面安装包与 CLI 分离，产物携带全部 `.map` 调试文件                                 | `pnpm build:wcode` 产出统一 `wcode` 单入口（`wcode` 启动 TUI，`wcode --web` 启动 Web），自动剔除全部 `.map` 减小包体，校验并随包打包 `agent/packages/bundled-skills` 及 Apache-2.0 合规四件套                                                                                                                    |
-| **品牌隔离与外部契约保护**   | 共享 `@zcode/*`、`~/.zcode` 与 `ZCODE_*` 命名空间                                   | 内部包作用域（`@wcode/*`）、CLI（`wcode`）、环境变量（`WCODE_*`）、数据目录（`~/.wcode/v2/`）与 W 字形 Logo 彻底隔离；**同时严格保留上游外部服务契约**（`zcode.z.ai`、`/api/v1/zcode-plan/*`、`cdn-zcode.z.ai/zcode/official-plugin/*`、`/zcode/deps`、`zcode-cua`），确保官方账号登录、套餐校验与插件市场无 404 |
+| 维度                           | 上游 ZCode                                                                          | WCode 优化                                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **运行形态与体积**             | 包含 Electron 桌面端、`packages/desktop`、`/remote` 桌面远控及大量桌面构建/E2E 依赖 | **纯 Web + 独立 HTTP/WS Server + Agent CLI/TUI**；彻底移除桌面端、`/remote` 远控及 Electron/WDIO/`@arms/rum-electron` 等依赖，`window-controller` 降为可选能力                                                                                                                                                   |
+| **Web 独立运行与宿主机能力**   | Web 侧文件定位/打开能力依赖桌面宿主或各入口分散判断；默认固定暗色主题               | 服务端自动判定 `deployment.mode`（`local` / `server`）；同机图形宿主开放 `realpath` 白名单保护（覆盖全部已登记项目根）的 Finder/资源管理器定位、默认应用与 VS Code 打开，远端访问自动隐藏本机专属入口；默认主题跟随系统外观；Web 开发默认端口 `5183`                                                             |
+| **服务端安全鉴权**             | 非回环访问需手动管理长期令牌，URL 携带令牌易留存在浏览器历史与 Referer              | 监听非回环地址且未配固定令牌时自动生成**一次性访问令牌**，首次打开写入 `HttpOnly` 会话 Cookie（TLS 反代下自动追加 `Secure`）并 `302` 清除 URL 中的 token；兼容 `Authorization: Bearer` 与 `WCODE_SERVER_AUTH_TOKEN`                                                                                              |
+| **Web 端动态工作流（DWF）**    | 离线/无远端下发时默认关闭或依赖远端开关；产物打开偏桌面 `file://` 路径              | 离线/无远端下发时缺省模式改为 `onDemand`（默认保留 `/workflow` 与「自动化 › 工作流」入口，且不污染普通对话工具集）；HTML 产物本机可直开系统浏览器、远端平滑回退文件树定位；发行包内置 `bundled-skills`；附带中文全景定义与边界图解指南                                                                           |
+| **统一轻量发行包与零源码部署** | 桌面安装包与 CLI 分离，产物携带全部 `.map` 调试文件                                 | `pnpm build:wcode` 产出统一 `wcode` 单入口（`wcode` 启动 TUI，`wcode --web` 启动 Web），自动剔除全部 `.map`、内置 `agent/packages/bundled-skills` 与合规四件套；提供 **GitHub Releases 一键安装（自带 Node 24 私有兜底 + SHA-256 校验）**、`systemd` + Nginx/Caddy 模板与多架构 **Docker / GHCR** 容器镜像       |
+| **品牌隔离与外部契约保护**     | 共享 `@zcode/*`、`~/.zcode` 与 `ZCODE_*` 命名空间                                   | 内部包作用域（`@wcode/*`）、CLI（`wcode`）、环境变量（`WCODE_*`）、数据目录（`~/.wcode/v2/`）与 W 字形 Logo 彻底隔离；**同时严格保留上游外部服务契约**（`zcode.z.ai`、`/api/v1/zcode-plan/*`、`cdn-zcode.z.ai/zcode/official-plugin/*`、`/zcode/deps`、`zcode-cua`），确保官方账号登录、套餐校验与插件市场无 404 |
 
 完整变更明细与升级注意事项见 [CHANGES.md](CHANGES.md)。
 
@@ -39,7 +39,80 @@ WCode 面向 **本地浏览器、局域网与云服务器自托管** 场景，�
 
 ---
 
-## 快速开始
+## 零源码部署与选型指南（无需 clone 代码）
+
+WCode 提供 **3 种开箱部署方式**，请先按使用场景选择（详细配置见 [deploy/README.md](deploy/README.md)）：
+
+| 部署方式                                 | 推荐场景                                      | 本地目录访问与宿主机能力                                                                                                                       |
+| ---------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **方式一：本机一键安装（推荐个人主力）** | macOS / Linux 本机日常编程（TUI + 本机 Web）  | **完整访问电脑任意本地目录**；保留本机工具链、Git/SSH 凭据与 Finder / VS Code 打开能力；无 Node 24 时自动下载隔离私有运行时（不污染系统 Node） |
+| **方式二：Linux `systemd` + 反代常驻**   | 自有 Linux VPS、物理开发机、团队主机长期托管  | **完整访问服务器本地目录**与服务器工具链；配合 Nginx / Caddy 提供 HTTPS 与 WebSocket 代理                                                      |
+| **方式三：Docker / `docker compose`**    | **容器化云主机、NAS、团队快速试用、隔离沙箱** | **仅能访问显式挂载到 `/workspace` 的目录**，无法访问宿主机其他未挂载本地目录，且无宿主机 Finder / VS Code 图形能力                             |
+
+> [!WARNING]
+> **关于 Docker 部署的适用边界**：Docker 容器与宿主机文件系统及开发环境隔离，**存在无法自由访问和编辑宿主机本地目录的情况**。
+> 如果你是为了在自己电脑上编辑本地项目，请优先使用 **方式一（本机一键安装）**；**Docker 建议仅用于容器化/云端隔离服务部署**（项目代码放在挂载卷 `/workspace` 内维护，或通过远程 SSH 工作区连接其他开发机）。
+
+### 方式一：本机一键安装（macOS / Linux）
+
+```bash
+curl -fsSL https://github.com/ccviolett/WCode/releases/latest/download/install.sh | sh
+
+# 启动终端 TUI
+wcode
+
+# 启动本机 Web 工作台（默认监听 127.0.0.1 并打开浏览器，可读写本机任意目录）
+wcode --web
+```
+
+> 首次发布需推送 `v*` tag 或在 GitHub Actions 手动运行 `Release WCode` 生成 Release 资产；自定义镜像源或历史版本可通过 `WCODE_DIST_BASE_URL`、`WCODE_NODE_DIST_URL` 覆盖，详见 [deploy/README.md](deploy/README.md)。
+
+### 方式二：Linux 服务器常驻部署（`systemd` + HTTPS 反代）
+
+```bash
+# 1. 安装统一运行包到系统目录（无 Node 24 时同样自动下载私有 Node 运行时）
+curl -fsSL https://github.com/ccviolett/WCode/releases/latest/download/install.sh \
+  | sudo WCODE_DIST_HOME=/opt/wcode WCODE_DIST_BIN_DIR=/usr/local/bin sh
+
+# 2. 复制并配置环境变量（设置 WCODE_SERVER_AUTH_TOKEN 与 WCODE_SERVER_WORKSPACE）
+sudo install -d -m 755 /etc/wcode /var/lib/wcode /srv/workspace
+sudo cp deploy/systemd/wcode.env.example /etc/wcode/wcode.env
+sudo chmod 600 /etc/wcode/wcode.env
+
+# 3. 启用 systemd 服务（按实际运行用户调整 User=）
+sudo cp deploy/systemd/wcode.service /etc/systemd/system/wcode.service
+sudo systemctl daemon-reload && sudo systemctl enable --now wcode
+```
+
+公网暴露请配合外层 HTTPS 反向代理（参考 [deploy/nginx/wcode.conf](deploy/nginx/wcode.conf) 或 [deploy/caddy/Caddyfile](deploy/caddy/Caddyfile)）。
+
+### 方式三：Docker / `docker compose`（建议仅用于容器/云端部署）
+
+使用仓库根目录的 [docker-compose.yml](docker-compose.yml)（拉取 `ghcr.io/ccviolett/wcode:latest` 多架构镜像）：
+
+```bash
+mkdir -p workspace
+export WCODE_SERVER_AUTH_TOKEN="$(openssl rand -hex 24)"
+docker compose up -d
+```
+
+- 持久化数据卷挂在 `/data`（保存登录态、会话与配置），容器工作区挂在 `/workspace`（容器内 Agent 仅能访问该挂载目录）。
+- 未设置 `WCODE_SERVER_AUTH_TOKEN` 时，首次启动会在 `docker logs wcode` 打印一次性 `?token=` 首登链接；访问一次后自动写入 `HttpOnly` 会话 Cookie。
+
+### 模型配置（首次发消息前必读）
+
+本仓库不内置任何模型凭据，以上任意部署方式均支持以下二选一：
+
+1. **账号登录**：在 Web 界面右上角「连接使用」登录，或在 CLI 执行 `wcode login`（源码开发模式为 `pnpm --filter @wcode/cli exec tsx src/main.ts login`）。
+2. **自定义模型服务**（兼容 `openai-chat-completions`、`openai-responses`、`anthropic-messages`）：
+   按 [CLI 配置文档](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例) 创建 `schemaVersion: 1` JSON 文件（如 `~/.wcode/model-config.json`），通过 `WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/绝对路径/model-config.json` 传入（Docker 场景以只读卷挂载进容器）。
+   > 个人配置文件含明文 API Key，请注意文件权限，不要提交到 Git。
+
+本地数据默认存储在 `~/.wcode/v2/`，与旧版 ZCode 的 `~/.zcode` **完全隔离且不自动迁移**。
+
+---
+
+## 从源码开发与打包
 
 ### 环境准备
 
@@ -51,7 +124,7 @@ pnpm bootstrap
 
 `pnpm bootstrap` 会安装 workspace 依赖并执行 `build:bootstrap`。Agent CLI 与运行时位于普通目录 [apps/wcode-cli/](apps/wcode-cli/)，无需额外拉取 Git submodule。如需准备远程运行资源，可执行 `pnpm bootstrap:with-remote` 或 `pnpm prepare:remote-assets`。
 
-### 方式一：源码开发模式（Web + Server）
+### 本地开发模式（Web + Server）
 
 ```bash
 pnpm dev:web
@@ -64,70 +137,27 @@ WCODE_SERVER_WORKSPACE=/path/to/project pnpm dev:web
 - 修改 [apps/wcode-cli/](apps/wcode-cli/) 源码后，运行 `pnpm --filter @wcode/cli... build` 并重启服务。
 - 单独开发 CLI / TUI 时运行 `pnpm --filter @wcode/cli dev`。
 
-### 方式二：统一命令行运行（`wcode` / `wcode --web`）
-
-使用打包后的统一入口 `wcode`（构建方式见下方「打包与本地验证」），无需 Electron：
-
-```bash
-# 默认启动终端 TUI
-wcode
-
-# 本机启动 Web 工作台（默认监听 127.0.0.1，自动选空闲端口并打开浏览器）
-wcode --web
-
-# 局域网 / 服务器部署（非回环地址默认生成一次性访问令牌并打印带 ?token= 的首登链接）
-wcode --web --host 0.0.0.0 --port 3030 --workspace /path/to/project --no-open
-
-# 使用固定令牌（或通过环境变量 WCODE_SERVER_AUTH_TOKEN 指定）
-wcode --web --host 0.0.0.0 --port 3030 --token <your-token> --no-open
-
-# 查看全部参数
-wcode --help
-wcode --web --help
-```
-
-> 公网部署建议在外层配合反向代理与 HTTPS；反代终止 TLS 时，会话 Cookie 会自动附带 `Secure` 标记。
-
-### 模型配置（首次发消息前必读）
-
-本仓库不内置任何模型凭据，两种方式二选一：
-
-1. **账号登录**：在 Web 界面右上角「连接使用」登录，或在 CLI 执行：
-   ```bash
-   pnpm --filter @wcode/cli exec tsx src/main.ts login
-   ```
-2. **自定义模型服务**（兼容 `openai-chat-completions`、`openai-responses`、`anthropic-messages`）：
-   按 [CLI 配置文档](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例) 创建 `schemaVersion: 1` JSON 文件（如 `~/.wcode/model-config.json`），启动时传入：
-   ```bash
-   WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/绝对路径/model-config.json pnpm dev:web
-   ```
-   > 个人配置文件含明文 API Key，请注意文件权限，不要提交到 Git。
-
-本地数据默认存储在 `~/.wcode/v2/`，与旧版 ZCode 的 `~/.zcode` **完全隔离且不自动迁移**。
-
----
-
-## 打包与本地验证
+### 打包与本地验证
 
 通过 `pnpm build:wcode` 一键构建并组装统一发行包（自动构建 CLI/TUI、Server 与 Web，剔除 `.map`，校验内置 `bundled-skills`，并在产物根目录写入合规四件套）：
 
 ```bash
-# 首次打包需通过 --base-url 或环境变量 WCODE_DIST_BASE_URL 指定托管根地址
+# 静态托管目录结构（默认 --layout nested）
 pnpm build:wcode --base-url https://downloads.example.com/wcode/
 
-# 已配置 WCODE_DIST_BASE_URL 时直接运行
-pnpm build:wcode
+# GitHub Releases 扁平资产结构（--flat）
+pnpm build:wcode --flat --base-url https://github.com/ccviolett/WCode/releases/latest/download/
 
 # 复用现有构建产物仅重新组包
 pnpm build:wcode --skip-build
 ```
 
-产物输出在 `dist/wcode/`（包含 `releases/<version>/wcode-<version>.tar.gz`、`sha256.txt`、`latest.json`、`install.sh`）。本地可直接解压验证完整链路：
+产物输出在 `dist/wcode/`（包含运行包 `.tar.gz`、`sha256.txt`、`latest.json`、`install.sh`）。本地可直接解压验证完整链路：
 
 ```bash
-wcode_version=$(node -p "require('./dist/wcode/latest.json').version")
+wcode_tarball=$(node -p "const m=require('./dist/wcode/latest.json'); m.tarballPath || ('releases/' + m.version + '/' + m.tarball)")
 mkdir -p dist/wcode/debug
-tar -xzf "dist/wcode/releases/$wcode_version/wcode-$wcode_version.tar.gz" -C dist/wcode/debug
+tar -xzf "dist/wcode/$wcode_tarball" -C dist/wcode/debug
 
 # 验证 TUI
 node dist/wcode/debug/wcode/bin/wcode.mjs
@@ -171,6 +201,7 @@ node dist/wcode/debug/wcode/bin/wcode.mjs --web --workspace "$PWD" --port 3030 -
 
 延伸阅读：
 
+- [部署与运维指南](deploy/README.md) — 三种零源码部署方式详解、`systemd` / Nginx / Caddy 配置与 Docker 适用边界
 - [CHANGES.md](CHANGES.md) — WCode 相对上游 ZCode 的完整修改记录与升级说明
 - [动态工作流（DWF）定义、能力边界与接入规范](docs/dynamic-workflow/wcode-definition-and-boundaries.md) — 含 4 张可视化架构图
 - [WCode CLI 使用指南](apps/wcode-cli/docs/usage/README.md) — TUI、非交互模式、模型配置、工具、权限与自动化评测

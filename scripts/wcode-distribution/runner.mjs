@@ -170,10 +170,18 @@ async function assertRuntimeFiles() {
 async function serve(options) {
   await assertRuntimeFiles();
   const port = options.port && options.port > 0 ? options.port : await pickPort(options.host);
-  const protect = options.tokenEnabled ?? shouldProtectHost(options.host);
-  const token = protect ? (options.token ?? createToken()) : "";
+  const envToken =
+    process.env.WCODE_SERVER_AUTH_TOKEN?.trim() ||
+    process.env.WCODE_SERVER_TOKEN?.trim() ||
+    undefined;
+  const protect = options.tokenEnabled ?? (shouldProtectHost(options.host) || Boolean(envToken));
+  const generatedToken = protect && !options.token && !envToken ? createToken() : undefined;
+  const token = protect ? (options.token ?? envToken ?? generatedToken ?? "") : "";
+  // 环境变量注入的固定令牌常见于 systemd / Docker，不在 stdout 日志回显明文密钥。
+  const tokenFromEnvOnly = Boolean(protect && !options.token && envToken);
+  const displayToken = tokenFromEnvOnly ? "" : token;
   const open = options.open ?? isLocalHost(options.host);
-  const localUrl = formatUrl(options.host, port, token);
+  const localUrl = formatUrl(options.host, port, displayToken);
 
   const child = spawn(process.execPath, [serverEntry], {
     cwd: options.workspace,
@@ -185,8 +193,9 @@ async function serve(options) {
       WCODE_SERVER_HOST: options.host,
       WCODE_SERVER_WORKSPACE: options.workspace,
       WCODE_WEB_STATIC_ROOT: webRoot,
-      // 显式关闭 token 时必须清空继承值，否则 --no-token 仍会开启后端鉴权。
+      // 显式关闭 token 时必须同时清空主变量与历史兼容变量，否则 --no-token 仍会开启后端鉴权。
       WCODE_SERVER_AUTH_TOKEN: token,
+      WCODE_SERVER_TOKEN: "",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -212,9 +221,12 @@ async function serve(options) {
   console.log("WCode Web is running");
   console.log(`Local:   ${localUrl}`);
   if (options.host === "0.0.0.0" || options.host === "::") {
-    for (const url of networkUrls(port, token)) {
+    for (const url of networkUrls(port, displayToken)) {
       console.log(`Network: ${url}`);
     }
+  }
+  if (tokenFromEnvOnly) {
+    console.log("Auth:    protected by WCODE_SERVER_AUTH_TOKEN (token omitted from logs)");
   }
   console.log("Press Ctrl+C to stop.");
   console.log("");

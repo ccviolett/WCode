@@ -1,0 +1,6 @@
+# WCode Caddy 反向代理参考配置（自动签发 HTTPS 证书并透传 WebSocket 与 X-Forwarded-* 头）
+# 将下方域名替换为实际域名后放到 /etc/caddy/Caddyfile
+
+wcode.example.com {
+    reverse_proxy 127.0.0.1:3030
+}

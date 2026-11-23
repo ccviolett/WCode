@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
-import { cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -227,4 +228,180 @@ test("stageBundledSkills stages dynamic-workflows skill pack and rejects missing
     stageBundledSkills(join(directory, "broken-package"), { cliRoot: brokenCliRoot }),
     /Missing bundled skill pack required asset/,
   );
+});
+
+test("Web mode honors WCODE_SERVER_AUTH_TOKEN from env without echoing it to stdout", async (t) => {
+  const { directory, runner } = await fixture(t);
+  const resultPath = join(directory, "web-env-token.json");
+  const secretToken = "env-secret-token-for-systemd-docker";
+  const child = spawn(
+    process.execPath,
+    [runner, "--web", "--workspace", directory, "--host", "0.0.0.0", "--port", "3042", "--no-open"],
+    {
+      env: {
+        ...process.env,
+        FIXTURE_WEB_RESULT: resultPath,
+        WCODE_SERVER_AUTH_TOKEN: secretToken,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let stdout = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk.toString();
+  });
+  t.after(() => {
+    if (child.exitCode === null) child.kill();
+  });
+  let result;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    result = await readFile(resultPath, "utf8")
+      .then(JSON.parse)
+      .catch(() => undefined);
+    if (result) break;
+    await setTimeout(20);
+  }
+  assert.equal(result.token, secretToken);
+  assert.doesNotMatch(stdout, new RegExp(secretToken));
+  assert.match(stdout, /protected by WCODE_SERVER_AUTH_TOKEN/);
+  const exited = once(child, "exit");
+  child.kill("SIGTERM");
+  assert.deepEqual(await exited, [0, null]);
+});
+
+test("installer supports flat GitHub Releases layout and enforces sha256 verification", async (t) => {
+  const { directory } = await fixture(t);
+  const downloads = join(directory, "gh-release");
+  await mkdir(downloads, { recursive: true });
+  const archive = join(downloads, "wcode-1.2.3.tar.gz");
+  await exec("tar", ["-czf", archive, "-C", directory, "wcode"]);
+  const sha256 = createHash("sha256")
+    .update(await readFile(archive))
+    .digest("hex");
+  await writeFile(
+    join(downloads, "latest.json"),
+    JSON.stringify({
+      version: "1.2.3",
+      tarball: "wcode-1.2.3.tar.gz",
+      tarballPath: "wcode-1.2.3.tar.gz",
+      sha256,
+    }),
+  );
+  const installer = join(directory, "install.sh");
+  await writeFile(installer, installScriptSource(`file://${downloads}/`));
+  const installRoot = join(directory, "installed");
+  const bin = join(directory, "bin");
+  await exec("sh", [installer], {
+    env: {
+      ...process.env,
+      WCODE_DIST_HOME: installRoot,
+      WCODE_DIST_BIN_DIR: bin,
+    },
+  });
+  const versionOutput = (await exec(join(bin, "wcode"), ["--version"])).stdout.trim();
+  assert.equal(versionOutput, "1.2.3");
+
+  // 篡改摘要时拒绝安装，且不破坏已有 current 软链。
+  await writeFile(
+    join(downloads, "latest.json"),
+    JSON.stringify({
+      version: "1.2.4",
+      tarball: "wcode-1.2.3.tar.gz",
+      tarballPath: "wcode-1.2.3.tar.gz",
+      sha256: "0".repeat(64),
+    }),
+  );
+  await assert.rejects(
+    exec("sh", [installer], {
+      env: {
+        ...process.env,
+        WCODE_DIST_HOME: installRoot,
+        WCODE_DIST_BIN_DIR: bin,
+      },
+    }),
+    /checksum mismatch/,
+  );
+  assert.equal((await exec(join(bin, "wcode"), ["--version"])).stdout.trim(), "1.2.3");
+});
+
+test("installer downloads isolated private Node 24 when host PATH lacks Node >= 24", async (t) => {
+  const { directory } = await fixture(t);
+  const downloads = join(directory, "downloads");
+  const nodeDist = join(directory, "node-dist");
+  const platformKey = `${process.platform === "darwin" ? "darwin" : "linux"}-${process.arch}`;
+  const nodeVersion = "24.14.0";
+  const nodeSlug = `node-v${nodeVersion}-${platformKey}`;
+  const fakeNodeDir = join(directory, "fake-node-stage", nodeSlug, "bin");
+  await mkdir(fakeNodeDir, { recursive: true });
+  await mkdir(join(nodeDist, `v${nodeVersion}`), { recursive: true });
+  await mkdir(downloads, { recursive: true });
+
+  // 用指向当前 Node 24+ 可执行文件的轻量垫片构造隔离运行时包，验证完整下载、解包与执行链路。
+  const shim = join(fakeNodeDir, "node");
+  await writeFile(shim, `#!/bin/sh\nexec "${process.execPath}" "$@"\n`);
+  await chmod(shim, 0o755);
+  await exec("tar", [
+    "-czf",
+    join(nodeDist, `v${nodeVersion}`, `${nodeSlug}.tar.gz`),
+    "-C",
+    join(directory, "fake-node-stage"),
+    nodeSlug,
+  ]);
+
+  const archive = join(downloads, "wcode-1.2.3.tar.gz");
+  await exec("tar", ["-czf", archive, "-C", directory, "wcode"]);
+  const sha256 = createHash("sha256")
+    .update(await readFile(archive))
+    .digest("hex");
+  await writeFile(
+    join(downloads, "latest.json"),
+    JSON.stringify({
+      version: "1.2.3",
+      tarball: "wcode-1.2.3.tar.gz",
+      tarballPath: "wcode-1.2.3.tar.gz",
+      sha256,
+    }),
+  );
+
+  // 构造仅含基础系统工具且不含 node 的最小 PATH，强制触发私有 Node 兜底分支。
+  const cleanPathDir = join(directory, "clean-path");
+  await mkdir(cleanPathDir, { recursive: true });
+  for (const tool of [
+    "curl",
+    "tar",
+    "uname",
+    "mktemp",
+    "mkdir",
+    "rm",
+    "mv",
+    "ln",
+    "chmod",
+    "cat",
+  ]) {
+    const resolved = (await exec("sh", ["-c", `command -v ${tool}`])).stdout.trim();
+    await exec("ln", ["-sf", resolved, join(cleanPathDir, tool)]);
+  }
+
+  const installer = join(directory, "install.sh");
+  await writeFile(installer, installScriptSource(`file://${downloads}/`));
+  const installRoot = join(directory, "installed");
+  const bin = join(directory, "bin");
+  await exec("/bin/sh", [installer], {
+    env: {
+      HOME: directory,
+      PATH: cleanPathDir,
+      WCODE_DIST_HOME: installRoot,
+      WCODE_DIST_BIN_DIR: bin,
+      WCODE_NODE_DIST_URL: `file://${nodeDist}/`,
+      WCODE_NODE_VERSION: nodeVersion,
+    },
+  });
+
+  // 即使运行期 PATH 仍无 node，已安装的 wcode 也应自动调用私有 Node 运行时启动。
+  const versionOutput = (
+    await exec(join(bin, "wcode"), ["--version"], {
+      env: { HOME: directory, PATH: cleanPathDir },
+    })
+  ).stdout.trim();
+  assert.equal(versionOutput, "1.2.3");
 });

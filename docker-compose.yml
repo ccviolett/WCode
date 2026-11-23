@@ -1,0 +1,41 @@
+# WCode Docker Compose 容器部署模板
+#
+# ⚠️ 适用性说明（请先确认场景）：
+# - Docker 容器仅能读写下方显式挂载到 /workspace 的目录，无法访问宿主机其他未挂载本地目录，
+#   且容器内为无图形界面的 Linux，不支持在宿主机 Finder / VS Code 中直接打开文件。
+# - 本模板建议用于：云服务器、NAS、团队内网试用或隔离沙箱（项目代码在 /workspace 内维护，
+#   或通过 WCode 远程 SSH 工作区连接其他开发机）。
+# - 若要在自己电脑上日常编辑分散在各处的本地项目目录，请优先使用一键本机安装脚本（详见 README.md）。
+
+services:
+  wcode:
+    image: ghcr.io/ccviolett/wcode:latest
+    # 如需基于当前源码在本地构建镜像，可取消下方注释：
+    # build:
+    #   context: .
+    container_name: wcode
+    restart: unless-stopped
+    ports:
+      - "${WCODE_PORT:-3030}:3030"
+    environment:
+      PORT: "3030"
+      WCODE_SERVER_HOST: "0.0.0.0"
+      WCODE_SERVER_WORKSPACE: "/workspace"
+      WCODE_DATA_BASE_DIR: "/data"
+      WCODE_DEPLOYMENT_MODE: "server"
+      WCODE_ALLOW_HOST_REVEAL: "0"
+      # 建议设置固定访问令牌（如 `openssl rand -hex 24`）；留空时首次启动会在 `docker logs wcode`
+      # 打印一次性 ?token= 链接，打开一次后写入 HttpOnly 会话 Cookie。
+      WCODE_SERVER_AUTH_TOKEN: "${WCODE_SERVER_AUTH_TOKEN:-}"
+      # 如使用自定义 OpenAI / Anthropic 兼容 API，可取消下方注释并同步挂载配置文件：
+      # WCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/config/model-config.json"
+    volumes:
+      # 持久化登录态、会话数据库与设置（保存在容器内 /data/.wcode/v2/）
+      - wcode_data:/data
+      # 容器工作区：容器内 Agent 仅能访问此处挂载的目录（可改为你的服务器项目目录）
+      - ${WCODE_WORKSPACE_DIR:-./workspace}:/workspace
+      # 如挂载自定义模型配置文件：
+      # - ./model-config.json:/config/model-config.json:ro
+
+volumes:
+  wcode_data:

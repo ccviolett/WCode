@@ -23,13 +23,16 @@ const usage = `Usage:
   node scripts/build-wcode.mjs --version 3.3.3-dev.1
   node scripts/build-wcode.mjs --out-dir dist/wcode
   node scripts/build-wcode.mjs --base-url http://host/wcode/deps/wcode/
+  node scripts/build-wcode.mjs --flat --base-url https://github.com/ccviolett/WCode/releases/latest/download/
 
 Options:
-  --skip-build        Reuse existing web/server/agent build outputs.
-  --version <text>    Release version. Defaults to root package.json version.
-  --out-dir <path>    Output directory. Defaults to dist/wcode.
-  --base-url <url>    Default install.sh download base URL.
-  --help, -h          Show this help.
+  --skip-build           Reuse existing web/server/agent build outputs.
+  --version <text>       Release version. Defaults to root package.json version.
+  --out-dir <path>       Output directory. Defaults to dist/wcode.
+  --base-url <url>       Default install.sh download base URL.
+  --layout <nested|flat> Release directory layout (default: nested; flat fits GitHub Releases).
+  --flat                 Shorthand for --layout flat.
+  --help, -h             Show this help.
 `;
 
 function readArgValue(argv, arg, index) {
@@ -53,6 +56,7 @@ function parseArgs(argv) {
   const options = {
     baseUrl: defaultBaseUrl,
     help: false,
+    layout: "nested",
     outDir: defaultOutDir,
     skipBuild: false,
     version: undefined,
@@ -69,6 +73,19 @@ function parseArgs(argv) {
     }
     if (arg === "--skip-build") {
       options.skipBuild = true;
+      continue;
+    }
+    if (arg === "--flat") {
+      options.layout = "flat";
+      continue;
+    }
+    if (arg === "--layout" || arg.startsWith("--layout=")) {
+      const { nextIndex, value } = readArgValue(argv, arg, index);
+      if (value !== "nested" && value !== "flat") {
+        throw new Error(`Invalid --layout "${value}". Expected "nested" or "flat".`);
+      }
+      options.layout = value;
+      index = nextIndex;
       continue;
     }
     if (arg === "--version" || arg.startsWith("--version=")) {
@@ -283,8 +300,10 @@ async function main() {
   const workDir = resolve(outDir, ".work");
   const packageParent = workDir;
   const packageRoot = resolve(packageParent, packageDirName);
-  const releaseDir = resolve(outDir, "releases", version);
   const tarballName = `${packageDirName}-${version}.tar.gz`;
+  const releaseDir = options.layout === "flat" ? outDir : resolve(outDir, "releases", version);
+  const tarballPath =
+    options.layout === "flat" ? tarballName : `releases/${version}/${tarballName}`;
 
   await rm(workDir, {
     force: true,
@@ -308,9 +327,11 @@ async function main() {
       {
         baseUrl: options.baseUrl,
         createdAt: new Date().toISOString(),
+        layout: options.layout,
         name: "wcode",
         sha256,
         tarball: tarballName,
+        tarballPath,
         version,
       },
       null,

@@ -20,14 +20,14 @@ WCode is tailored for **local browser, LAN, and self-hosted server deployments**
 
 ## What WCode Optimizes over ZCode
 
-| Area                                     | Upstream ZCode                                                                                                         | WCode Optimizations                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Runtime Footprint & Platform**         | Bundles Electron desktop app, `packages/desktop`, `/remote` desktop remote control, and desktop build/E2E dependencies | **Pure Web + standalone HTTP/WS Server + Agent CLI/TUI**; completely removes `packages/desktop`, `/remote`, and Electron/WDIO/`@arms/rum-electron` dependencies; downgrades `window-controller` to optional                                                                                                                                                                                                              |
-| **Standalone Web & Host Capabilities**   | File reveal/open relies on desktop host or fragmented UI checks; defaults to fixed dark theme                          | Server auto-detects `deployment.mode` (`local` / `server`); enables `realpath`-whitelisted host actions (reveal in Finder/Explorer, default app open, VS Code open across all registered project roots) on local GUI hosts while automatically hiding local-only controls on remote access; defaults to system theme; Web dev server defaults to port `5183`                                                             |
-| **Out-of-the-Box Server Auth**           | Manual static token management for non-loopback hosts; URL tokens remain in browser history and Referer headers        | Automatically generates a **one-time access token** when binding a non-loopback host without a configured token; first navigation exchanges it for an `HttpOnly` session cookie (`Secure` behind TLS proxies) and `302`-redirects to strip the token from the URL; also supports `Authorization: Bearer` and `WCODE_SERVER_AUTH_TOKEN`                                                                                   |
-| **Web Dynamic Workflows (DWF)**          | Offline/unconfigured mode depends on remote toggles; artifact open assumes desktop `file://` access                    | Defaults `DEFAULT_DYNAMIC_WORKFLOW_MODE` to `onDemand` when offline or unconfigured (keeps `/workflow` and Automation → Workflows ready without injecting workflow tools into regular chats); opens HTML workflow artifacts in the system browser locally via `system.openPath` and falls back to workspace file-tree reveal remotely; bundles `bundled-skills` into releases and adds an illustrated architecture guide |
-| **Unified Slim Distribution**            | Separate desktop packaging; ships `.map` sourcemaps in distribution artifacts                                          | `pnpm build:wcode` produces a single `wcode` entry (`wcode` for TUI, `wcode --web` for Web), strips all `.map` files to shrink archive size, validates & packages `agent/packages/bundled-skills`, and includes all four Apache-2.0 compliance files at archive root                                                                                                                                                     |
-| **Brand Isolation & Upstream Contracts** | Shares `@zcode/*`, `~/.zcode`, and `ZCODE_*` namespaces                                                                | Fully isolates package scope (`@wcode/*`), CLI binary (`wcode`), env vars (`WCODE_*`), data dir (`~/.wcode/v2/`), and W-series logo while **strictly preserving upstream external service contracts** (`zcode.z.ai`, `/api/v1/zcode-plan/*`, `cdn-zcode.z.ai/zcode/official-plugin/*`, `/zcode/deps`, PyPI `zcode-cua`) so official login, plan checks, model matching, and plugin marketplace work without 404s         |
+| Area                                              | Upstream ZCode                                                                                                         | WCode Optimizations                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Runtime Footprint & Platform**                  | Bundles Electron desktop app, `packages/desktop`, `/remote` desktop remote control, and desktop build/E2E dependencies | **Pure Web + standalone HTTP/WS Server + Agent CLI/TUI**; completely removes `packages/desktop`, `/remote`, and Electron/WDIO/`@arms/rum-electron` dependencies; downgrades `window-controller` to optional                                                                                                                                                                                                              |
+| **Standalone Web & Host Capabilities**            | File reveal/open relies on desktop host or fragmented UI checks; defaults to fixed dark theme                          | Server auto-detects `deployment.mode` (`local` / `server`); enables `realpath`-whitelisted host actions (reveal in Finder/Explorer, default app open, VS Code open across all registered project roots) on local GUI hosts while automatically hiding local-only controls on remote access; defaults to system theme; Web dev server defaults to port `5183`                                                             |
+| **Out-of-the-Box Server Auth**                    | Manual static token management for non-loopback hosts; URL tokens remain in browser history and Referer headers        | Automatically generates a **one-time access token** when binding a non-loopback host without a configured token; first navigation exchanges it for an `HttpOnly` session cookie (`Secure` behind TLS proxies) and `302`-redirects to strip the token from the URL; also supports `Authorization: Bearer` and `WCODE_SERVER_AUTH_TOKEN`                                                                                   |
+| **Web Dynamic Workflows (DWF)**                   | Offline/unconfigured mode depends on remote toggles; artifact open assumes desktop `file://` access                    | Defaults `DEFAULT_DYNAMIC_WORKFLOW_MODE` to `onDemand` when offline or unconfigured (keeps `/workflow` and Automation → Workflows ready without injecting workflow tools into regular chats); opens HTML workflow artifacts in the system browser locally via `system.openPath` and falls back to workspace file-tree reveal remotely; bundles `bundled-skills` into releases and adds an illustrated architecture guide |
+| **Unified Slim Distribution & Zero-Clone Deploy** | Separate desktop packaging; ships `.map` sourcemaps in distribution artifacts                                          | `pnpm build:wcode` produces a single `wcode` entry (`wcode` for TUI, `wcode --web` for Web), strips all `.map` files, packages `agent/packages/bundled-skills` and Apache-2.0 compliance notices; ships **GitHub Releases one-line installer (isolated Node 24 fallback + SHA-256 verification)**, `systemd` + Nginx/Caddy templates, and multi-arch **Docker / GHCR** images                                            |
+| **Brand Isolation & Upstream Contracts**          | Shares `@zcode/*`, `~/.zcode`, and `ZCODE_*` namespaces                                                                | Fully isolates package scope (`@wcode/*`), CLI binary (`wcode`), env vars (`WCODE_*`), data dir (`~/.wcode/v2/`), and W-series logo while **strictly preserving upstream external service contracts** (`zcode.z.ai`, `/api/v1/zcode-plan/*`, `cdn-zcode.z.ai/zcode/official-plugin/*`, `/zcode/deps`, PyPI `zcode-cua`) so official login, plan checks, model matching, and plugin marketplace work without 404s         |
 
 For the complete technical changelog and upgrade notes, see [CHANGES.md](CHANGES.md).
 
@@ -39,7 +39,80 @@ For the complete technical changelog and upgrade notes, see [CHANGES.md](CHANGES
 
 ---
 
-## Quick Start
+## Zero-Clone Deployment Options
+
+WCode provides **3 zero-clone deployment modes** tailored to different environments (see [deploy/README.md](deploy/README.md) for the full operations handbook):
+
+| Deployment Mode                                              | Recommended For                                                      | Local Directory & Host Capabilities                                                                                                                                                                                  |
+| ------------------------------------------------------------ | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. One-Line Local Install (Recommended for Personal Dev)** | Local macOS / Linux workstations (TUI + local Web)                   | **Full access to any local directory** on your machine; preserves native SDKs, Git/SSH credentials, and Finder / VS Code actions; auto-downloads an isolated Node 24 runtime if missing without touching system Node |
+| **2. Linux `systemd` + Reverse Proxy**                       | Dedicated Linux VPS, dev boxes, or team hosts                        | **Full access to server directories** and native server toolchains; pair with Nginx / Caddy for HTTPS & WebSocket                                                                                                    |
+| **3. Docker / `docker compose`**                             | **Containerized cloud hosts, NAS, quick trials, isolated sandboxes** | **Restricted to directories explicitly mounted into `/workspace`**; cannot browse/edit arbitrary unmounted host directories and has no host GUI (Finder / VS Code)                                                   |
+
+> [!WARNING]
+> **Important Caveat for Docker Deployments**: Because containers are isolated from the host filesystem and toolchain, **Docker cannot freely access or edit unmounted local directories on your machine**.
+> If your goal is editing local projects on your personal computer, use **Option 1 (One-Line Local Install)**. **Use Docker only for containerized / cloud / NAS isolated deployments** (managing repos inside the mounted `/workspace` volume or connecting to remote dev boxes via SSH workspaces).
+
+### Option 1: One-Line Local Install (macOS / Linux)
+
+```bash
+curl -fsSL https://github.com/ccviolett/WCode/releases/latest/download/install.sh | sh
+
+# Start terminal TUI
+wcode
+
+# Start local Web workspace (binds 127.0.0.1, opens browser, accesses any local directory)
+wcode --web
+```
+
+> Publishing releases is automated via `.github/workflows/release.yml` on `v*` tags or manual dispatch. Override `WCODE_DIST_BASE_URL` or `WCODE_NODE_DIST_URL` for custom mirrors; see [deploy/README.md](deploy/README.md).
+
+### Option 2: Linux Server Permanent Service (`systemd` + HTTPS Proxy)
+
+```bash
+# 1. Install runtime into system paths (auto-installs isolated Node 24 if host lacks Node >= 24)
+curl -fsSL https://github.com/ccviolett/WCode/releases/latest/download/install.sh \
+  | sudo WCODE_DIST_HOME=/opt/wcode WCODE_DIST_BIN_DIR=/usr/local/bin sh
+
+# 2. Configure environment (set WCODE_SERVER_AUTH_TOKEN and WCODE_SERVER_WORKSPACE)
+sudo install -d -m 755 /etc/wcode /var/lib/wcode /srv/workspace
+sudo cp deploy/systemd/wcode.env.example /etc/wcode/wcode.env
+sudo chmod 600 /etc/wcode/wcode.env
+
+# 3. Enable systemd unit (adjust User= as appropriate)
+sudo cp deploy/systemd/wcode.service /etc/systemd/system/wcode.service
+sudo systemctl daemon-reload && sudo systemctl enable --now wcode
+```
+
+For public exposure, terminate HTTPS with [deploy/nginx/wcode.conf](deploy/nginx/wcode.conf) or [deploy/caddy/Caddyfile](deploy/caddy/Caddyfile).
+
+### Option 3: Docker / `docker compose` (Container / Cloud Isolated Deployment Only)
+
+Using the root [docker-compose.yml](docker-compose.yml) (pulls multi-arch `ghcr.io/ccviolett/wcode:latest`):
+
+```bash
+mkdir -p workspace
+export WCODE_SERVER_AUTH_TOKEN="$(openssl rand -hex 24)"
+docker compose up -d
+```
+
+- Persistent data (login state, SQLite sessions, settings) lives in `/data`; container workspaces live in `/workspace` (only mounted paths are visible to the Agent).
+- If `WCODE_SERVER_AUTH_TOKEN` is left empty, check `docker logs wcode` for the auto-generated one-time `?token=` URL (first visit sets an `HttpOnly` session cookie).
+
+### Model Configuration (Required Before First Message)
+
+This repository ships with no model credentials. All deployment modes support either option:
+
+1. **Account Sign-In**: Sign in from the Web UI top-right menu, or run `wcode login` (`pnpm --filter @wcode/cli exec tsx src/main.ts login` in source dev mode).
+2. **Custom Model Provider** (supports `openai-chat-completions`, `openai-responses`, and `anthropic-messages`):
+   Create a `schemaVersion: 1` JSON file (e.g., `~/.wcode/model-config.json`) following the [CLI Configuration Guide](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例) and pass `WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/abs/path/model-config.json` (mount read-only in Docker).
+   > Personal provider files contain plaintext API keys—restrict file permissions and never commit them to Git.
+
+Local application data is stored under `~/.wcode/v2/`, isolated from legacy `~/.zcode` with no automatic migration.
+
+---
+
+## Developing & Packaging from Source
 
 ### Prerequisites
 
@@ -51,7 +124,7 @@ pnpm bootstrap
 
 `pnpm bootstrap` installs workspace dependencies and runs `build:bootstrap`. The Agent CLI and runtime live in [apps/wcode-cli/](apps/wcode-cli/) as a regular directory (no Git submodule required). Run `pnpm bootstrap:with-remote` or `pnpm prepare:remote-assets` only when preparing remote runtime assets.
 
-### Option 1: Source Development Mode (Web + Server)
+### Source Development Mode (Web + Server)
 
 ```bash
 pnpm dev:web
@@ -64,70 +137,27 @@ WCODE_SERVER_WORKSPACE=/path/to/project pnpm dev:web
 - After editing [apps/wcode-cli/](apps/wcode-cli/), rebuild via `pnpm --filter @wcode/cli... build` and restart the server.
 - To develop the CLI / TUI directly, run `pnpm --filter @wcode/cli dev`.
 
-### Option 2: Unified CLI & Web Runtime (`wcode` / `wcode --web`)
-
-Using the packaged unified `wcode` binary (built via `pnpm build:wcode` below), with no Electron required:
-
-```bash
-# Start interactive terminal TUI
-wcode
-
-# Start local Web workspace (binds 127.0.0.1, picks a free port, opens browser)
-wcode --web
-
-# LAN / Server mode (auto-generates a one-time ?token= bootstrap URL on non-loopback hosts)
-wcode --web --host 0.0.0.0 --port 3030 --workspace /path/to/project --no-open
-
-# Use a static token (or set WCODE_SERVER_AUTH_TOKEN)
-wcode --web --host 0.0.0.0 --port 3030 --token <your-token> --no-open
-
-# View all options
-wcode --help
-wcode --web --help
-```
-
-> For public internet exposure, always place WCode behind an HTTPS reverse proxy; the session cookie automatically sets `Secure` when TLS is terminated upstream.
-
-### Model Configuration (Required Before First Message)
-
-This repository ships with no model credentials. Choose either option:
-
-1. **Account Sign-In**: Sign in from the Web UI top-right menu, or run via CLI:
-   ```bash
-   pnpm --filter @wcode/cli exec tsx src/main.ts login
-   ```
-2. **Custom Model Provider** (supports `openai-chat-completions`, `openai-responses`, and `anthropic-messages`):
-   Create a `schemaVersion: 1` JSON file (e.g., `~/.wcode/model-config.json`) following the [CLI Configuration Guide](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例), then launch with:
-   ```bash
-   WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/abs/path/model-config.json pnpm dev:web
-   ```
-   > Personal provider files contain plaintext API keys—restrict file permissions and never commit them to Git.
-
-Local application data is stored under `~/.wcode/v2/`, isolated from legacy `~/.zcode` with no automatic migration.
-
----
-
-## Packaging & Local Verification
+### Packaging & Local Verification
 
 Build the unified distribution bundle with `pnpm build:wcode` (builds CLI/TUI, Server, and Web, strips `.map` sourcemaps, validates bundled skills, and copies Apache-2.0 compliance notices into the archive root):
 
 ```bash
-# Pass --base-url or set WCODE_DIST_BASE_URL for the generated installer
+# Nested static-host layout (default)
 pnpm build:wcode --base-url https://downloads.example.com/wcode/
 
-# When WCODE_DIST_BASE_URL is already set
-pnpm build:wcode
+# Flat GitHub Releases asset layout (--flat)
+pnpm build:wcode --flat --base-url https://github.com/ccviolett/WCode/releases/latest/download/
 
 # Repackage without rebuilding artifacts
 pnpm build:wcode --skip-build
 ```
 
-Outputs are written to `dist/wcode/` (`releases/<version>/wcode-<version>.tar.gz`, `sha256.txt`, `latest.json`, `install.sh`). To verify locally without uploading:
+Outputs are written to `dist/wcode/` (`.tar.gz`, `sha256.txt`, `latest.json`, `install.sh`). To verify locally without uploading:
 
 ```bash
-wcode_version=$(node -p "require('./dist/wcode/latest.json').version")
+wcode_tarball=$(node -p "const m=require('./dist/wcode/latest.json'); m.tarballPath || ('releases/' + m.version + '/' + m.tarball)")
 mkdir -p dist/wcode/debug
-tar -xzf "dist/wcode/releases/$wcode_version/wcode-$wcode_version.tar.gz" -C dist/wcode/debug
+tar -xzf "dist/wcode/$wcode_tarball" -C dist/wcode/debug
 
 # Verify TUI
 node dist/wcode/debug/wcode/bin/wcode.mjs
@@ -171,6 +201,7 @@ See [.env.example](.env.example) for full defaults and [config/README.md](config
 
 Further reading:
 
+- [Deployment & Operations Guide](deploy/README.md) — Three zero-clone deployment modes, `systemd` / Nginx / Caddy configs, and Docker applicability caveats (Chinese)
 - [CHANGES.md](CHANGES.md) — Full list of modifications relative to upstream ZCode and upgrade notes
 - [Dynamic Workflow (DWF) Definition & Boundaries](docs/dynamic-workflow/wcode-definition-and-boundaries.md) — Architecture & capability guide with 4 SVG diagrams (Chinese)
 - [WCode CLI Usage Guide](apps/wcode-cli/docs/usage/README.md) — TUI, headless usage, config, tools, permissions, and batch automation (Chinese)

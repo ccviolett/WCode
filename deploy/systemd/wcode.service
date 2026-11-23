@@ -1,0 +1,46 @@
+# WCode systemd 服务模板（Linux 宿主机常驻 Web 服务）
+#
+# 适用场景：Linux VPS、物理开发机或团队服务器，希望直接操作服务器本地任意项目目录并保留完整原生工具链。
+# 安装步骤（详见 deploy/README.md）：
+#   1. 全局安装运行包：
+#      curl -fsSL https://github.com/ccviolett/WCode/releases/latest/download/install.sh \
+#        | sudo WCODE_DIST_HOME=/opt/wcode WCODE_DIST_BIN_DIR=/usr/local/bin sh
+#   2. 创建环境变量文件：
+#      sudo install -d -m 755 /etc/wcode
+#      sudo cp deploy/systemd/wcode.env.example /etc/wcode/wcode.env
+#      sudo chmod 600 /etc/wcode/wcode.env   # 按需修改 User、工作区路径与 WCODE_SERVER_AUTH_TOKEN
+#   3. 安装并启动服务：
+#      sudo cp deploy/systemd/wcode.service /etc/systemd/system/wcode.service
+#      sudo systemctl daemon-reload && sudo systemctl enable --now wcode
+
+[Unit]
+Description=WCode Web Server & Agent Runtime
+Documentation=https://github.com/ccviolett/WCode
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 建议改为实际负责开发的非 root Linux 用户（例如 ubuntu / deploy / your-user）
+User=wcode
+Group=wcode
+WorkingDirectory=/srv/workspace
+
+# 默认值可由 /etc/wcode/wcode.env 覆盖；搭配 Nginx/Caddy 反代时建议保持 127.0.0.1
+Environment=WCODE_SERVER_HOST=127.0.0.1
+Environment=PORT=3030
+Environment=WCODE_SERVER_WORKSPACE=/srv/workspace
+Environment=WCODE_DATA_BASE_DIR=/var/lib/wcode
+Environment=WCODE_DEPLOYMENT_MODE=server
+Environment=WCODE_ALLOW_HOST_REVEAL=0
+EnvironmentFile=-/etc/wcode/wcode.env
+
+ExecStart=/usr/local/bin/wcode --web --host ${WCODE_SERVER_HOST} --port ${PORT} --workspace ${WCODE_SERVER_WORKSPACE} --no-open
+
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
