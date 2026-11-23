@@ -1,256 +1,193 @@
 # WCode
 
 <div align="center">
-  <img src="public/logo/icons/1024x1024.png" alt="WCode" width="128" height="128" />
+  <img src="public/logo/icons/1024x1024.png" alt="WCode" width="120" height="120" />
 </div>
-<p align="center">
-  <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=47ag983c-8fcb-4d6d-814b-5395193a712c&amp;qr_code=true">飞书社群</a> ·
-  <a href="https://discord.gg/z9aBcQXZQ3">Discord</a>
-</p>
+
 <p align="center">
   简体中文 | <a href="README.en.md">English</a>
 </p>
 
-WCode 是 AI 编程工作台，提供浏览器界面和终端 Agent。本仓库已裁剪为仅保留 Web 端与共享运行时源码，桌面应用及其专属构建、调试与打包工具已移除。本仓库包含客户端、后端服务、共享 UI，以及 Agent CLI 与运行时源码。
+<p align="center">
+  基于 <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a>（<code>v3.18.2</code>）派生的纯 Web、独立 Server 与 Agent CLI/TUI 轻量化分支
+</p>
 
-## 更新
+---
 
-- **2026-11-12**：更新至 WCode v3.18.2 版本。
-- 2026-11-12：更新至 WCode v3.18.1 版本。
-- 2026-11-11：更新至 WCode v3.18.0 版本。
-- 2026-11-03：更新至 WCode v3.17.2 版本。
-- 2026-10-30：更新至 WCode v3.17.1 版本。
-- 2026-10-29：更新至 WCode v3.17.0 版本。
-- 2026-10-19：更新至 WCode v3.16.2 版本。
-- 2026-10-16：更新至 WCode v3.16.1 版本。
-- 2026-10-16：更新至 WCode v3.15.4 版本。
-- 2026-10-10：更新至 WCode v3.15.1 版本。
-- 2026-9-23：更新至 WCode v3.14.3 版本。
+WCode 面向 **本地浏览器、局域网与云服务器自托管** 场景，在保留完整 Web 工作台与 Agent CLI/TUI 能力的前提下，彻底移除 Electron 桌面端耦合，并围绕 Web 独立运行、安全访问控制、动态工作流开箱体验与轻量分发进行了系统化改造。
 
-## 初始化
+> **关于上游原项目**：ZCode 的原生 AI 编程能力、Agent 运行时理念与通用功能说明，请直接查阅上游仓库 [zai-org/ZCode](https://github.com/zai-org/ZCode)。本文档聚焦 **WCode 相对 ZCode 的核心优化** 与 **本仓库的实际使用方式**。
 
-准备 Git、Node.js **24.14.0** 和 pnpm **10.33.2**，版本以 [mise.toml](mise.toml) 为准。以下开发和打包命令均在仓库根目录执行。
+## 相对 ZCode 的核心优化
+
+| 维度                         | 上游 ZCode                                                                          | WCode 优化                                                                                                                                                                                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **运行形态与体积**           | 包含 Electron 桌面端、`packages/desktop`、`/remote` 桌面远控及大量桌面构建/E2E 依赖 | **纯 Web + 独立 HTTP/WS Server + Agent CLI/TUI**；彻底移除桌面端、`/remote` 远控及 Electron/WDIO/`@arms/rum-electron` 等依赖，`window-controller` 降为可选能力                                                                                                                                                   |
+| **Web 独立运行与宿主机能力** | Web 侧文件定位/打开能力依赖桌面宿主或各入口分散判断；默认固定暗色主题               | 服务端自动判定 `deployment.mode`（`local` / `server`）；同机图形宿主开放 `realpath` 白名单保护（覆盖全部已登记项目根）的 Finder/资源管理器定位、默认应用与 VS Code 打开，远端访问自动隐藏本机专属入口；默认主题跟随系统外观；Web 开发默认端口 `5183`                                                             |
+| **服务端安全鉴权**           | 非回环访问需手动管理长期令牌，URL 携带令牌易留存在浏览器历史与 Referer              | 监听非回环地址且未配固定令牌时自动生成**一次性访问令牌**，首次打开写入 `HttpOnly` 会话 Cookie（TLS 反代下自动追加 `Secure`）并 `302` 清除 URL 中的 token；兼容 `Authorization: Bearer` 与 `WCODE_SERVER_AUTH_TOKEN`                                                                                              |
+| **Web 端动态工作流（DWF）**  | 离线/无远端下发时默认关闭或依赖远端开关；产物打开偏桌面 `file://` 路径              | 离线/无远端下发时缺省模式改为 `onDemand`（默认保留 `/workflow` 与「自动化 › 工作流」入口，且不污染普通对话工具集）；HTML 产物本机可直开系统浏览器、远端平滑回退文件树定位；发行包内置 `bundled-skills`；附带中文全景定义与边界图解指南                                                                           |
+| **统一轻量发行包**           | 桌面安装包与 CLI 分离，产物携带全部 `.map` 调试文件                                 | `pnpm build:wcode` 产出统一 `wcode` 单入口（`wcode` 启动 TUI，`wcode --web` 启动 Web），自动剔除全部 `.map` 减小包体，校验并随包打包 `agent/packages/bundled-skills` 及 Apache-2.0 合规四件套                                                                                                                    |
+| **品牌隔离与外部契约保护**   | 共享 `@zcode/*`、`~/.zcode` 与 `ZCODE_*` 命名空间                                   | 内部包作用域（`@wcode/*`）、CLI（`wcode`）、环境变量（`WCODE_*`）、数据目录（`~/.wcode/v2/`）与 W 字形 Logo 彻底隔离；**同时严格保留上游外部服务契约**（`zcode.z.ai`、`/api/v1/zcode-plan/*`、`cdn-zcode.z.ai/zcode/official-plugin/*`、`/zcode/deps`、`zcode-cua`），确保官方账号登录、套餐校验与插件市场无 404 |
+
+完整变更明细与升级注意事项见 [CHANGES.md](CHANGES.md)。
+
+### 几项关键改进说明
+
+- **本机与远端自动分层**：服务端根据代理转发头与对端回环地址自动判定 `deployment.mode`（可用 `WCODE_DEPLOYMENT_MODE` 显式覆盖）。本机通过浏览器使用时体验接近桌面端（支持在文件管理器定位、系统默认应用或 VS Code 打开任意已登记项目文件，可通过 `WCODE_ALLOW_HOST_REVEAL=0` 关闭）；部署在远端服务器时自动隐藏只在宿主机生效的操作，避免无效点击。
+- **动态工作流（DWF）开箱即用**：脱离上游配置服务运行时，Web/Server Host 默认采用 `onDemand` 策略——普通会话保持轻量，需要时即可通过 `/workflow` 或侧栏「自动化 › 工作流」运行 `.dwf.ts`；详见 [WCode 动态工作流：定义、能力边界与运行接入规范](docs/dynamic-workflow/wcode-definition-and-boundaries.md)（含 4 张架构图解）。
+- **面向自托管的零配置安全默认值**：`wcode --web` 默认绑定 `127.0.0.1` 免鉴权；一旦监听 `0.0.0.0` 等非回环地址且未指定固定令牌，会自动启用一次性令牌换取 `HttpOnly` Cookie，既开箱安全又免去每次手动拼接 Token。
+
+---
+
+## 快速开始
+
+### 环境准备
+
+准备 Git、Node.js **24.14.0** 和 pnpm **10.33.2**（版本以 [mise.toml](mise.toml) 为准）。以下所有命令均在仓库根目录执行。
 
 ```bash
 pnpm bootstrap
 ```
 
-`pnpm bootstrap` 安装 workspace 依赖并执行 `build:bootstrap`。
+`pnpm bootstrap` 会安装 workspace 依赖并执行 `build:bootstrap`。Agent CLI 与运行时位于普通目录 [apps/wcode-cli/](apps/wcode-cli/)，无需额外拉取 Git submodule。如需准备远程运行资源，可执行 `pnpm bootstrap:with-remote` 或 `pnpm prepare:remote-assets`。
 
-Agent CLI 与运行时源码位于 [apps/wcode-cli/](apps/wcode-cli/)，作为普通目录随本仓库一起克隆，无需单独拉取或初始化 Git submodule。
-
-根据需要选择其他初始化或构建入口：
-
-| 命令                           | 用途                                                              |
-| ------------------------------ | ----------------------------------------------------------------- |
-| `pnpm install`                 | 安装依赖                                                          |
-| `pnpm prepare:remote-assets`   | 单独准备远程运行资源                                              |
-| `pnpm bootstrap:with-remote`   | 初始化依赖、本地与远程资源，并串行构建相关包                     |
-| `pnpm build`                   | 递归执行各 workspace 包的构建脚本，包括包内的资源准备步骤         |
-
-默认 `bootstrap` 跳过远程资源准备，适合本地 Web 开发。使用远程工作区或验证远程发行资源时，再运行对应准备命令。
-
-## 开发与运行
-
-### Web 开发
-
-修改 Web 或后端源码时，使用开发模式：
+### 方式一：源码开发模式（Web + Server）
 
 ```bash
 pnpm dev:web
 
-# 指定后端工作区（macOS / Linux）
+# 指定后端工作区
 WCODE_SERVER_WORKSPACE=/path/to/project pnpm dev:web
 ```
 
-该命令同时启动 Web 开发服务器（默认 `http://localhost:5183`）和后端（默认 `http://localhost:3030`）；浏览器访问前者。`/ws` 和一般 `/api` 请求代理到本地后端，`/api/v1/oauth/token` 单独代理到当前配置的产品服务。
+- Web 前端默认运行在 `http://localhost:5183`，后端服务默认运行在 `http://localhost:3030`，浏览器直接访问前者即可。
+- 修改 [apps/wcode-cli/](apps/wcode-cli/) 源码后，运行 `pnpm --filter @wcode/cli... build` 并重启服务。
+- 单独开发 CLI / TUI 时运行 `pnpm --filter @wcode/cli dev`。
 
-Agent 源码修改后，执行 `pnpm --filter @wcode/cli... build` 并重启服务。需要验证完整发行包时，按下方“WCode 命令行版”打包章节解压运行。
+### 方式二：统一命令行运行（`wcode` / `wcode --web`）
 
-### WCode 命令行版
-
-命令行发行包包含 TUI、Web 和 Agent，统一使用 `wcode` 启动：无参数进入 TUI；第一个参数为 `--web` 时启动 Web；其他参数交给现有 Agent CLI 处理。两种模式都在本机运行，无需 Electron。
+使用打包后的统一入口 `wcode`（构建方式见下方「打包与本地验证」），无需 Electron：
 
 ```bash
-# 默认进入终端交互界面
+# 默认启动终端 TUI
 wcode
 
-# 启动 Web 界面
+# 本机启动 Web 工作台（默认监听 127.0.0.1，自动选空闲端口并打开浏览器）
 wcode --web
 
-# 指定项目和端口，不自动打开浏览器
-wcode --web --workspace /path/to/project --port 3030 --no-open
+# 局域网 / 服务器部署（非回环地址默认生成一次性访问令牌并打印带 ?token= 的首登链接）
+wcode --web --host 0.0.0.0 --port 3030 --workspace /path/to/project --no-open
 
-# 查看 CLI 或 Web 参数
+# 使用固定令牌（或通过环境变量 WCODE_SERVER_AUTH_TOKEN 指定）
+wcode --web --host 0.0.0.0 --port 3030 --token <your-token> --no-open
+
+# 查看全部参数
 wcode --help
 wcode --web --help
 ```
 
-Web 模式默认工作目录为当前目录，监听 `127.0.0.1`，默认不启用访问令牌，自动选择空闲端口并打开浏览器。访问终端输出的地址，按 `Ctrl+C` 停止服务。局域网访问可使用 `--host 0.0.0.0`；监听非本机地址时默认生成访问令牌，使用终端输出的带令牌链接。可通过 `--token` 指定令牌或 `--no-token` 关闭令牌认证。
+> 公网部署建议在外层配合反向代理与 HTTPS；反代终止 TLS 时，会话 Cookie 会自动附带 `Secure` 标记。
 
-直接启动通用 Web 服务的 HTTP 入口时，通过 `WCODE_SERVER_AUTH_TOKEN` 配置 API／WebSocket 认证；通过程序接口创建服务时，使用 `authToken` 选项。
+### 模型配置（首次发消息前必读）
 
-监听非回环地址且未配置令牌时，Server 会自动生成一个**一次性令牌**并在启动日志打印带 `?token=` 的地址。
-用该地址打开一次后，服务端写入 HttpOnly 会话 Cookie 并 302 去掉 URL 中的 token，后续请求（含 WebSocket）
-不再需要携带令牌；需要固定令牌时显式设置 `WCODE_SERVER_AUTH_TOKEN`。公网部署还应在外层加反向代理与 HTTPS。
+本仓库不内置任何模型凭据，两种方式二选一：
 
-构建方式见下方打包章节。`pnpm build:wcode` 只生成发行包，不会替换 `PATH` 中已有的 `wcode`。如果命令仍指向旧安装或其他源码目录，macOS / Linux 可用 `command -v wcode` 检查，Windows 可用 `where.exe wcode` 检查。
-
-### CLI 源码开发
-
-CLI 的模型配置、非交互调用、工具与扩展、批量评测和轨迹记录见 [CLI 使用指南](apps/wcode-cli/docs/usage/README.md)。
-
-直接开发 TUI 或 Agent 时，运行源码入口：
-
-```bash
-pnpm --filter @wcode/cli dev --help
-pnpm --filter @wcode/cli dev
-
-# 构建 CLI 及其 workspace 依赖
-pnpm --filter @wcode/cli... build
-node apps/wcode-cli/packages/cli/dist/wcode.cjs --help
-```
-
-这个入口直接运行 Agent CLI，不经过发行包的 `--web` 分流。开发 Web 用 `pnpm dev:web`；验证统一的 `wcode` 命令，用下方解压后的 `bin/wcode.mjs`。
-
-### UI Plugin 开发
-
-参见 [UI Plugin：能力、API 与调试](UI_PLUGIN.md)，从 Excalidraw 的画布协作示例开始，了解插件安装更新、页面 API 和宿主联调入口。
-
-**向 `wcode-plugins` 提交插件 PR 时，必须在 PR 模板中声明是否为 UI Plugin，并填写插件名称。** 判断标准见[提交 PR 时声明插件类型](UI_PLUGIN.md#提交-pr-时声明插件类型)。
-
-## 模型配置（首次使用必读）
-
-仓库不内置任何模型凭据，直接启动后可以打开界面，但**发送消息前必须先配置模型**，否则会提示不可用。两种方式二选一：
-
-### 方式一：登录 WCode 账号
-
-在界面右上角或「连接使用」入口选择登录，也可以在 CLI 中登录：
-
-```bash
-pnpm --filter @wcode/cli exec tsx src/main.ts login
-```
-
-登录后即可使用账号可用的模型，无需自己填写 API Key。
-
-首次使用建议先执行 `pnpm bootstrap`（或至少 `pnpm install`），否则缺少 workspace 依赖。
-
-### 方式二：配置自己的模型服务
-
-适用于任意 OpenAI Chat Completions / OpenAI Responses / Anthropic Messages 兼容服务。
-
-1. 按 [CLI 配置文档](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例) 的 `schemaVersion: 1` 格式创建个人配置文件（任选路径，如 `~/.wcode/model-config.json`），替换 `providerId`、`baseUrl`、`apiKey` 与模型名。
-
-2. 通过环境变量指向该文件后启动：
-
+1. **账号登录**：在 Web 界面右上角「连接使用」登录，或在 CLI 执行：
+   ```bash
+   pnpm --filter @wcode/cli exec tsx src/main.ts login
+   ```
+2. **自定义模型服务**（兼容 `openai-chat-completions`、`openai-responses`、`anthropic-messages`）：
+   按 [CLI 配置文档](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例) 创建 `schemaVersion: 1` JSON 文件（如 `~/.wcode/model-config.json`），启动时传入：
    ```bash
    WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/绝对路径/model-config.json pnpm dev:web
    ```
+   > 个人配置文件含明文 API Key，请注意文件权限，不要提交到 Git。
 
-支持的 `api.type`：`openai-chat-completions`、`openai-responses`、`anthropic-messages`。服务需要支持所选协议以及工具调用能力。
+本地数据默认存储在 `~/.wcode/v2/`，与旧版 ZCode 的 `~/.zcode` **完全隔离且不自动迁移**。
 
-> 个人配置文件含明文 API Key，请限制文件权限，不要提交到 Git。
+---
 
-### 本地数据目录
+## 打包与本地验证
 
-应用数据写入 `~/.wcode/v2/`（会话、设置、登录态等）。旧版 ZCode 使用 `~/.zcode`，两者**不互通且不会自动迁移**；如需沿用历史会话，请自行复制对应文件。
-
-## 配置
-
-根目录 [.env.example](.env.example) 提供服务地址与构建配置示例，可按需复制到 `.env`，本地覆盖放入 `.env.local`。
-
-| 配置                                 | 用途                                             |
-| ------------------------------------ | ------------------------------------------------ |
-| `WCODE_DATA_BASE_DIR`                | 应用数据基目录，数据写入其下的 `.wcode/`         |
-| `WCODE_SERVER_WORKSPACE`             | Web 后端的工作区路径                             |
-| `WCODE_BUILTIN_PROVIDER_CONFIG_FILE` | 本地 Provider 配置文件路径；未设置时使用内置配置 |
-| `WCODE_DIST_BASE_URL`                | 命令行安装脚本使用的下载根地址                   |
-
-运行时变量可在启动命令的环境中显式设置。随客户端发布的默认配置见 [config/README.md](config/README.md)。
-
-## 打包
-
-第三方声明生成、发行校验流程及声明在发行物中的位置见 [third-party/README.md](third-party/README.md)。
-
-### WCode 命令行版
-
-构建入口为 `pnpm build:wcode`。脚本会依次构建 CLI/TUI、后端和 Web，收集 TUI 的原生库、worker 与运行时依赖，再组装发行包；运行发行包仍需要 Node.js，版本以 `mise.toml` 为准。
-
-打包前必须设置下载根地址 `WCODE_DIST_BASE_URL`（可放在 `.env`、`.env.local` 或环境变量中），也可以通过 `--base-url` 传入。以下地址是占位示例，发布时替换为实际托管地址：
+通过 `pnpm build:wcode` 一键构建并组装统一发行包（自动构建 CLI/TUI、Server 与 Web，剔除 `.map`，校验内置 `bundled-skills`，并在产物根目录写入合规四件套）：
 
 ```bash
+# 首次打包需通过 --base-url 或环境变量 WCODE_DIST_BASE_URL 指定托管根地址
 pnpm build:wcode --base-url https://downloads.example.com/wcode/
 
-# 已配置 WCODE_DIST_BASE_URL 时
+# 已配置 WCODE_DIST_BASE_URL 时直接运行
 pnpm build:wcode
 
-# 仅重新组包，复用已有的 Agent、后端和 Web 构建产物
+# 复用现有构建产物仅重新组包
 pnpm build:wcode --skip-build
-
-# 查看版本、输出目录等可选参数
-pnpm build:wcode --help
 ```
 
-默认版本取根目录 `package.json`，输出目录为 `dist/wcode/`：
-
-- `releases/<version>/wcode-<version>.tar.gz`：运行包。
-- `releases/<version>/sha256.txt`：校验摘要。
-- `latest.json`、`install.sh`：版本索引和安装脚本。
-
-完整目录可上传到配置的下载根地址。安装脚本从该地址下载运行包，默认安装到 `~/.wcode/runtime`，并在 `~/.local/bin` 创建 `wcode` 命令。安装目录可通过 `WCODE_DIST_HOME` 修改，命令目录可通过 `WCODE_DIST_BIN_DIR` 修改。
-
-旧 Lite 用户需要改用上述构建命令、环境变量和新的安装脚本。新安装不会删除旧 Lite 目录，也不会迁移或删除已有会话数据。
-
-本地调试打包产物时，可直接解压运行，无需上传或安装：
+产物输出在 `dist/wcode/`（包含 `releases/<version>/wcode-<version>.tar.gz`、`sha256.txt`、`latest.json`、`install.sh`）。本地可直接解压验证完整链路：
 
 ```bash
 wcode_version=$(node -p "require('./dist/wcode/latest.json').version")
 mkdir -p dist/wcode/debug
-tar -xzf "dist/wcode/releases/$wcode_version/wcode-$wcode_version.tar.gz" \
-  -C dist/wcode/debug
-# 默认启动 TUI
+tar -xzf "dist/wcode/releases/$wcode_version/wcode-$wcode_version.tar.gz" -C dist/wcode/debug
+
+# 验证 TUI
 node dist/wcode/debug/wcode/bin/wcode.mjs
 
-# 启动 Web
-node dist/wcode/debug/wcode/bin/wcode.mjs --web \
-  --workspace "$PWD" --port 3030 --no-open
+# 验证独立 Web 服务（浏览器打开 http://127.0.0.1:3030）
+node dist/wcode/debug/wcode/bin/wcode.mjs --web --workspace "$PWD" --port 3030 --no-open
 ```
 
-浏览器打开 `http://127.0.0.1:3030`，即可验证同一后端服务托管 Web 页面和 Agent 的完整链路。该端口需要空闲；如正在运行 `pnpm dev:web`，可改用其他 `--port`。
+---
 
-## 仓库结构
+## 常用环境变量
 
-| 目录                                                 | 职责                                       |
-| ---------------------------------------------------- | ------------------------------------------ |
-| `packages/web`                                       | Web 客户端                                 |
-| `packages/server`                                    | HTTP / WebSocket 服务与远程连接            |
-| `packages/wcode-server-cli`                          | 独立 Server 启动与进程管理                 |
-| `packages/ui`                                        | 共享 React 组件、hooks 与 Zustand 状态     |
-| `packages/services`                                  | 业务服务与持久化                           |
-| `packages/shared`、`packages/rpc`、`packages/client` | 共享协议和类型、RPC 框架、Agent 客户端 SDK |
-| `packages/provider`、`packages/provider-node`        | Provider 公共能力与 Node 实现              |
-| `apps/wcode-cli`                                     | Agent CLI、TUI、运行时与工具               |
-| `scripts`、`config`、`third-party`                   | 构建维护脚本、内置配置与第三方声明材料     |
+完整示例见根目录 [.env.example](.env.example)，内置默认配置说明见 [config/README.md](config/README.md)。
 
-## 许可证
+| 环境变量                             | 说明                                                  |
+| ------------------------------------ | ----------------------------------------------------- |
+| `WCODE_DATA_BASE_DIR`                | 应用数据基目录，数据写入其下的 `.wcode/`              |
+| `WCODE_SERVER_WORKSPACE`             | Web 后端默认工作区路径                                |
+| `WCODE_SERVER_AUTH_TOKEN`            | 独立 Server 固定访问令牌（兼容 `WCODE_SERVER_TOKEN`） |
+| `WCODE_DEPLOYMENT_MODE`              | 显式覆盖部署模式（`local` 或 `server`）               |
+| `WCODE_ALLOW_HOST_REVEAL`            | 设为 `0` 时关闭同机宿主机文件定位 / 打开能力          |
+| `WCODE_DYNAMIC_WORKFLOW_MODE`        | 覆盖动态工作流提供模式（缺省离线回退为 `onDemand`）   |
+| `WCODE_BUILTIN_PROVIDER_CONFIG_FILE` | 自定义本地 Provider 配置文件绝对路径                  |
+| `WCODE_DIST_BASE_URL`                | `pnpm build:wcode` 生成安装脚本时使用的下载根地址     |
 
-本仓库基于 [zai-org/ZCode](https://github.com/zai-org/ZCode)（v3.18.2，基线提交 `fec97590`）修改，
-沿用 **Apache License 2.0**，见 [LICENSE](LICENSE)。完整许可证原文包含该版本的版权行。
+---
 
-发布或分发源码、二进制与镜像时，请一并提供：
+## 仓库结构与延伸文档
 
-| 文件 | 作用 |
-| --- | --- |
-| [LICENSE](LICENSE) | Apache-2.0 许可证原文（含上游版权行） |
-| [NOTICE.md](NOTICE.md) | 来源与商标声明、执行与数据风险说明 |
-| [CHANGES.md](CHANGES.md) | 相对上游的修改说明（Apache-2.0 §4(b) 要求） |
-| [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) | 第三方依赖与素材的许可原文 |
+| 目录                                                 | 职责                                                 |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| `packages/web`                                       | 浏览器 Web 客户端                                    |
+| `packages/server`                                    | HTTP / WebSocket 独立服务端与远程连接                |
+| `packages/wcode-server-cli`                          | 独立 Server 启动与进程管理                           |
+| `packages/ui`                                        | 共享 React 组件、hooks 与 Zustand 状态               |
+| `packages/services`                                  | 业务服务、宿主机能力与持久化                         |
+| `packages/shared`、`packages/rpc`、`packages/client` | 共享协议与类型、RPC 框架、Agent 客户端 SDK           |
+| `packages/provider`、`packages/provider-node`        | Provider 公共能力与 Node 实现                        |
+| `apps/wcode-cli`                                     | Agent CLI、TUI、运行时、工具与内置技能               |
+| `docs`、`scripts`、`config`、`third-party`           | 架构与工作流文档、构建校验脚本、默认配置与第三方声明 |
 
-`pnpm build:wcode` 生成的发行包已在根目录自动包含上述四个文件。
+延伸阅读：
 
-WCode 是独立维护的分支，不是 Z.ai 官方项目，未获得其背书或赞助；"ZCode"、"Z.ai" 等名称与标识
-归其各自权利人所有。第三方材料维护与重新生成方式见 [third-party/README.md](third-party/README.md)。
+- [CHANGES.md](CHANGES.md) — WCode 相对上游 ZCode 的完整修改记录与升级说明
+- [动态工作流（DWF）定义、能力边界与接入规范](docs/dynamic-workflow/wcode-definition-and-boundaries.md) — 含 4 张可视化架构图
+- [WCode CLI 使用指南](apps/wcode-cli/docs/usage/README.md) — TUI、非交互模式、模型配置、工具、权限与自动化评测
+- [UI Plugin 指南](UI_PLUGIN.md) — UI 插件能力、API 与调试方式
+- [第三方声明维护说明](third-party/README.md) — 第三方许可生成与发行校验流程
 
-## 项目声明
+---
 
-功能与优惠范围、维护规则、执行与数据风险，以及许可和第三方版权说明，详见 [NOTICE.md](NOTICE.md)。
+## 许可证与上游声明
+
+本项目基于 [zai-org/ZCode](https://github.com/zai-org/ZCode)（`v3.18.2`，基线提交 `fec97590`）修改并沿用 **Apache License 2.0**（见 [LICENSE](LICENSE)）。
+
+分发源码、发行包或镜像时，请一并保留以下合规文件（`pnpm build:wcode` 已自动打包至发行包根目录）：
+
+- [LICENSE](LICENSE) — Apache-2.0 许可证原文（含上游版权行）
+- [NOTICE.md](NOTICE.md) — 来源与商标声明、执行与数据风险说明
+- [CHANGES.md](CHANGES.md) — 相对上游的修改说明（履行 Apache-2.0 §4(b) 义务）
+- [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) — 第三方依赖与素材许可原文
+
+WCode 是独立维护的社区分支，**并非 Z.ai 官方项目**，未获得其背书或赞助；"ZCode"、"Z.ai" 等名称与标识归其各自权利人所有。

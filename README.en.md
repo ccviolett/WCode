@@ -1,254 +1,193 @@
 # WCode
 
 <div align="center">
-  <img src="public/logo/icons/1024x1024.png" alt="WCode" width="128" height="128" />
+  <img src="public/logo/icons/1024x1024.png" alt="WCode" width="120" height="120" />
 </div>
-<p align="center">
-  <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=47ag983c-8fcb-4d6d-814b-5395193a712c&amp;qr_code=true">Feishu community</a> ·
-  <a href="https://discord.gg/z9aBcQXZQ3">Discord</a>
-</p>
+
 <p align="center">
   <a href="README.md">简体中文</a> | English
 </p>
 
-WCode is an AI coding workspace with browser and terminal interfaces. This repository has been trimmed to keep only the Web client and shared runtime sources; the desktop application and its dedicated build, debug, and packaging tools have been removed. This repository contains the clients, backend services, shared UI, and Agent CLI and runtime source code.
+<p align="center">
+  A lightweight Web-only, standalone Server, and Agent CLI/TUI fork of <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a> (<code>v3.18.2</code>)
+</p>
 
-## Updates
+---
 
-- **2026-11-12**: Updated to WCode v3.18.2.
-- 2026-11-12: Updated to WCode v3.18.1.
-- 2026-11-11: Updated to WCode v3.18.0.
-- 2026-11-03: Updated to WCode v3.17.2.
-- 2026-10-30: Updated to WCode v3.17.1.
-- 2026-10-29: Updated to WCode v3.17.0.
-- 2026-10-19: Updated to WCode v3.16.2.
-- 2026-10-16: Updated to WCode v3.16.1.
-- 2026-10-16: Updated to WCode v3.15.4.
-- 2026-10-10: Updated to WCode v3.15.1.
-- 2026-9-23: Updated to WCode v3.14.3.
+WCode is tailored for **local browser, LAN, and self-hosted server deployments**. While preserving the full Web workspace and Agent CLI/TUI experience, it removes Electron desktop coupling and focuses on standalone Web usability, out-of-the-box server authentication, Dynamic Workflow ergonomics, and slim unified distribution.
 
-## Setup
+> **About Upstream**: For ZCode's core AI coding capabilities, Agent runtime design, and general feature documentation, please refer directly to [zai-org/ZCode](https://github.com/zai-org/ZCode). This README focuses on **what WCode optimizes over ZCode** and **how to build, run, and deploy WCode**.
 
-Install Git, Node.js **24.14.0**, and pnpm **10.33.2**. [mise.toml](mise.toml) is the source of truth for tool versions. Run all development and packaging commands below from the repository root.
+## What WCode Optimizes over ZCode
+
+| Area                                     | Upstream ZCode                                                                                                         | WCode Optimizations                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Runtime Footprint & Platform**         | Bundles Electron desktop app, `packages/desktop`, `/remote` desktop remote control, and desktop build/E2E dependencies | **Pure Web + standalone HTTP/WS Server + Agent CLI/TUI**; completely removes `packages/desktop`, `/remote`, and Electron/WDIO/`@arms/rum-electron` dependencies; downgrades `window-controller` to optional                                                                                                                                                                                                              |
+| **Standalone Web & Host Capabilities**   | File reveal/open relies on desktop host or fragmented UI checks; defaults to fixed dark theme                          | Server auto-detects `deployment.mode` (`local` / `server`); enables `realpath`-whitelisted host actions (reveal in Finder/Explorer, default app open, VS Code open across all registered project roots) on local GUI hosts while automatically hiding local-only controls on remote access; defaults to system theme; Web dev server defaults to port `5183`                                                             |
+| **Out-of-the-Box Server Auth**           | Manual static token management for non-loopback hosts; URL tokens remain in browser history and Referer headers        | Automatically generates a **one-time access token** when binding a non-loopback host without a configured token; first navigation exchanges it for an `HttpOnly` session cookie (`Secure` behind TLS proxies) and `302`-redirects to strip the token from the URL; also supports `Authorization: Bearer` and `WCODE_SERVER_AUTH_TOKEN`                                                                                   |
+| **Web Dynamic Workflows (DWF)**          | Offline/unconfigured mode depends on remote toggles; artifact open assumes desktop `file://` access                    | Defaults `DEFAULT_DYNAMIC_WORKFLOW_MODE` to `onDemand` when offline or unconfigured (keeps `/workflow` and Automation → Workflows ready without injecting workflow tools into regular chats); opens HTML workflow artifacts in the system browser locally via `system.openPath` and falls back to workspace file-tree reveal remotely; bundles `bundled-skills` into releases and adds an illustrated architecture guide |
+| **Unified Slim Distribution**            | Separate desktop packaging; ships `.map` sourcemaps in distribution artifacts                                          | `pnpm build:wcode` produces a single `wcode` entry (`wcode` for TUI, `wcode --web` for Web), strips all `.map` files to shrink archive size, validates & packages `agent/packages/bundled-skills`, and includes all four Apache-2.0 compliance files at archive root                                                                                                                                                     |
+| **Brand Isolation & Upstream Contracts** | Shares `@zcode/*`, `~/.zcode`, and `ZCODE_*` namespaces                                                                | Fully isolates package scope (`@wcode/*`), CLI binary (`wcode`), env vars (`WCODE_*`), data dir (`~/.wcode/v2/`), and W-series logo while **strictly preserving upstream external service contracts** (`zcode.z.ai`, `/api/v1/zcode-plan/*`, `cdn-zcode.z.ai/zcode/official-plugin/*`, `/zcode/deps`, PyPI `zcode-cua`) so official login, plan checks, model matching, and plugin marketplace work without 404s         |
+
+For the complete technical changelog and upgrade notes, see [CHANGES.md](CHANGES.md).
+
+### Key Highlights
+
+- **Automatic Local vs. Remote Awareness**: The server infers `deployment.mode` from proxy forwarding headers and peer loopback checks (overridable via `WCODE_DEPLOYMENT_MODE`). Local browser sessions get desktop-like host integration across every registered project root (disableable via `WCODE_ALLOW_HOST_REVEAL=0`), whereas remote server sessions automatically hide host-only actions that would otherwise trigger unseen on the server.
+- **Dynamic Workflows (DWF) Ready Out of the Box**: Without an upstream feature-flag server, the Web/Server Host defaults to `onDemand`—keeping normal chats lightweight while leaving `/workflow` and Automation → Workflows immediately usable. See the [WCode Dynamic Workflow Definition & Boundaries Guide](docs/dynamic-workflow/wcode-definition-and-boundaries.md) (Chinese, with 4 SVG architecture diagrams).
+- **Safe Defaults for Self-Hosting**: `wcode --web` binds `127.0.0.1` without auth for frictionless local usage; binding `0.0.0.0` or another non-loopback address without a static token automatically switches to one-time token → `HttpOnly` cookie session bootstrap.
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+Install Git, Node.js **24.14.0**, and pnpm **10.33.2** (pinned in [mise.toml](mise.toml)). Run all commands below from the repository root.
 
 ```bash
 pnpm bootstrap
 ```
 
-`pnpm bootstrap` installs workspace dependencies and runs `build:bootstrap`.
+`pnpm bootstrap` installs workspace dependencies and runs `build:bootstrap`. The Agent CLI and runtime live in [apps/wcode-cli/](apps/wcode-cli/) as a regular directory (no Git submodule required). Run `pnpm bootstrap:with-remote` or `pnpm prepare:remote-assets` only when preparing remote runtime assets.
 
-The Agent CLI and runtime source code lives in [apps/wcode-cli/](apps/wcode-cli/) as a regular directory included when you clone this repository. No separate checkout or Git submodule initialization is required.
-
-Additional setup and build commands:
-
-| Command                        | Purpose                                                                                                                             |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm install`                 | Install dependencies                                                                                                                |
-| `pnpm prepare:remote-assets`   | Prepare remote runtime assets separately                                                                                            |
-| `pnpm bootstrap:with-remote`   | Set up dependencies and local and remote assets, then build the relevant packages sequentially                                      |
-| `pnpm build`                   | Recursively run each workspace package's build script, including its asset preparation steps                                        |
-
-The default `bootstrap` skips remote asset preparation and is suitable for local Web development. Run the corresponding preparation command when working with remote workspaces or validating remote distribution assets.
-
-## Development and Usage
-
-### Web Development
-
-Use development mode when editing Web or backend source code:
+### Option 1: Source Development Mode (Web + Server)
 
 ```bash
 pnpm dev:web
 
-# Set the backend workspace (macOS / Linux)
+# Specify the backend workspace
 WCODE_SERVER_WORKSPACE=/path/to/project pnpm dev:web
 ```
 
-This starts both the Web development server (default: `http://localhost:5183`) and the backend (default: `http://localhost:3030`). Open the Web development server in your browser. `/ws` and general `/api` requests are proxied to the local backend; `/api/v1/oauth/token` is proxied separately to the configured product service.
+- Web UI runs at `http://localhost:5183` and proxies API/WebSocket traffic to the backend at `http://localhost:3030`.
+- After editing [apps/wcode-cli/](apps/wcode-cli/), rebuild via `pnpm --filter @wcode/cli... build` and restart the server.
+- To develop the CLI / TUI directly, run `pnpm --filter @wcode/cli dev`.
 
-After changing Agent source code, run `pnpm --filter @wcode/cli... build` and restart the service. To validate the complete distribution, extract and run it as described under Packaging → WCode CLI distribution below.
+### Option 2: Unified CLI & Web Runtime (`wcode` / `wcode --web`)
 
-### WCode CLI distribution
-
-The command-line distribution includes the TUI, Web client, and Agent behind one `wcode` command. With no arguments it starts the TUI; a leading `--web` starts Web mode; all other arguments go to the existing Agent CLI. Both modes run locally without Electron.
+Using the packaged unified `wcode` binary (built via `pnpm build:wcode` below), with no Electron required:
 
 ```bash
-# Start the terminal UI by default
+# Start interactive terminal TUI
 wcode
 
-# Start the Web interface
+# Start local Web workspace (binds 127.0.0.1, picks a free port, opens browser)
 wcode --web
 
-# Set the project and port without opening a browser automatically
-wcode --web --workspace /path/to/project --port 3030 --no-open
+# LAN / Server mode (auto-generates a one-time ?token= bootstrap URL on non-loopback hosts)
+wcode --web --host 0.0.0.0 --port 3030 --workspace /path/to/project --no-open
 
-# Show CLI or Web options
+# Use a static token (or set WCODE_SERVER_AUTH_TOKEN)
+wcode --web --host 0.0.0.0 --port 3030 --token <your-token> --no-open
+
+# View all options
 wcode --help
 wcode --web --help
 ```
 
-In Web mode, it uses the current directory as the workspace, listens on `127.0.0.1` without token authentication by default, selects an available port, and opens a browser. Use the URL printed in the terminal and press `Ctrl+C` to stop the service. For LAN access, use `--host 0.0.0.0`; listening on a non-local address generates an access token by default. Use the token-bearing URL printed in the terminal. Set a token with `--token`, or disable token authentication with `--no-token`.
+> For public internet exposure, always place WCode behind an HTTPS reverse proxy; the session cookie automatically sets `Secure` when TLS is terminated upstream.
 
-When starting the general Web service's HTTP entry directly, configure API/WebSocket authentication with `WCODE_SERVER_AUTH_TOKEN`. When creating the service programmatically, use the `authToken` option.
+### Model Configuration (Required Before First Message)
 
-See Packaging below for build instructions. `pnpm build:wcode` only creates the distribution; it does not replace an existing `wcode` on `PATH`. If the command still points to an older installation or another checkout, check it with `command -v wcode` on macOS / Linux or `where.exe wcode` on Windows.
+This repository ships with no model credentials. Choose either option:
 
-### CLI Source Development
-
-See the [CLI usage guide (Chinese)](apps/wcode-cli/docs/usage/README.md) for model configuration, non-interactive runs, tools and extensions, batch evaluation, and trajectory capture.
-
-Use the source entry when developing the TUI or Agent:
-
-```bash
-pnpm --filter @wcode/cli dev --help
-pnpm --filter @wcode/cli dev
-
-# Build the CLI and its workspace dependencies
-pnpm --filter @wcode/cli... build
-node apps/wcode-cli/packages/cli/dist/wcode.cjs --help
-```
-
-This entry runs the Agent CLI directly and does not handle the distribution's `--web` switch. Use `pnpm dev:web` for Web development, or the extracted `bin/wcode.mjs` shown below to test the unified command.
-
-### UI Plugin development
-
-See the [UI Plugin guide](UI_PLUGIN.en.md) for the Excalidraw workflow, supported APIs, plugin installation and updates, and host debugging.
-
-**Plugin PRs in `wcode-plugins` must declare whether they affect a UI Plugin and list the plugin names in the PR template.** See the [required plugin-type declaration](UI_PLUGIN.en.md#declare-the-plugin-type-in-pull-requests).
-
-## Model configuration (required before first use)
-
-This repository ships no model credentials. The UI opens without one, but **you must configure a model before sending messages**, otherwise the composer reports the model is unavailable. Pick one of two options.
-
-### Option 1: sign in to a WCode account
-
-Use the sign-in entry in the app (top-right or the connection panel), or sign in from the CLI:
-
-```bash
-pnpm --filter @wcode/cli exec tsx src/main.ts login
-```
-
-Your account's available models are then ready to use; no API key needed.
-
-Run `pnpm bootstrap` (or at least `pnpm install`) first, otherwise workspace dependencies are missing.
-
-### Option 2: configure your own model service
-
-Works with any OpenAI Chat Completions, OpenAI Responses, or Anthropic Messages compatible endpoint.
-
-1. Create a personal config file following the `schemaVersion: 1` format in the [CLI configuration docs](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例) (any path, e.g. `~/.wcode/model-config.json`), replacing `providerId`, `baseUrl`, `apiKey`, and the model name.
-
-2. Point the environment variable at it and start:
-
+1. **Account Sign-In**: Sign in from the Web UI top-right menu, or run via CLI:
    ```bash
-   WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/absolute/path/model-config.json pnpm dev:web
+   pnpm --filter @wcode/cli exec tsx src/main.ts login
    ```
+2. **Custom Model Provider** (supports `openai-chat-completions`, `openai-responses`, and `anthropic-messages`):
+   Create a `schemaVersion: 1` JSON file (e.g., `~/.wcode/model-config.json`) following the [CLI Configuration Guide](apps/wcode-cli/docs/usage/03-config.md#个人模型配置示例), then launch with:
+   ```bash
+   WCODE_BUILTIN_PROVIDER_CONFIG_FILE=/abs/path/model-config.json pnpm dev:web
+   ```
+   > Personal provider files contain plaintext API keys—restrict file permissions and never commit them to Git.
 
-Supported `api.type` values: `openai-chat-completions`, `openai-responses`, `anthropic-messages`. The endpoint must support the chosen protocol and tool calling.
+Local application data is stored under `~/.wcode/v2/`, isolated from legacy `~/.zcode` with no automatic migration.
 
-> The personal config file contains a plaintext API key. Restrict its permissions and never commit it.
+---
 
-### Local data directory
+## Packaging & Local Verification
 
-Application data is written to `~/.wcode/v2/` (sessions, settings, sign-in state). Legacy ZCode used `~/.zcode`; the two are **independent and not migrated automatically** — copy the relevant files yourself if you need old sessions.
-
-## Configuration
-
-The root [.env.example](.env.example) provides sample service URLs and build configuration. Copy it to `.env` as needed and place local overrides in `.env.local`.
-
-| Setting                              | Purpose                                                                                 |
-| ------------------------------------ | --------------------------------------------------------------------------------------- |
-| `WCODE_DATA_BASE_DIR`                | Base directory for application data, stored under its `.wcode/` subdirectory            |
-| `WCODE_SERVER_WORKSPACE`             | Workspace path for the Web backend                                                      |
-| `WCODE_BUILTIN_PROVIDER_CONFIG_FILE` | Path to a local provider configuration file; uses the built-in configuration when unset |
-| `WCODE_DIST_BASE_URL`                | Download base URL used by the CLI distribution installer                                |
-
-Runtime variables can be set explicitly in the environment of the startup command. See [config/README.md](config/README.md) for the default configuration shipped with the client.
-
-## Packaging
-
-See [third-party/README.md](third-party/README.md) for notice generation, distribution checks, and where the notices are included in each distribution.
-
-### WCode CLI distribution
-
-Run `pnpm build:wcode` to build the CLI/TUI, backend, and Web client, collect the TUI native libraries, workers, and runtime dependencies, then assemble the distribution. Running the distribution still requires Node.js; use the version specified in `mise.toml`.
-
-Before packaging, set the download base URL with `WCODE_DIST_BASE_URL` in `.env`, `.env.local`, or the process environment, or pass it through `--base-url`. The URL below is a placeholder; replace it with your hosting URL when publishing:
+Build the unified distribution bundle with `pnpm build:wcode` (builds CLI/TUI, Server, and Web, strips `.map` sourcemaps, validates bundled skills, and copies Apache-2.0 compliance notices into the archive root):
 
 ```bash
+# Pass --base-url or set WCODE_DIST_BASE_URL for the generated installer
 pnpm build:wcode --base-url https://downloads.example.com/wcode/
 
-# When WCODE_DIST_BASE_URL is already configured
+# When WCODE_DIST_BASE_URL is already set
 pnpm build:wcode
 
-# Repackage existing Agent, backend, and Web build outputs
+# Repackage without rebuilding artifacts
 pnpm build:wcode --skip-build
-
-# Show options for the version, output directory, and more
-pnpm build:wcode --help
 ```
 
-The version defaults to the root `package.json` version. Output is written to `dist/wcode/`:
-
-- `releases/<version>/wcode-<version>.tar.gz`: runtime package.
-- `releases/<version>/sha256.txt`: checksum file.
-- `latest.json` and `install.sh`: version index and installer.
-
-Upload the entire directory to the configured download base URL. The installer downloads the runtime package from that URL, installs it to `~/.wcode/runtime` by default, and creates the `wcode` command in `~/.local/bin`. Override these directories with `WCODE_DIST_HOME` and `WCODE_DIST_BIN_DIR`, respectively.
-
-Existing Lite users should switch to the new build command, environment variables, and installer. Installation does not remove old Lite directories or migrate/delete session data.
-
-To test a packaged build locally, extract and run it directly without uploading or installing it:
+Outputs are written to `dist/wcode/` (`releases/<version>/wcode-<version>.tar.gz`, `sha256.txt`, `latest.json`, `install.sh`). To verify locally without uploading:
 
 ```bash
 wcode_version=$(node -p "require('./dist/wcode/latest.json').version")
 mkdir -p dist/wcode/debug
-tar -xzf "dist/wcode/releases/$wcode_version/wcode-$wcode_version.tar.gz" \
-  -C dist/wcode/debug
-# Start the TUI by default
+tar -xzf "dist/wcode/releases/$wcode_version/wcode-$wcode_version.tar.gz" -C dist/wcode/debug
+
+# Verify TUI
 node dist/wcode/debug/wcode/bin/wcode.mjs
 
-# Start Web mode
-node dist/wcode/debug/wcode/bin/wcode.mjs --web \
-  --workspace "$PWD" --port 3030 --no-open
+# Verify standalone Web server (open http://127.0.0.1:3030)
+node dist/wcode/debug/wcode/bin/wcode.mjs --web --workspace "$PWD" --port 3030 --no-open
 ```
 
-Open `http://127.0.0.1:3030` to validate the complete flow, with one backend serving the Web pages and running the Agent. The port must be available; if `pnpm dev:web` is already running, choose another `--port`.
+---
 
-## Repository Structure
+## Environment Variables
 
-| Directory                                            | Responsibility                                                                          |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `packages/web`                                       | Web client                                                                              |
-| `packages/server`                                    | HTTP / WebSocket services and remote connections                                        |
-| `packages/wcode-server-cli`                          | Standalone server startup and process management                                        |
-| `packages/ui`                                        | Shared React components, hooks, and Zustand state                                       |
-| `packages/services`                                  | Business services and persistence                                                       |
-| `packages/shared`, `packages/rpc`, `packages/client` | Shared protocols and types, RPC framework, and Agent client SDK                         |
-| `packages/provider`, `packages/provider-node`        | Common provider capabilities and Node implementations                                   |
-| `apps/wcode-cli`                                     | Agent CLI, TUI, runtime, and tools                                                      |
-| `scripts`, `config`, `third-party`                   | Build and maintenance scripts, built-in configuration, and third-party notice materials |
+See [.env.example](.env.example) for full defaults and [config/README.md](config/README.md) for bundled configuration details.
 
-## License
+| Variable                             | Purpose                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------- |
+| `WCODE_DATA_BASE_DIR`                | Base directory for application data (writes to `.wcode/` underneath)             |
+| `WCODE_SERVER_WORKSPACE`             | Default workspace directory for the Web backend                                  |
+| `WCODE_SERVER_AUTH_TOKEN`            | Static access token for standalone Server (compatible with `WCODE_SERVER_TOKEN`) |
+| `WCODE_DEPLOYMENT_MODE`              | Explicitly override deployment mode (`local` or `server`)                        |
+| `WCODE_ALLOW_HOST_REVEAL`            | Set to `0` to disable local host file reveal/open actions                        |
+| `WCODE_DYNAMIC_WORKFLOW_MODE`        | Override Dynamic Workflow mode (defaults offline fallback to `onDemand`)         |
+| `WCODE_BUILTIN_PROVIDER_CONFIG_FILE` | Absolute path to a custom local Provider JSON configuration                      |
+| `WCODE_DIST_BASE_URL`                | Download base URL embedded in `install.sh` by `pnpm build:wcode`                 |
 
-This repository is derived from [zai-org/ZCode](https://github.com/zai-org/ZCode) (v3.18.2, baseline commit `fec97590`)
-and remains under the **Apache License 2.0**; see [LICENSE](LICENSE). The full license text keeps that version's
-copyright line.
+---
 
-When redistributing sources, binaries, or images, ship these files together:
+## Repository Layout & Documentation
 
-| File | Purpose |
-| --- | --- |
-| [LICENSE](LICENSE) | Apache-2.0 license text (including the upstream copyright line) |
-| [NOTICE.md](NOTICE.md) | Origin and trademark statement, execution and data risk notes |
-| [CHANGES.md](CHANGES.md) | Changes relative to upstream (required by Apache-2.0 §4(b)) |
-| [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) | License texts for third-party dependencies and assets |
+| Path                                                 | Responsibility                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `packages/web`                                       | Browser Web client                                                                   |
+| `packages/server`                                    | Standalone HTTP / WebSocket server and remote connections                            |
+| `packages/wcode-server-cli`                          | Standalone server launcher and process management                                    |
+| `packages/ui`                                        | Shared React components, hooks, and Zustand stores                                   |
+| `packages/services`                                  | Domain services, host reveal capabilities, and persistence                           |
+| `packages/shared`, `packages/rpc`, `packages/client` | Shared protocol & types, RPC framework, Agent client SDK                             |
+| `packages/provider`, `packages/provider-node`        | Provider abstractions and Node implementations                                       |
+| `apps/wcode-cli`                                     | Agent CLI, TUI, runtime, tools, and bundled skills                                   |
+| `docs`, `scripts`, `config`, `third-party`           | Architecture & workflow docs, build/check scripts, defaults, and third-party notices |
 
-`pnpm build:wcode` already places all four files in the root of the generated distribution.
+Further reading:
 
-WCode is an independently maintained fork. It is not an official Z.ai project and is not endorsed or sponsored by
-Z.ai; the "ZCode" and "Z.ai" names and marks belong to their respective owners. See
-[third-party/README.md](third-party/README.md) for maintaining and regenerating third-party materials.
+- [CHANGES.md](CHANGES.md) — Full list of modifications relative to upstream ZCode and upgrade notes
+- [Dynamic Workflow (DWF) Definition & Boundaries](docs/dynamic-workflow/wcode-definition-and-boundaries.md) — Architecture & capability guide with 4 SVG diagrams (Chinese)
+- [WCode CLI Usage Guide](apps/wcode-cli/docs/usage/README.md) — TUI, headless usage, config, tools, permissions, and batch automation (Chinese)
+- [UI Plugin Guide](UI_PLUGIN.en.md) — UI plugin capabilities, host API, and debugging
+- [Third-Party Notices Guide](third-party/README.md) — Generating and validating third-party license notices
 
-## Project Notice
+---
 
-See [NOTICE.md](NOTICE.md) for feature and promotion scope, maintenance policy, execution and data risks, licensing, and third-party copyright information.
+## License & Attribution
+
+WCode is derived from [zai-org/ZCode](https://github.com/zai-org/ZCode) (`v3.18.2`, baseline commit `fec97590`) and remains licensed under the **Apache License 2.0** (see [LICENSE](LICENSE)).
+
+When redistributing source, packages, or container images, include all four compliance files (automatically placed at the archive root by `pnpm build:wcode`):
+
+- [LICENSE](LICENSE) — Apache License 2.0 text (with upstream copyright line)
+- [NOTICE.md](NOTICE.md) — Provenance, trademark notice, and execution/data risk disclosures
+- [CHANGES.md](CHANGES.md) — Summary of modifications relative to upstream (Apache-2.0 §4(b))
+- [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) — Third-party dependency and asset license texts
+
+WCode is an independently maintained community fork and is **not** an official Z.ai project, nor endorsed or sponsored by Z.ai. "ZCode", "Z.ai", and related marks belong to their respective owners.
