@@ -17,8 +17,9 @@ export function resolveIntranetMachineHost(env: IntranetEnv = readProcessEnv()) 
 
 export const INTRANET_MACHINE_HOST = resolveIntranetMachineHost();
 export const INTRANET_ASSET_SERVICE_PORT = 12345;
+// 修复原因：内网依赖镜像源路径段 /zcode 与 /zcode/deps 属于外部镜像契约，品牌改名不可改动。
 export const INTRANET_ASSET_BASE_URL = INTRANET_MACHINE_HOST
-  ? `http://${INTRANET_MACHINE_HOST}:${INTRANET_ASSET_SERVICE_PORT}/wcode`
+  ? `http://${INTRANET_MACHINE_HOST}:${INTRANET_ASSET_SERVICE_PORT}/zcode`
   : "";
 export const INTRANET_DEPS_BASE_URL = INTRANET_ASSET_BASE_URL
   ? `${INTRANET_ASSET_BASE_URL}/deps`
@@ -40,5 +41,5 @@ export function resolveIntranetDepsBaseUrl(env: IntranetEnv = readProcessEnv()) 
     throw new Error(
       "Configure WCODE_DEPS_BASE_URL or INTRANET_MACHINE_HOST in .env before downloading internal dependencies",
     );
-  return `http://${host}:${INTRANET_ASSET_SERVICE_PORT}/wcode/deps`;
+  return `http://${host}:${INTRANET_ASSET_SERVICE_PORT}/zcode/deps`;
 }

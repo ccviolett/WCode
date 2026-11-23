@@ -55,8 +55,8 @@ if [ "$PLATFORM" = "win32" ]; then
   BINARY_NAME="wcode-agent.exe"
 fi
 
-# Bugfix: GLM 二进制按 wcode-cli 版本发布，默认下载目录必须跟随 shared runtime 里的 glm.version。
-DOWNLOAD_BASE_URL="${GLM_BINARY_DOWNLOAD_BASE_URL:-http://${INTRANET_MACHINE_HOST}:12345/wcode/deps/wcode-cli-${GLM_RUNTIME_VERSION}}"
+# Bugfix: 内网依赖镜像目录路径为外部契约 /zcode/deps/zcode-cli-*，品牌改名不可修改下载源路径。
+DOWNLOAD_BASE_URL="${GLM_BINARY_DOWNLOAD_BASE_URL:-http://${INTRANET_MACHINE_HOST}:12345/zcode/deps/zcode-cli-${GLM_RUNTIME_VERSION}}"
 # Bugfix：Windows 制品命名恢复为 wcode-windows-*.exe，避免继续请求错误文件名。
 DOWNLOAD_NAME="wcode-${PLATFORM}-${ARCH}"
 if [ "$PLATFORM" = "win32" ]; then

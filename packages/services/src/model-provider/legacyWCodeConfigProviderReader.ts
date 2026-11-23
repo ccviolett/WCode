@@ -452,7 +452,12 @@ function resolvePresetProviderKindFromRuntimeBaseUrl(
   if (path.includes("/coding/paas/v4")) {
     return "openai-compatible";
   }
-  if (path.includes("/api/anthropic") || path.includes("/wcode-plan/anthropic")) {
+  // 修复原因：恢复识别上游真实路径 /zcode-plan/anthropic，同时保留 /wcode-plan/anthropic 兼容已落盘旧配置。
+  if (
+    path.includes("/api/anthropic") ||
+    path.includes("/zcode-plan/anthropic") ||
+    path.includes("/wcode-plan/anthropic")
+  ) {
     return "anthropic";
   }
   return undefined;

@@ -66,7 +66,8 @@ export interface OfficialPluginDefinition {
 }
 
 const ZAI_AUTHOR = { name: "Z.ai", url: "https://z.ai" } as const;
-const OFFICIAL_PLUGIN_ASSETS_BASE_URL = "https://cdn-zcode.z.ai/wcode/official-plugin/assets";
+// 修复原因：上游官方插件图标托管在 cdn-zcode.z.ai/zcode/official-plugin/assets，/wcode/ 路径返回 404。
+const OFFICIAL_PLUGIN_ASSETS_BASE_URL = "https://cdn-zcode.z.ai/zcode/official-plugin/assets";
 
 export const OFFICIAL_NODE_REPL_HOST_REQUIRED_SEED_PATHS = ["dist/mcp/server.js"] as const;
 const NODE_REPL_HOST_BUILD_IDENTITY_PATH = "dist/build-identity.json";
@@ -397,7 +398,7 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
       category: "utilities",
       displayName: "WCode Guide",
       displayName_i18n: { "zh-CN": "WCode 使用指南" },
-      icon: `${OFFICIAL_PLUGIN_ASSETS_BASE_URL}/wcode-guide/icon.png`,
+      icon: `${OFFICIAL_PLUGIN_ASSETS_BASE_URL}/zcode-guide/icon.png`,
       description_i18n: {
         "zh-CN": "提供 WCode 配置指南与插件、技能、MCP、命令和钩子诊断。",
       },
@@ -469,7 +470,7 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
         "zh-CN": "自动化桌面应用：智能体驱动鼠标、键盘与界面元素，代你完成实际任务。",
       },
       // 插件更名为 computer-use 后，CDN 图标仍发布在 wcode-cua 目录；沿用资源路径避免 404。
-      icon: `${OFFICIAL_PLUGIN_ASSETS_BASE_URL}/wcode-cua/icon.png`,
+      icon: `${OFFICIAL_PLUGIN_ASSETS_BASE_URL}/zcode-cua/icon.png`,
     },
     rootCandidates: [
       "packages/wcode-cua-plugin",
@@ -504,7 +505,7 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
       },
       examplePrompts: ["Deploy this project as a website"],
       examplePrompts_i18n: { "zh-CN": ["把这个项目部署成网站"] },
-      icon: `${OFFICIAL_PLUGIN_ASSETS_BASE_URL}/wcode-site/icon.png`,
+      icon: `${OFFICIAL_PLUGIN_ASSETS_BASE_URL}/zcode-site/icon.png`,
     },
     rootCandidates: [
       "packages/wcode-site-plugin",

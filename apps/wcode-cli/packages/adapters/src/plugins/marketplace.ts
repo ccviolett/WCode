@@ -52,7 +52,8 @@ const INSTALLED_PLUGINS_FILE = "installed_plugins.json";
 const MARKETPLACE_FILE = "marketplace.json";
 const CLAUDE_OFFICIAL_MARKETPLACE = "claude-plugins-official";
 const PLUGIN_ICON_SOURCES_FILE = "icon-sources.json";
-const PLUGIN_ICON_ASSETS_BASE_URL = "https://cdn-zcode.z.ai/wcode/official-plugin/assets/";
+// 修复原因：上游官方插件图标托管在 cdn-zcode.z.ai/zcode/official-plugin/assets/，/wcode/ 路径返回 404。
+const PLUGIN_ICON_ASSETS_BASE_URL = "https://cdn-zcode.z.ai/zcode/official-plugin/assets/";
 const PLUGIN_ICON_SOURCES_URL = `${PLUGIN_ICON_ASSETS_BASE_URL}${PLUGIN_ICON_SOURCES_FILE}`;
 const MARKETPLACE_JSON_MAX_BYTES = 10 * 1024 * 1024;
 const MARKETPLACE_JSON_MAX_REDIRECTS = 5;

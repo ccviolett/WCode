@@ -223,7 +223,7 @@ describe("WCode plugins", () => {
           await readFile(join(marketplaceRoot, "marketplace.json"), "utf8"),
         ) as { plugins: Array<{ icon?: string }> };
         expect(saved.plugins[0]?.icon).toBe(
-          "https://cdn-zcode.z.ai/wcode/official-plugin/assets/figma/icon.png",
+          "https://cdn-zcode.z.ai/zcode/official-plugin/assets/figma/icon.png",
         );
       });
     } finally {
@@ -695,7 +695,7 @@ describe("WCode plugins", () => {
             pluginCount: 16,
             source: {
               source: "url",
-              url: "https://cdn-zcode.z.ai/wcode/official-plugin/marketplace.json",
+              url: "https://cdn-zcode.z.ai/zcode/official-plugin/marketplace.json",
             },
           }),
           expect.objectContaining({
@@ -2642,7 +2642,7 @@ describe("WCode plugins", () => {
         pluginCount: 16,
         source: {
           source: "url",
-          url: "https://cdn-zcode.z.ai/wcode/official-plugin/marketplace.json",
+          url: "https://cdn-zcode.z.ai/zcode/official-plugin/marketplace.json",
         },
       });
       expect(overview.diagnostics).toEqual(

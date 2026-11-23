@@ -279,7 +279,8 @@ export class BigModelCodingPlanSubscriptionProvider {
 
   async getManualClaimPlanPreviews(): Promise<ManualClaimPlanPreviewSnapshot> {
     const token = (await this.credentialService.load(WCODE_JWT_TOKEN_KEY))?.trim();
-    const url = new URL(buildRuntimeWCodeApiUrl(process.env, "/api/v1/wcode-plan/billing/preview"));
+    // 修复原因：上游套餐接口路径段为 /api/v1/zcode-plan/*，不能随品牌改为 wcode-plan。
+    const url = new URL(buildRuntimeWCodeApiUrl(process.env, "/api/v1/zcode-plan/billing/preview"));
     url.searchParams.set("app_version", WCODE_VERSION);
     url.searchParams.set("platform", resolveClientPlatformKey());
     const payload = await readCodingPlanApiJson<RemoteEnvelope<ManualClaimPlanPreviewPayload>>(
@@ -346,7 +347,7 @@ export class BigModelCodingPlanSubscriptionProvider {
       Omit<RemoteEnvelope<ManualClaimPlanClaimPayload>, "code"> & { code?: number | string }
     >(
       this.apiClient,
-      new URL(buildRuntimeWCodeApiUrl(process.env, "/api/v1/wcode-plan/billing/claim")),
+      new URL(buildRuntimeWCodeApiUrl(process.env, "/api/v1/zcode-plan/billing/claim")),
       {
         method: "POST",
         headers: {

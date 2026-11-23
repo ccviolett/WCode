@@ -1105,7 +1105,7 @@
             },
             "api": {
               "type": "anthropic-messages",
-              "baseUrl": "https://zcode.z.ai/api/v1/wcode-plan/anthropic"
+              "baseUrl": "https://zcode.z.ai/api/v1/zcode-plan/anthropic"
             },
             "logo": {
               "type": "builtin",
@@ -1168,7 +1168,7 @@
             },
             "api": {
               "type": "anthropic-messages",
-              "baseUrl": "https://zcode.z.ai/api/v1/wcode-plan/anthropic"
+              "baseUrl": "https://zcode.z.ai/api/v1/zcode-plan/anthropic"
             },
             "logo": {
               "type": "builtin",
@@ -4415,7 +4415,7 @@
         },
         {
           "modelMatch": ".*",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/wcode-plan/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/zcode-plan/anthropic/?",
           "config": {
             "properties": {
               "inputFormat": {
@@ -4427,7 +4427,7 @@
         },
         {
           "modelMatch": ".*",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/wcode-plan/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/zcode-plan/anthropic/?",
           "config": {
             "properties": {
               "inputFormat": {
@@ -4439,7 +4439,7 @@
         },
         {
           "modelMatch": ".*",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
           "config": {
             "properties": {
               "inputFormat": {
@@ -4451,7 +4451,7 @@
         },
         {
           "modelMatch": ".*",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
           "config": {
             "properties": {
               "inputFormat": {
@@ -4512,7 +4512,7 @@
         {
           "modelMatch": "glm-5\\.3",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
           "config": {
             "properties": {
               "inputFormat": {
@@ -4524,7 +4524,7 @@
         {
           "modelMatch": "glm-5\\.3",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
           "config": {
             "properties": {
               "inputFormat": {
@@ -4623,7 +4623,7 @@
         {
           "modelMatch": ".*",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/wcode-plan/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/zcode-plan/anthropic/?",
           "config": {
             "properties": {
               "supportsNativeWebSearch": true,
@@ -4634,7 +4634,7 @@
         {
           "modelMatch": ".*",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/wcode-plan/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/zcode-plan/anthropic/?",
           "config": {
             "properties": {
               "supportsNativeWebSearch": true,
@@ -4645,7 +4645,7 @@
         {
           "modelMatch": ".*",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/off-peak/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/off-peak/anthropic/?",
           "config": {
             "properties": {
               "supportsNativeWebSearch": false,
@@ -4656,7 +4656,7 @@
         {
           "modelMatch": ".*",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/off-peak/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/off-peak/anthropic/?",
           "config": {
             "properties": {
               "supportsNativeWebSearch": false,
@@ -4667,7 +4667,7 @@
         {
           "modelMatch": ".*",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
           "config": {
             "properties": {
               "supportsNativeWebSearch": true,
@@ -4678,7 +4678,7 @@
         {
           "modelMatch": ".*",
           "apiTypeMatch": "anthropic-messages",
-          "baseUrlMatch": "https://wcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
+          "baseUrlMatch": "https://zcode\\.z\\.ai/api/v1/highspeed/anthropic/?",
           "config": {
             "properties": {
               "supportsNativeWebSearch": true,

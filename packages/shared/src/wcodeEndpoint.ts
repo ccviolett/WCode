@@ -378,10 +378,12 @@ export function buildWCodeEndpointUrls(
     webRemoteCallbackUrl: `${normalizedOrigin}/remote/v4`,
     webShareCallbackUrl: `${normalizedOrigin}/cn/share/callback`,
     relayWsUrl: `${wsOrigin}/api/v1/remote/ws2`,
-    wcodePlanOpenAiBaseUrl: `${normalizedOrigin}/api/v1/wcode-plan`,
-    wcodePlanAnthropicBaseUrl: `${normalizedOrigin}/api/v1/wcode-plan/anthropic`,
-    wcodePlanBillingCurrentUrl: `${normalizedOrigin}/api/v1/wcode-plan/billing/current`,
-    wcodePlanBillingBalanceUrl: `${normalizedOrigin}/api/v1/wcode-plan/billing/balance`,
+    // 修复原因：zcode.z.ai 上游套餐网关路径段为外部服务契约 /api/v1/zcode-plan/*，
+    // 此前品牌改名误改路径段导致 billing/balance 等接口返回 404，需恢复上游真实路径。
+    wcodePlanOpenAiBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan`,
+    wcodePlanAnthropicBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan/anthropic`,
+    wcodePlanBillingCurrentUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/current`,
+    wcodePlanBillingBalanceUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/balance`,
   };
 }
 

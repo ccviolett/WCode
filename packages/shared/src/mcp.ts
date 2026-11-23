@@ -249,16 +249,22 @@ function wcodeCuaArgLeaf(value: string): string {
 // wcode-cua）；覆盖 uv/npm 的 `@version`、pip 的 `==version`、extras `[...]`、git 的 `.git`/`.git@`，
 // 以及 `python -m wcode_cua.server` 这种点号子模块（`wcode-cua.<submodule>`）。fail-closed 边界宁可
 // 过判也不漏判；仍不会误判 `wcode-cua-proxy`（短横续接，不以 `.`/`@`/`[`/`==` 边界续接）。
+// 修复原因：上游 PyPI / git 分发的 CUA Python 包名仍为 zcode-cua（zcode_cua），品牌改名仅改了内部包名。
+// 此处同时匹配 zcode-cua 与 wcode-cua（fail-closed），避免上游包规格漏判或本地包规格失效。
+function matchesCuaPackageName(normalized: string, pkgName: string): boolean {
+  return (
+    normalized === pkgName ||
+    normalized.startsWith(`${pkgName}[`) ||
+    normalized.startsWith(`${pkgName}@`) ||
+    normalized.startsWith(`${pkgName}==`) ||
+    // `.` 分支同时覆盖 `<pkg>.git` / `<pkg>.git@v1` 与 `<pkg>.server` 等 python 子模块。
+    normalized.startsWith(`${pkgName}.`)
+  );
+}
+
 function matchesWCodeCuaSpec(candidate: string): boolean {
   const c = candidate.replace(/_/g, "-");
-  return (
-    c === "wcode-cua" ||
-    c.startsWith("wcode-cua[") ||
-    c.startsWith("wcode-cua@") ||
-    c.startsWith("wcode-cua==") ||
-    // `.` 分支同时覆盖 `wcode-cua.git` / `wcode-cua.git@v1` 与 `wcode-cua.server` 等 python 子模块。
-    c.startsWith("wcode-cua.")
-  );
+  return matchesCuaPackageName(c, "zcode-cua") || matchesCuaPackageName(c, "wcode-cua");
 }
 
 /**

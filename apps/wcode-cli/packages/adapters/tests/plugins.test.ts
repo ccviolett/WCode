@@ -863,7 +863,7 @@ describe("NodePluginAdapter", () => {
       { name: "svg", icon: "svg/icon.svg", mimeType: "image/svg+xml" },
     ]);
     expect(icons.get("figma")).toBe(
-      "https://cdn-zcode.z.ai/wcode/official-plugin/assets/figma/icon.png",
+      "https://cdn-zcode.z.ai/zcode/official-plugin/assets/figma/icon.png",
     );
     expect(icons.has("unsafe")).toBe(false);
     expect(icons.has("svg")).toBe(false);
@@ -884,7 +884,7 @@ describe("NodePluginAdapter", () => {
     expect(enriched.plugins).toEqual([
       {
         name: "figma",
-        icon: "https://cdn-zcode.z.ai/wcode/official-plugin/assets/figma/icon.png",
+        icon: "https://cdn-zcode.z.ai/zcode/official-plugin/assets/figma/icon.png",
         source: "./figma",
       },
       { name: "existing", icon: "https://example.com/existing.png", source: "./existing" },
@@ -1054,7 +1054,7 @@ describe("NodePluginAdapter", () => {
         plugins: [
           {
             name: "figma",
-            icon: "https://cdn-zcode.z.ai/wcode/official-plugin/assets/figma/icon.png",
+            icon: "https://cdn-zcode.z.ai/zcode/official-plugin/assets/figma/icon.png",
           },
         ],
       });
@@ -1124,7 +1124,7 @@ describe("NodePluginAdapter", () => {
         plugins: [
           {
             name: "figma",
-            icon: "https://cdn-zcode.z.ai/wcode/official-plugin/assets/figma/icon.png",
+            icon: "https://cdn-zcode.z.ai/zcode/official-plugin/assets/figma/icon.png",
           },
         ],
       });
@@ -1171,7 +1171,7 @@ describe("NodePluginAdapter", () => {
         plugins: [
           {
             name: "figma",
-            icon: "https://cdn-zcode.z.ai/wcode/official-plugin/assets/figma/icon.png",
+            icon: "https://cdn-zcode.z.ai/zcode/official-plugin/assets/figma/icon.png",
           },
         ],
       });

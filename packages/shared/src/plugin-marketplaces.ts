@@ -41,7 +41,8 @@ export const DEFAULT_PLUGIN_MARKETPLACES: DefaultPluginMarketplace[] = [
     // WCode 官方唯一市场：本地 seed 分片与 CDN 分片在 Agent storage 内合并。
     // CDN manifest 的 name 必须与该 canonical id 一致。
     id: WCODE_OFFICIAL_PLUGIN_MARKETPLACE_ID,
-    source: "https://cdn-zcode.z.ai/wcode/official-plugin/marketplace.json",
+    // 修复原因：上游 CDN 路径为 /zcode/official-plugin/marketplace.json（/wcode/ 路径返回 404）。
+    source: "https://cdn-zcode.z.ai/zcode/official-plugin/marketplace.json",
     name: WCODE_OFFICIAL_PLUGIN_MARKETPLACE_ID,
     description: "Official WCode plugins marketplace: built-in and community plugins for WCode.",
     pluginCount: 0,

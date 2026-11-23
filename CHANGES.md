@@ -5,13 +5,13 @@
 
 ## 来源
 
-| 项 | 值 |
-| --- | --- |
-| 上游项目 | [zai-org/ZCode](https://github.com/zai-org/ZCode) |
-| 上游版本 | v3.18.2（`package.json` version `3.18.2`） |
-| 基线提交 | `fec97590`（`chore: sync ZCode source v3.18.2`） |
-| 许可证 | Apache License 2.0（见 [LICENSE](LICENSE)），本分支沿用同一许可证 |
-| 本分支名称 | WCode |
+| 项         | 值                                                                |
+| ---------- | ----------------------------------------------------------------- |
+| 上游项目   | [zai-org/ZCode](https://github.com/zai-org/ZCode)                 |
+| 上游版本   | v3.18.2（`package.json` version `3.18.2`）                        |
+| 基线提交   | `fec97590`（`chore: sync ZCode source v3.18.2`）                  |
+| 许可证     | Apache License 2.0（见 [LICENSE](LICENSE)），本分支沿用同一许可证 |
+| 本分支名称 | WCode                                                             |
 
 本仓库是上游源码的修改版，不是 Z.ai 官方项目，未获得其背书或赞助。
 上一版 fork 基于 v3.17.2；本版是**重新派生**（在新基线上重放改动），不是与旧分支 merge。
@@ -40,8 +40,7 @@
 - 命令：`pnpm build:zcode` → `pnpm build:wcode`，`scripts/build-wcode.mjs`。
 - 品牌图形：应用 Logo 由 Z 字形改为同风格 W 字形（同一圆角方块、同一粗斜线几何）；
   同步更新启动页与关于页矢量、空状态水印 `packages/ui/src/assets/W.svg`。Z.ai 作为供应商的图标保持原样。
-- **保留未改**：上游服务域名（`zcode.z.ai`、`cdn-zcode.z.ai`、`zcode.ai`）。这些是外部服务地址，
-  改名会导致登录、计费与插件市场不可用；如需指向自建后端，请通过 `WCODE_BASE_URL` 等配置项切换。
+- **保留未改（外部服务契约）**：上游服务域名（`zcode.z.ai`、`cdn-zcode.z.ai`、`zcode.ai`）以及上游路径段与外部包名（`/api/v1/zcode-plan/*`、`zcode\.z\.ai` `baseUrlMatch`、`cdn-zcode.z.ai/zcode/official-plugin/*` 含 `zcode-guide`/`zcode-cua`/`zcode-site` 图标、内网镜像 `/zcode/deps`、上游 PyPI 包名 `zcode-cua`）。这些是外部服务/分发契约，改名会导致登录、计费、模型能力匹配与插件市场 404；如需指向自建后端，请通过 `WCODE_BASE_URL`、`WCODE_DEPS_BASE_URL` 等配置项切换。
 
 ## 三、Web 独立运行改造
 
@@ -59,6 +58,8 @@
 - `window-controller` 在客户端改为**可选**能力：Web 端不创建该代理，任务归档/置顶/重命名与
   未读信号回退到 `wcodeTaskService`；桌面端若恢复可显式开启。
 - Web 端默认主题改为跟随系统外观（原默认固定 Zai dark），并保留用户已保存的偏好。
+- Web/Server Host 动态工作流缺省提供模式（`DEFAULT_DYNAMIC_WORKFLOW_MODE`）在未连接上游配置服务或无远端下发时改为 `onDemand`：默认保留 `/workflow` 命令与自动化页「工作流」入口，且不在普通聊天会话预注册 10 个工作流工具；仍遵循 `WCODE_DYNAMIC_WORKFLOW_MODE`、远端配置与用户设置覆盖。
+- Web 端查看动态工作流 HTML 产物时，本机模式通过宿主机 `system.openPath` 调用系统默认浏览器打开工作区原文件，远端模式隐藏不可用的 `file://` 打开按钮并回退至工作区文件树定位。
 
 ## 四、访问控制
 
@@ -72,6 +73,7 @@
 
 - `build:wcode` 组装发行包时剔除全部 `.map`（终端用户不需要调试产物，体积明显下降）。
 - 发行包根目录自动随附 `LICENSE`、`NOTICE.md`、`CHANGES.md`、`THIRD-PARTY-NOTICES.md`。
+- `build:wcode` 随 `agent/wcode.cjs` 一并校验并打包 `agent/packages/bundled-skills`（`dynamic-workflows` 内置技能包），确保脱离源码目录运行时 `/workflow` 与工作流工具链的技能门可用。
 - 删除桌面端遗留的 `package-lock.json`（pnpm 项目不使用），lockfile 与 workspace 链接按 `@wcode`
   作用域重建。
 - 依赖集变化：不再包含 Electron、WebdriverIO、`@arms/rum-electron` 等桌面依赖。
