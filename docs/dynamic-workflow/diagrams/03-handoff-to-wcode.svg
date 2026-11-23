@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="1200" height="740" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">
+  <!-- Solid Light Card Canvas -->
+  <rect x="0" y="0" width="1200" height="740" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Header (y=20..82) -->
+  <text x="36" y="46" font-size="24" font-weight="700" fill="#0F172A">3. 动态工作流如何交给 WCode 运行？（交接方式与后台托管）</text>
+  <text x="36" y="74" font-size="14" font-weight="400" fill="#475569">清晰分工：团队只需交出 .dwf.ts 剧本与入参 → WCode 全权接管体检、控并发、断点续跑与结果渲染</text>
+
+  <!-- Column 1: 4 种启动入口 (x=36, width=326) -->
+  <rect x="36" y="100" width="326" height="548" rx="12" fill="#F0FDFA" stroke="#0D9488" stroke-width="2"/>
+  <text x="52" y="130" font-size="15" font-weight="700" fill="#0F766E">你们怎么交给 WCode？（4 种启动入口）</text>
+  <line x1="50" y1="140" x2="348" y2="140" stroke="#99F6E4" stroke-width="1.5"/>
+
+  <!-- Col 1 Card 1 -->
+  <rect x="50" y="147" width="298" height="159" rx="10" fill="#FFFFFF" stroke="#0D9488" stroke-width="2"/>
+  <text x="64" y="176" font-size="14" font-weight="700" fill="#0F766E">入口 1 · 存好剧本一键直跑<tspan fill="#0D9488">【最推荐】</tspan></text>
+  <text x="64" y="200" font-size="13" fill="#334155">放入 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" fill="#0F172A">.wcode/workflows/*.dwf.ts</tspan></text>
+  <text x="64" y="222" font-size="13" fill="#334155">Web「自动化 › 工作流」填参点运行</text>
+  <text x="64" y="244" font-size="13" fill="#334155">或调用 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" fill="#0F172A">startSavedWorkflow</tspan></text>
+  <text x="64" y="266" font-size="13" font-weight="700" fill="#0F766E">跳过主 AI 现想剧本环节，</text>
+  <text x="64" y="288" font-size="13" font-weight="700" fill="#0F766E">0 等待、0 聊天 Token 直接跑！</text>
+
+  <!-- Col 1 Card 2 -->
+  <rect x="50" y="313" width="298" height="95" rx="10" fill="#FFFFFF" stroke="#99F6E4" stroke-width="1.5"/>
+  <text x="64" y="342" font-size="14" font-weight="700" fill="#0F766E">入口 2 · 对话按需编排</text>
+  <text x="64" y="366" font-size="13" fill="#334155">聊天框输入 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" fill="#0F172A">/workflow 任务目标</tspan></text>
+  <text x="64" y="389" font-size="13" fill="#334155">主 AI 自动加载技能写剧本并启动运行</text>
+
+  <!-- Col 1 Card 3 -->
+  <rect x="50" y="415" width="298" height="116" rx="10" fill="#FFFFFF" stroke="#99F6E4" stroke-width="1.5"/>
+  <text x="64" y="444" font-size="14" font-weight="700" fill="#0F766E">入口 3 · CI / 命令行批处理</text>
+  <text x="64" y="468" font-size="13" fill="#334155">无头命令行自动跑通（适合 CI 集成）：</text>
+  <text x="64" y="491" font-size="13" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" fill="#0F172A">wcode --workflow-mode alwaysOn</text>
+  <text x="64" y="513" font-size="13" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" fill="#0F172A">-p "/workflow ..."</text>
+
+  <!-- Col 1 Card 4 -->
+  <rect x="50" y="538" width="298" height="96" rx="10" fill="#FFFFFF" stroke="#99F6E4" stroke-width="1.5"/>
+  <text x="64" y="567" font-size="14" font-weight="700" fill="#0F766E">入口 4 · 外部系统集成</text>
+  <text x="64" y="591" font-size="13" fill="#334155">接入 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" fill="#0F172A">app-server</tspan>（WebSocket/stdio V4）</text>
+  <text x="64" y="614" font-size="13" fill="#334155">用程序直接启停、查进度与拉取产物</text>
+
+  <!-- Gutter 1 Arrow (x=362..392) -->
+  <line x1="364" y1="374" x2="380" y2="374" stroke="#475569" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="379,366 390,374 379,382" fill="#475569"/>
+
+  <!-- Column 2: 4 大托管核心 (x=392, width=466) -->
+  <rect x="392" y="100" width="466" height="548" rx="12" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="408" y="130" font-size="15" font-weight="700" fill="#3730A3">WCode 接手后自动管什么？（4 大托管核心）</text>
+  <line x1="406" y1="140" x2="844" y2="140" stroke="#C7D2FE" stroke-width="1.5"/>
+
+  <!-- Col 2 Card 1 -->
+  <rect x="406" y="147" width="438" height="94" rx="10" fill="#FFFFFF" stroke="#C7D2FE" stroke-width="1.5"/>
+  <text x="420" y="176" font-size="14" font-weight="700" fill="#3730A3">① 启动前零成本体检</text>
+  <text x="420" y="200" font-size="13" fill="#334155">校验脚本语法、传入参数与子模型是否可用，预先画出阶段流程图</text>
+  <text x="420" y="222" font-size="13" fill="#334155">编不过直接拦截并提示修改，不白烧 Token</text>
+
+  <!-- Col 2 Card 2 -->
+  <rect x="406" y="248" width="438" height="94" rx="10" fill="#FFFFFF" stroke="#C7D2FE" stroke-width="1.5"/>
+  <text x="420" y="277" font-size="14" font-weight="700" fill="#3730A3">② 双层智能并发控流</text>
+  <text x="420" y="301" font-size="13" fill="#334155">单任务并发池默认按 CPU 核数推导 4~16，遇到接口限流自动降速保护</text>
+  <text x="420" y="323" font-size="13" font-weight="700" fill="#312E81">运行中可随时在线调高/调低且不打断在跑步骤</text>
+
+  <!-- Col 2 Card 3 -->
+  <rect x="406" y="349" width="438" height="94" rx="10" fill="#FFFFFF" stroke="#C7D2FE" stroke-width="1.5"/>
+  <text x="420" y="378" font-size="14" font-weight="700" fill="#3730A3">③ 全程本地持久化存档</text>
+  <text x="420" y="402" font-size="13" fill="#334155">每一次文件读取、命令输出、子员工问答均实时写入本地存档</text>
+  <text x="420" y="424" font-size="13" fill="#334155">全链路状态可靠留存，关闭网页也不丢进度</text>
+
+  <!-- Col 2 Card 4 -->
+  <rect x="406" y="450" width="438" height="184" rx="10" fill="#FFFFFF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="420" y="479" font-size="14" font-weight="700" fill="#3730A3">④ 三大容灾与省钱续跑</text>
+  <text x="420" y="502" font-size="13" font-weight="700" fill="#1E1B4B">• 剧本没改 → 断点接着跑（Resume）：</text>
+  <text x="431" y="524" font-size="13" fill="#334155">断网/重启后读存档秒过已完步骤，绝不重跑扣费</text>
+  <text x="420" y="548" font-size="13" font-weight="700" fill="#1E1B4B">• 额度用光 → 到点自己醒：</text>
+  <text x="431" y="570" font-size="13" fill="#334155">遇套餐限额自动暂停，到重置时间 +1 分钟自动唤醒接着跑</text>
+  <text x="420" y="594" font-size="13" font-weight="700" fill="#1E1B4B">• 剧本改了 → 借旧成果跑（Amend）：</text>
+  <text x="431" y="616" font-size="13" fill="#334155">前 8 步跑完改第 9 步代码，起过名字的子员工直接复用旧结果</text>
+
+  <!-- Gutter 2 Arrow (x=858..888) -->
+  <line x1="860" y1="374" x2="876" y2="374" stroke="#475569" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="875,366 886,374 875,382" fill="#475569"/>
+
+  <!-- Column 3: 拿回什么 (x=888, width=276) -->
+  <rect x="888" y="100" width="276" height="548" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+  <text x="904" y="130" font-size="15" font-weight="700" fill="#065F46">你们从 WCode 拿回什么？</text>
+  <line x1="902" y1="140" x2="1150" y2="140" stroke="#A7F3D0" stroke-width="1.5"/>
+
+  <!-- Col 3 Card 1 -->
+  <rect x="902" y="147" width="248" height="185" rx="10" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1.5"/>
+  <text x="916" y="176" font-size="14" font-weight="700" fill="#065F46">1. 实时运行大盘</text>
+  <text x="916" y="201" font-size="13" fill="#334155">• 每个阶段进度与流转状态</text>
+  <text x="916" y="224" font-size="13" fill="#334155">• 在跑子员工与 Token 用量</text>
+  <text x="916" y="247" font-size="13" fill="#334155">• 子员工请示单</text>
+  <text x="923" y="269" font-size="13" fill="#334155">（escalate 汇总问答）</text>
+  <text x="916" y="292" font-size="13" fill="#334155">• 剧本填空进度</text>
+  <text x="923" y="314" font-size="13" fill="#334155">（hole 主 AI 自动补代码）</text>
+
+  <!-- Col 3 Card 2 -->
+  <rect x="902" y="341" width="248" height="161" rx="10" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1.5"/>
+  <text x="916" y="370" font-size="14" font-weight="700" fill="#065F46">2. 多版本可视化产物库</text>
+  <text x="916" y="395" font-size="13" fill="#334155">右侧面板在线浏览与下载：</text>
+  <text x="916" y="417" font-size="13" fill="#334155">• Markdown / PDF / Office</text>
+  <text x="916" y="439" font-size="13" fill="#334155">• HTML（支持系统浏览器打开）</text>
+  <text x="916" y="461" font-size="13" fill="#334155">• 实时折线图与表格看板</text>
+  <text x="916" y="483" font-size="13" font-weight="600" fill="#047857">支持多版本产物对比与留档</text>
+
+  <!-- Col 3 Card 3 -->
+  <rect x="902" y="511" width="248" height="123" rx="10" fill="#FFFFFF" stroke="#059669" stroke-width="2"/>
+  <text x="916" y="540" font-size="14" font-weight="700" fill="#065F46">3. 最终结构化结论</text>
+  <text x="916" y="566" font-size="13" fill="#334155">工作流 return 返回的 JSON</text>
+  <text x="916" y="589" font-size="13" fill="#334155">结果直接回传给当前主会话</text>
+  <text x="916" y="612" font-size="13" fill="#334155">或外部调用方，形成完整闭环</text>
+
+  <!-- Bottom Takeaway Banner (y=666..718) -->
+  <rect x="36" y="666" width="1128" height="52" rx="10" fill="#1E293B"/>
+  <text x="600" y="697" text-anchor="middle" font-size="14" font-weight="500" fill="#F8FAFC">推荐落地模式：团队把成熟流程写成 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-weight="700" fill="#5EEAD4">.dwf.ts</tspan> 放进仓库 → 通过 Web 工作流中枢或 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-weight="700" fill="#5EEAD4">startSavedWorkflow</tspan> 直接交给 WCode 后台托管运行。</text>
+</svg>

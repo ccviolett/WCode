@@ -22,10 +22,25 @@ const mocks = new Map([
         id: 'review-file', kind: 'file', title: 'Review file', version: 1,
         sourcePath: 'out/review.txt', contentType: 'text/plain', bytes: 6,
         versions: [{version: 1, publishedAt: 1, bytes: 6}], itemCount: 0
+      }, {
+        id: 'review-html', kind: 'file', title: 'Review HTML', version: 1,
+        sourcePath: 'out/report.html', contentType: 'text/html', bytes: 13,
+        versions: [{version: 1, publishedAt: 1, bytes: 13}], itemCount: 0
       }] }),
-      workflowRunArtifactRead: async () => ({
-        dataBase64: 'cmV2aWV3', totalBytes: 6, nextOffset: null, mediaType: 'text/plain'
-      }),
+      workflowRunArtifactRead: async (params) =>
+        params?.artifactId === 'review-html'
+          ? {
+              dataBase64: 'PGgxPmh0bWw8L2gxPg==',
+              totalBytes: 13,
+              nextOffset: null,
+              mediaType: 'text/html',
+            }
+          : {
+              dataBase64: 'cmV2aWV3',
+              totalBytes: 6,
+              nextOffset: null,
+              mediaType: 'text/plain',
+            },
       workflowRunArtifactData: async () => ({items: [], hasMore: false})
     };
     export const useV4Conversation = () => conversation;
@@ -36,10 +51,12 @@ const mocks = new Map([
     "@/v4/useConversationProjection.js",
     "export const useConversationProjection = () => ({snapshot: null});",
   ],
-  // 查看器已由独立用例覆盖，此处只隔离重量级正文，保留真实头部与平台动作。
+  // 保留真实 WorkflowArtifactBody / WorkflowArtifactHtmlCard，仅隔离重量级叶子依赖。
+  ["@/components/ai-elements/code-block.js", "export const CodeBlock = () => null;"],
+  ["@/components/ai-elements/message.js", "export const MessageResponse = () => null;"],
   [
-    "@/app-shell/workflow-artifacts/WorkflowArtifactBody.js",
-    "export const WorkflowArtifactBody = () => null;",
+    "@/app-shell/workflow-artifacts/ArtifactPresetBody.js",
+    "export const ArtifactPresetBody = () => null;",
   ],
 ]);
 let server, browser, origin;
@@ -152,3 +169,40 @@ for (const width of [390, 1200])
           await context.close();
         }
       });
+
+test("WORK-HTML-WEB-REMOTE: remote Web hides dead file:// openInBrowser and falls back to workspace reveal", async () => {
+  const context = await browser.newContext({ viewport: { width: 1200, height: 844 } });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  try {
+    await page.goto(`${origin}fixture?artifact=html&canOpenLocal=0&embedded=0`);
+    await page.getByTestId("workflow-artifact-html-card").waitFor();
+    assert.equal(await page.getByTestId("workflow-artifact-open-in-browser").count(), 0);
+    await page.getByTestId("workflow-artifact-html-reveal").click();
+    assert.equal(await page.getAttribute("body", "data-revealed"), "/workspace/out/report.html");
+    assert.equal(await page.getAttribute("body", "data-opened-browser-url"), null);
+    assert.deepEqual(errors, []);
+  } finally {
+    await context.close();
+  }
+});
+
+test("WORK-HTML-WEB-LOCAL: local Web opens HTML via host openExternalFile instead of window.open(file://)", async () => {
+  const context = await browser.newContext({ viewport: { width: 1200, height: 844 } });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  try {
+    await page.goto(`${origin}fixture?artifact=html&canOpenLocal=1&embedded=0`);
+    await page.getByTestId("workflow-artifact-html-card").waitFor();
+    await page.getByTestId("workflow-artifact-open-in-browser").click();
+    await page.waitForFunction(
+      () => document.body.dataset.openedExternal === "/workspace/out/report.html",
+    );
+    assert.equal(await page.getAttribute("body", "data-opened-browser-url"), null);
+    assert.deepEqual(errors, []);
+  } finally {
+    await context.close();
+  }
+});

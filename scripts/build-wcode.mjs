@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import {
   copyRuntimeNodeModules,
   patchNodePtyPrebuilds,
+  stageBundledSkills,
   stageTuiRuntime,
 } from "./wcode-distribution/assets.mjs";
 import { installScriptSource } from "./wcode-distribution/installer.mjs";
@@ -211,6 +212,7 @@ async function stageWCodePackage({ packageRoot, version }) {
   );
   await chmod(resolve(packageRoot, "agent", "wcode.cjs"), 0o755);
 
+  await stageBundledSkills(packageRoot);
   await stageTuiRuntime(packageRoot);
   await copyRuntimeNodeModules(packageRoot);
   await patchNodePtyPrebuilds(packageRoot);

@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="1200" height="740" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <style>
+      .mono { font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace; }
+    </style>
+  </defs>
+
+  <!-- Solid light card canvas -->
+  <rect x="0" y="0" width="1200" height="740" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Header -->
+  <text x="36" y="46" font-size="24" font-weight="700" fill="#0F172A">2. 动态工作流的能力边界：能做什么 vs 不能做什么</text>
+  <text x="36" y="72" font-size="14" font-weight="400" fill="#475569">设计铁律：总管脚本保持 100% 确定性（只指挥不乱伸手），真正改代码/查资料全交给受控的 AI 子员工</text>
+  <line x1="36" y1="86" x2="1164" y2="86" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <!-- Upper Section: Dual-layer isolation diagram -->
+  <text x="36" y="108" font-size="14" font-weight="700" fill="#1E293B">双层分工隔离图（一眼解答「为什么总管脚本不能写文件，工作流却能改代码？」）</text>
+
+  <!-- Left Box: Orchestrator Sandbox -->
+  <rect x="36" y="120" width="445" height="200" rx="12" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <path d="M 37 131 Q 37 121 47 121 L 470 121 Q 480 121 480 131 L 480 156 L 37 156 Z" fill="#DBEAFE"/>
+  <line x1="36" y1="156" x2="481" y2="156" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="258.5" y="144" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1E3A8A">【编排总管：.dwf.ts 脚本（确定性沙箱）】</text>
+
+  <text x="54" y="182" font-size="13.5" fill="#1E293B"><tspan font-weight="700" fill="#1D4ED8">✅ 能做：</tspan>划分阶段、分头派活、只读查文件/Git、</text>
+  <text x="72" y="206" font-size="13.5" fill="#1E293B">跑白名单安检命令 <tspan class="mono" font-weight="600" fill="#1D4ED8">world.run</tspan>、汇总发布报告</text>
+  <line x1="54" y1="224" x2="463" y2="224" stroke="#BFDBFE" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="54" y="248" font-size="13.5" fill="#1E293B"><tspan font-weight="700" fill="#B91C1C">⛔ 刻意禁止：</tspan>不直接修改工作区文件、不直接联网；</text>
+  <text x="72" y="272" font-size="13.5" fill="#1E293B">禁用 <tspan class="mono" font-weight="600" fill="#B91C1C">Date.now()</tspan> 与 <tspan class="mono" font-weight="600" fill="#B91C1C">Math.random()</tspan></text>
+  <text x="72" y="296" font-size="13" fill="#475569">（只为保证中断续跑时路线 100% 一模一样！）</text>
+
+  <!-- Center Bridge -->
+  <text x="600" y="158" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1D4ED8"><tspan class="mono">ask&lt;T&gt;</tspan>(任务指令)</text>
+  <line x1="496" y1="172" x2="695" y2="172" stroke="#2563EB" stroke-width="2.5"/>
+  <polygon points="693,166 705,172 693,178" fill="#2563EB"/>
+  <text x="600" y="192" text-anchor="middle" font-size="13" font-weight="500" fill="#334155">派发明确工作 + 结构化验收表</text>
+
+  <text x="600" y="238" text-anchor="middle" font-size="13.5" font-weight="700" fill="#6D28D9">交回合格 JSON 验收表</text>
+  <line x1="704" y1="252" x2="505" y2="252" stroke="#7C3AED" stroke-width="2.5"/>
+  <polygon points="507,246 495,252 507,258" fill="#7C3AED"/>
+  <text x="600" y="272" text-anchor="middle" font-size="13" font-weight="500" fill="#334155">遇盲区递 <tspan class="mono" font-weight="600" fill="#6D28D9">escalate</tspan> 请示单</text>
+  <text x="600" y="295" text-anchor="middle" font-size="13" font-weight="500" fill="#334155">给主 AI（最多 3 次）</text>
+
+  <!-- Right Box: AI Sub-agent -->
+  <rect x="719" y="120" width="445" height="200" rx="12" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+  <path d="M 720 131 Q 720 121 730 121 L 1153 121 Q 1163 121 1163 131 L 1163 156 L 720 156 Z" fill="#EDE9FE"/>
+  <line x1="719" y1="156" x2="1164" y2="156" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="941.5" y="144" text-anchor="middle" font-size="14.5" font-weight="700" fill="#4C1D95">【AI 子员工：<tspan class="mono">agent()</tspan> 实例（独立记忆会话）】</text>
+
+  <text x="737" y="182" font-size="13.5" fill="#1E293B"><tspan font-weight="700" fill="#6D28D9">✅ 能做：</tspan>持有真实工作工具箱 ——</text>
+  <text x="755" y="206" font-size="13.5" fill="#1E293B">修改/新建文件（Edit/Write）、运行终端（Bash）、</text>
+  <text x="755" y="230" font-size="13.5" fill="#1E293B">网页搜索（WebSearch）、MCP 与插件</text>
+  <line x1="737" y1="248" x2="1146" y2="248" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="737" y="272" font-size="13.5" fill="#1E293B"><tspan font-weight="700" fill="#B91C1C">⛔ 刻意剥离：</tspan>不能套娃发起新工作流，</text>
+  <text x="755" y="296" font-size="13.5" fill="#1E293B">不能绕过总管直接弹窗打扰用户提问</text>
+
+  <!-- Lower Section: Three equal columns -->
+  <!-- Column 1: Strengths (Green) -->
+  <rect x="36" y="342" width="360" height="368" rx="12" fill="#F0FDF4" stroke="#16A34A" stroke-width="2"/>
+  <path d="M 37 353 Q 37 343 47 343 L 385 343 Q 395 343 395 353 L 395 386 L 37 386 Z" fill="#DCFCE7"/>
+  <line x1="36" y1="386" x2="396" y2="386" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="216" y="370" text-anchor="middle" font-size="15" font-weight="700" fill="#14532D">✅ 最擅长的 5 件事</text>
+
+  <text x="52" y="416" font-size="14" font-weight="700" fill="#166534">1. 多人分头并行干</text>
+  <text x="64" y="439" font-size="13" fill="#334155">同时派几十个独立子员工各查各的，快且记忆不串味</text>
+  <line x1="52" y1="454" x2="380" y2="454" stroke="#BBF7D0" stroke-width="1"/>
+
+  <text x="52" y="477" font-size="14" font-weight="700" fill="#166534">2. 按必填表收结果</text>
+  <text x="64" y="500" font-size="13" fill="#334155">交错格式自动打回重填（最多 3 次），稳拿合法 JSON</text>
+  <line x1="52" y1="515" x2="380" y2="515" stroke="#BBF7D0" stroke-width="1"/>
+
+  <text x="52" y="538" font-size="14" font-weight="700" fill="#166534">3. 真命令当安检门</text>
+  <text x="64" y="561" font-size="13" fill="#334155">AI 改完代码立刻跑真实单测，不过就循环打回重修</text>
+  <line x1="52" y1="576" x2="380" y2="576" stroke="#BBF7D0" stroke-width="1"/>
+
+  <text x="52" y="599" font-size="14" font-weight="700" fill="#166534">4. 剧本填空题 <tspan class="mono">hole&lt;T&gt;</tspan></text>
+  <text x="64" y="622" font-size="13" fill="#334155">前期没法猜的步骤先留空，跑出结果后现场补代码</text>
+  <line x1="52" y1="637" x2="380" y2="637" stroke="#BBF7D0" stroke-width="1"/>
+
+  <text x="52" y="660" font-size="14" font-weight="700" fill="#166534">5. 多版本报告与看板</text>
+  <text x="64" y="683" font-size="13" fill="#334155">右侧直接看 MD / HTML / PDF / Office / 图表与表</text>
+
+  <!-- Column 2: Red Lines (Red) -->
+  <rect x="420" y="342" width="360" height="368" rx="12" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+  <path d="M 421 353 Q 421 343 431 343 L 769 343 Q 779 343 779 353 L 779 386 L 421 386 Z" fill="#FEE2E2"/>
+  <line x1="420" y1="386" x2="780" y2="386" stroke="#FCA5A5" stroke-width="1.5"/>
+  <text x="600" y="370" text-anchor="middle" font-size="15" font-weight="700" fill="#7F1D1D">⛔ 明确禁止的 5 条红线</text>
+
+  <text x="436" y="416" font-size="14" font-weight="700" fill="#991B1B">1. 禁止工作流套娃</text>
+  <text x="448" y="439" font-size="13" fill="#334155">子员工严禁再发起新工作流，防无限递归失控</text>
+  <line x1="436" y1="454" x2="764" y2="454" stroke="#FECACA" stroke-width="1"/>
+
+  <text x="436" y="477" font-size="14" font-weight="700" fill="#991B1B">2. 禁止偷偷拼危险命令</text>
+  <text x="448" y="500" font-size="13" fill="#334155"><tspan class="mono" font-weight="600" fill="#7F1D1D">world.run</tspan> 命令名必须写死，且启动前弹窗公示</text>
+  <line x1="436" y1="515" x2="764" y2="515" stroke="#FECACA" stroke-width="1"/>
+
+  <text x="436" y="538" font-size="14" font-weight="700" fill="#991B1B">3. 禁止乱引外部包或联网</text>
+  <text x="448" y="561" font-size="13" fill="#334155">脚本不可 <tspan class="mono" font-weight="600" fill="#7F1D1D">import</tspan> npm 包，不可直接调 <tspan class="mono" font-weight="600" fill="#7F1D1D">fs / fetch</tspan></text>
+  <line x1="436" y1="576" x2="764" y2="576" stroke="#FECACA" stroke-width="1"/>
+
+  <text x="436" y="599" font-size="14" font-weight="700" fill="#991B1B">4. 禁止子员工弹窗轰炸人</text>
+  <text x="448" y="622" font-size="13" fill="#334155">20 人并行绝不弹 20 个窗，统一递请示单给主 AI</text>
+  <line x1="436" y1="637" x2="764" y2="637" stroke="#FECACA" stroke-width="1"/>
+
+  <text x="436" y="660" font-size="14" font-weight="700" fill="#991B1B">5. 禁止传没法存档的值</text>
+  <text x="448" y="683" font-size="13" fill="#334155">不可传函数、<tspan class="mono">Date</tspan>、<tspan class="mono">Map</tspan>（否则断网无法读档重跑）</text>
+
+  <!-- Column 3: Capacity Caps (Amber) -->
+  <rect x="804" y="342" width="360" height="368" rx="12" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+  <path d="M 805 353 Q 805 343 815 343 L 1153 343 Q 1163 343 1163 353 L 1163 386 L 805 386 Z" fill="#FEF3C7"/>
+  <line x1="804" y1="386" x2="1164" y2="386" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="984" y="370" text-anchor="middle" font-size="14.5" font-weight="700" fill="#78350F">⚠️ 关键容量上限（超限报错，绝不偷截断）</text>
+
+  <text x="820" y="414" font-size="13.5" font-weight="700" fill="#92400E">• <tspan class="mono">files.glob</tspan> 匹配：</text>
+  <text x="832" y="436" font-size="13.5" fill="#334155">最多 <tspan font-weight="700" fill="#B45309">2,000</tspan> 个文件</text>
+
+  <text x="820" y="463" font-size="13.5" font-weight="700" fill="#92400E">• <tspan class="mono">files.grep</tspan> 搜索：</text>
+  <text x="832" y="485" font-size="13.5" fill="#334155">最多 <tspan font-weight="700" fill="#B45309">2,000</tspan> 条 或 <tspan font-weight="700" fill="#B45309">256 KiB</tspan></text>
+
+  <text x="820" y="512" font-size="13.5" font-weight="700" fill="#92400E">• <tspan class="mono">git.diff / log</tspan>：</text>
+  <text x="832" y="534" font-size="13.5" fill="#334155">diff 上限 <tspan font-weight="700" fill="#B45309">512 KiB</tspan> / log <tspan font-weight="700" fill="#B45309">100</tspan> 条</text>
+
+  <text x="820" y="561" font-size="13.5" font-weight="700" fill="#92400E">• <tspan class="mono">world.run</tspan> 执行：</text>
+  <text x="832" y="583" font-size="13.5" fill="#334155">默认超时 <tspan font-weight="700" fill="#B45309">5</tspan> 分钟，单流上限 <tspan font-weight="700" fill="#B45309">16 MiB</tspan></text>
+
+  <text x="820" y="610" font-size="13.5" font-weight="700" fill="#92400E">• <tspan class="mono">report()</tspan> 上报：</text>
+  <text x="832" y="632" font-size="13.5" fill="#334155"><tspan font-weight="700" fill="#B45309">65,536</tspan> 条 / 单条 <tspan font-weight="700" fill="#B45309">1 MiB</tspan> / 总 <tspan font-weight="700" fill="#B45309">1 GiB</tspan></text>
+
+  <text x="820" y="659" font-size="13.5" font-weight="700" fill="#92400E">• <tspan class="mono">artifact.*</tspan> 产物：</text>
+  <text x="832" y="681" font-size="13.5" fill="#334155"><tspan font-weight="700" fill="#B45309">32</tspan> 个 × <tspan font-weight="700" fill="#B45309">16</tspan> 版，单文件上限 <tspan font-weight="700" fill="#B45309">20 MiB</tspan></text>
+</svg>

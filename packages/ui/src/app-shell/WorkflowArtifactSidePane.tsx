@@ -3,7 +3,10 @@ import { TID_WORKFLOW_ARTIFACT_PANE } from "@wcode/shared";
 import type { WorkflowRunArtifactSummary } from "@wcode/shared/wcode-protocol-v4";
 import { ChevronLeftIcon, ChevronRightIcon, CopyIcon, FolderOpenIcon } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
+import { toast } from "@/components/ui/toast.js";
+import { useOptionalPlatform } from "@/hooks/usePlatform.js";
 import { useWCodeIntl } from "@/i18n/IntlProvider.js";
+import { logger } from "@/logger.js";
 import {
   ArtifactKindIcon,
   artifactDisplayTitle,
@@ -43,10 +46,12 @@ const EMPTY_SUMMARIES: readonly WorkflowRunArtifactSummary[] = [];
 
 const WorkflowArtifactContent = memo(function WorkflowArtifactContent({
   tab,
+  supportsEmbeddedBrowser = true,
   onOpenBrowserUrl,
   onRevealFileInTree,
 }: {
   tab: WorkflowArtifactSidePaneTab;
+  supportsEmbeddedBrowser?: boolean;
   onOpenBrowserUrl?: (url: string) => void;
   onRevealFileInTree?: (path: string) => void;
 }) {
@@ -116,6 +121,7 @@ const WorkflowArtifactContent = memo(function WorkflowArtifactContent({
           metadataLoading={metadataLoading}
           tab={tab}
           theme={theme}
+          supportsEmbeddedBrowser={supportsEmbeddedBrowser}
           {...(onOpenBrowserUrl === undefined ? {} : { onOpenBrowserUrl })}
           {...(onRevealFileInTree === undefined ? {} : { onRevealFileInTree })}
         />
@@ -133,6 +139,7 @@ function WorkflowArtifactView({
   metadataLoading,
   tab,
   theme,
+  supportsEmbeddedBrowser = true,
   onOpenBrowserUrl,
   onRevealFileInTree,
 }: {
@@ -141,6 +148,7 @@ function WorkflowArtifactView({
   metadataLoading: boolean;
   tab: WorkflowArtifactSidePaneTab;
   theme: Theme;
+  supportsEmbeddedBrowser?: boolean;
   onOpenBrowserUrl?: (url: string) => void;
   onRevealFileInTree?: (path: string) => void;
 }) {
@@ -218,6 +226,33 @@ function WorkflowArtifactView({
     localSourcePath !== undefined && onRevealFileInTree !== undefined
       ? () => onRevealFileInTree(localSourcePath)
       : undefined;
+
+  const platform = useOptionalPlatform();
+  // 修复原因：Web 端没有内嵌浏览器时，上层传入的 handleOpenBrowserUrl 只会执行
+  // window.open("file://...")，被现代浏览器同源策略直接拦截，还会把原本兜底的「在工作区显示」按钮顶掉。
+  // 本机 Web 模式改走宿主 system.openPath 用系统默认浏览器打开原文件；远端 Web 模式显式传 null 回退到文件树定位。
+  const handleOpenHtmlInBrowser = useMemo<((url: string) => void) | null | undefined>(() => {
+    if (supportsEmbeddedBrowser) return onOpenBrowserUrl;
+    const openExternalFile = platform?.openExternalFile;
+    if (
+      platform?.canOpenLocalFiles !== true ||
+      typeof openExternalFile !== "function" ||
+      localSourcePath === undefined
+    ) {
+      return null;
+    }
+    return () => {
+      void openExternalFile.call(platform, localSourcePath).then((result) => {
+        if (!result.success) {
+          logger.warn("[WorkflowArtifact] 宿主机默认浏览器打开 HTML 产物失败", {
+            path: localSourcePath,
+            error: result.error,
+          });
+          toast(intl.formatMessage({ id: "chat.toolCall.workflow.run.artifacts.loadError" }));
+        }
+      });
+    };
+  }, [intl, localSourcePath, onOpenBrowserUrl, platform, supportsEmbeddedBrowser]);
 
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -326,6 +361,9 @@ function WorkflowArtifactView({
           version={version}
           {...(localSourcePath === undefined ? {} : { localSourcePath })}
           {...(onOpenBrowserUrl === undefined ? {} : { onOpenBrowserUrl })}
+          {...(handleOpenHtmlInBrowser === undefined
+            ? {}
+            : { onOpenHtmlBrowserUrl: handleOpenHtmlInBrowser })}
           {...(reveal === undefined ? {} : { onReveal: reveal })}
         />
       </div>
@@ -418,10 +456,12 @@ function ArtifactVersionStepper({
  */
 export const WorkflowArtifactSidePane = memo(function WorkflowArtifactSidePane({
   tab,
+  supportsEmbeddedBrowser = true,
   onOpenBrowserUrl,
   onRevealFileInTree,
 }: {
   tab: WorkflowArtifactSidePaneTab;
+  supportsEmbeddedBrowser?: boolean;
   /** html 产物的「在浏览器中打开」。 */
   onOpenBrowserUrl?: (url: string) => void;
   /** 「在工作区显示」：复用既有的文件树 reveal（与 Git 面板同一条路径）。 */
@@ -440,6 +480,7 @@ export const WorkflowArtifactSidePane = memo(function WorkflowArtifactSidePane({
     <V4PaneConversationProvider scope={scope}>
       <WorkflowArtifactContent
         tab={tab}
+        supportsEmbeddedBrowser={supportsEmbeddedBrowser}
         {...(onOpenBrowserUrl === undefined ? {} : { onOpenBrowserUrl })}
         {...(onRevealFileInTree === undefined ? {} : { onRevealFileInTree })}
       />

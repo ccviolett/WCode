@@ -19,8 +19,13 @@ export type DynamicWorkflowMode = (typeof DYNAMIC_WORKFLOW_MODES)[number];
  */
 export const WCODE_DYNAMIC_WORKFLOW_MODE_ENV = "WCODE_DYNAMIC_WORKFLOW_MODE";
 
-/** 服务端缺省、格式非法或请求失败时的取值：fail-closed，与闲时任务灰度一致。 */
-export const DEFAULT_DYNAMIC_WORKFLOW_MODE: DynamicWorkflowMode = "disabled";
+/**
+ * 服务端缺省、格式非法或请求失败时的默认提供模式。
+ * WCode 分支支持离线与自定义 Provider 独立运行 Web/Server，默认采用 onDemand：
+ * 保留 `/workflow` 命令与自动化页「工作流」入口，同时不在普通聊天会话首包预注册 10 个工作流工具；
+ * 环境变量 WCODE_DYNAMIC_WORKFLOW_MODE、远端配置下发与用户设置项仍按既有优先级覆盖。
+ */
+export const DEFAULT_DYNAMIC_WORKFLOW_MODE: DynamicWorkflowMode = "onDemand";
 
 export function normalizeDynamicWorkflowMode(value: unknown): DynamicWorkflowMode | undefined {
   if (typeof value !== "string") return undefined;

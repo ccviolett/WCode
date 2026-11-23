@@ -9,9 +9,23 @@ import "@/styles.css";
 
 const params = new URLSearchParams(location.search);
 const locale = params.get("locale") === "en-US" ? "en-US" : "zh-CN";
+const artifactId = params.get("artifact") === "html" ? "review-html" : "review-file";
+const canOpenLocalFiles = params.get("canOpenLocal") === "1";
+const supportsEmbeddedBrowser = params.get("embedded") === "1";
 document.documentElement.className =
   params.get("theme") === "dark" ? "theme-zai-dark dark" : "theme-zai-light";
-const platform = { canOpenLocalFiles: false, saveFile: saveBrowserFile } as IPlatformService;
+const platform = {
+  canOpenLocalFiles,
+  saveFile: saveBrowserFile,
+  ...(canOpenLocalFiles
+    ? {
+        openExternalFile: async (path: string) => {
+          document.body.dataset.openedExternal = path;
+          return { success: true };
+        },
+      }
+    : {}),
+} as IPlatformService;
 
 createRoot(document.getElementById("root")!).render(
   <WCodeIntlProvider initialLocale={locale}>
@@ -24,7 +38,11 @@ createRoot(document.getElementById("root")!).render(
           workspacePath: "/workspace",
           parentSessionId: "review-parent",
           runId: "review-run",
-          artifactId: "review-file",
+          artifactId,
+        }}
+        supportsEmbeddedBrowser={supportsEmbeddedBrowser}
+        onOpenBrowserUrl={(url) => {
+          document.body.dataset.openedBrowserUrl = url;
         }}
         onRevealFileInTree={(path) => {
           document.body.dataset.revealed = path;

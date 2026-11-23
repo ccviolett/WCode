@@ -5,6 +5,11 @@ import {
   collectSeaTuiAssets,
   seaTuiAssetPrefix,
 } from "../../apps/wcode-cli/packages/cli/scripts/sea-tui-assets.mjs";
+import {
+  bundledSkillPackRootPath,
+  collectSeaBundledSkillAssets,
+  seaBundledSkillAssetPrefix,
+} from "../../apps/wcode-cli/packages/cli/scripts/sea-bundled-skill-assets.mjs";
 import { supportedTargets } from "../../apps/wcode-cli/packages/cli/scripts/sea-targets.mjs";
 const root = resolve(import.meta.dirname, "../..");
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
@@ -28,6 +33,33 @@ const runtimePackageNames = [
   "yauzl",
   "node-forge",
 ];
+
+// 修复原因：dynamic-workflows 已迁出官方插件进入 packages/bundled-skills，若未随 agent/wcode.cjs
+// 一起打包至 agent/packages/bundled-skills，脱离源码目录运行时技能门（428）会拒绝 CreateWorkflow 等工具。
+export async function stageBundledSkills(packageRoot, options = {}) {
+  const cliRoot = options.cliRoot ?? resolve(root, "apps/wcode-cli");
+  const stagingDirectory = resolve(packageRoot, "../bundled-skills-staging");
+  try {
+    const { assets, manifest } = await collectSeaBundledSkillAssets({
+      root: cliRoot,
+      stagingDirectory,
+    });
+    for (const file of manifest.files) {
+      const destination = resolve(packageRoot, "agent/packages/bundled-skills", file.path);
+      await mkdir(dirname(destination), { recursive: true });
+      await cp(assets[`${seaBundledSkillAssetPrefix}${file.path}`], destination);
+      await chmod(destination, file.mode);
+    }
+    const readmePath = resolve(cliRoot, bundledSkillPackRootPath, "README.md");
+    if (await pathExists(readmePath)) {
+      const destination = resolve(packageRoot, "agent/packages/bundled-skills/README.md");
+      await mkdir(dirname(destination), { recursive: true });
+      await cp(readmePath, destination);
+    }
+  } finally {
+    await rm(stagingDirectory, { recursive: true, force: true });
+  }
+}
 
 export async function stageTuiRuntime(packageRoot) {
   const stagingDirectory = resolve(packageRoot, "../tui-staging");

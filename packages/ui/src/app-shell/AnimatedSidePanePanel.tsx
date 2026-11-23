@@ -1296,6 +1296,7 @@ export function AnimatedSidePanePanel({
                           // 不新造第二条定位路径。
                           <WorkflowArtifactSidePane
                             tab={tab}
+                            supportsEmbeddedBrowser={supportsEmbeddedBrowser}
                             onOpenBrowserUrl={onOpenBrowserUrl}
                             {...(onRevealGitFileInTree === undefined
                               ? {}

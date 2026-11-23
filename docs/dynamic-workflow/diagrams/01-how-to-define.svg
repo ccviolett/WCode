@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="1200" height="740">
+  <defs>
+    <marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3B82F6"/>
+    </marker>
+  </defs>
+
+  <!-- Solid light card canvas -->
+  <rect x="0" y="0" width="1200" height="740" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Header (y=20..82) -->
+  <text x="36" y="47" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="24" font-weight="700" fill="#0F172A">1. 如何定义一个动态工作流？</text>
+  <rect x="932" y="22" width="232" height="30" rx="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="1048" y="42" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1D4ED8">.dwf.ts = 说明书 + 编排代码</text>
+  <text x="36" y="74" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="500" fill="#475569">核心直觉：一份 .dwf.ts 文件 = 上半段【运行说明书】+ 下半段【给一群 AI 员工派活的普通 TS 代码】</text>
+
+  <!-- Left Column: 存放位置与提交方式 (x=36, width=310, y=102..650) -->
+  <rect x="36" y="102" width="310" height="548" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <path d="M 36 114 Q 36 102 48 102 L 334 102 Q 346 102 346 114 L 346 146 L 36 146 Z" fill="#F1F5F9"/>
+  <line x1="36" y1="146" x2="346" y2="146" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="54" y="130" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="16" font-weight="700" fill="#0F172A">存放位置与提交方式</text>
+  <text x="328" y="130" text-anchor="end" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#64748B">2 种落地路径</text>
+
+  <!-- Card 1: 推荐：存成文件一键直跑（0 聊天损耗） -->
+  <rect x="50" y="160" width="282" height="262" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="1.5"/>
+  <rect x="60" y="171" width="262" height="26" rx="6" fill="#059669"/>
+  <text x="191" y="189" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">推荐：存成文件一键直跑（0 聊天损耗）</text>
+
+  <!-- Card 1 - Item A: 项目级 -->
+  <rect x="64" y="205" width="254" height="108" rx="8" fill="#FFFFFF" stroke="#6EE7B7" stroke-width="1.2"/>
+  <text x="78" y="230" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="700" fill="#065F46">项目级（随仓库团队共享）</text>
+  <text x="78" y="252" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#0F172A">&lt;项目&gt;/.wcode/workflows/</text>
+  <text x="86" y="274" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#0F172A">└─ xxx.dwf.ts</text>
+  <text x="78" y="296" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#047857">同名时优先覆盖全局目录</text>
+
+  <!-- Card 1 - Item B: 全局级 -->
+  <rect x="64" y="321" width="254" height="86" rx="8" fill="#FFFFFF" stroke="#6EE7B7" stroke-width="1.2"/>
+  <text x="78" y="346" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="700" fill="#065F46">全局级（本机跨项目通用）</text>
+  <text x="78" y="368" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#0F172A">~/.wcode/workflows/</text>
+  <text x="86" y="390" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#0F172A">└─ xxx.dwf.ts</text>
+
+  <!-- Transition arrow: Card 2 -> Card 1 -->
+  <line x1="92" y1="460" x2="92" y2="426" stroke="#059669" stroke-width="2" marker-end="url(#arrow-emerald)"/>
+  <rect x="108" y="431" width="212" height="24" rx="12" fill="#D1FAE5" stroke="#34D399" stroke-width="1"/>
+  <text x="214" y="448" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#065F46">跑通后正式保存成 .dwf.ts</text>
+
+  <!-- Card 2: 对话现场生成 -->
+  <rect x="50" y="464" width="282" height="172" rx="10" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+  <rect x="64" y="476" width="108" height="24" rx="6" fill="#0284C7"/>
+  <text x="118" y="493" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">对话现场生成</text>
+  <text x="318" y="493" text-anchor="end" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0369A1">边写边试草稿</text>
+
+  <rect x="64" y="508" width="254" height="114" rx="8" fill="#FFFFFF" stroke="#7DD3FC" stroke-width="1.2"/>
+  <text x="78" y="533" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#1E293B">在聊天框用 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-weight="700" fill="#0369A1">/workflow</tspan> 生成的</text>
+  <text x="78" y="555" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#1E293B">临时脚本，自动存入草稿目录：</text>
+  <text x="78" y="577" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="700" fill="#0369A1">.wcode/workflow-drafts/</text>
+  <text x="78" y="599" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569">报错可就地修改文件并重跑</text>
+
+  <!-- Right Main Area (x=372, width=792, y=102..650) -->
+  <!-- Top Block: ① 头部说明书注释块 (y=102..299) -->
+  <rect x="372" y="102" width="792" height="197" rx="12" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
+  <text x="390" y="125" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#92400E">① 头部说明书注释块 <tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="14" fill="#B45309">/* wcode-workflow ... */</tspan></text>
+  <rect x="942" y="108" width="206" height="24" rx="12" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+  <text x="1045" y="125" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#B45309">左：YAML 抬头 · 右：大白话</text>
+
+  <!-- Top Left: YAML Code Block (x=388..796, y=135..286) -->
+  <rect x="388" y="135" width="408" height="151" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1.2"/>
+  <text x="402" y="159" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#FBBF24">/* wcode-workflow</text>
+  <text x="402" y="181" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#38BDF8">description:</tspan> 并行审查改动并汇总建议</text>
+  <text x="402" y="203" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#38BDF8">whenToUse:</tspan> 提交前全面检查修改时</text>
+  <text x="402" y="225" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#38BDF8">args:</tspan> { <tspan fill="#7DD3FC">base:</tspan> { <tspan fill="#C4B5FD">type:</tspan> string, <tspan fill="#6EE7B7">default:</tspan> HEAD },</text>
+  <text x="450" y="247" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#7DD3FC">maxFiles:</tspan> { <tspan fill="#C4B5FD">type:</tspan> number, <tspan fill="#6EE7B7">default:</tspan> 20 } }</text>
+  <text x="402" y="269" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#FBBF24">*/</text>
+
+  <!-- Top Right: Plain-Chinese Callout Card (x=810..1148, y=135..286) -->
+  <rect x="810" y="135" width="338" height="151" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="826" y="167" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="700" fill="#B45309">大白话批注（为什么写这段？）</text>
+  <text x="826" y="190" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#1E293B">1. 让 Web「工作流」页自动生成填参表单</text>
+  <text x="826" y="213" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#1E293B">2. 启动前自动校验参数类型（不合即拦）</text>
+  <text x="826" y="236" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#1E293B">3. 用 /* ... */ 块注释包裹，完全不影响</text>
+  <text x="842" y="259" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#1E293B">TS 语法高亮（.dwf.ts 仍是合法 TS）！</text>
+
+  <!-- Bottom Block: ② 编排正文（普通异步 TS 代码的 4 步常见套路）(y=308..650) -->
+  <rect x="372" y="308" width="792" height="342" rx="12" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+  <text x="390" y="331" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#1E3A8A">② 编排正文（普通异步 TS 代码的 4 步常见套路）</text>
+  <rect x="942" y="314" width="206" height="24" rx="12" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1"/>
+  <text x="1045" y="331" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#1D4ED8">无需 import · 顶层直接 await</text>
+
+  <!-- Bottom Left: Continuous TS Source Block (x=388..728, y=342..637) -->
+  <rect x="388" y="342" width="340" height="295" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1.2"/>
+
+  <!-- Subtle step stripes inside code block -->
+  <rect x="392" y="349" width="4" height="46" rx="2" fill="#38BDF8"/>
+  <rect x="392" y="407" width="4" height="65" rx="2" fill="#34D399"/>
+  <rect x="392" y="484" width="4" height="84" rx="2" fill="#FBBF24"/>
+  <rect x="392" y="581" width="4" height="47" rx="2" fill="#A78BFA"/>
+
+  <!-- Code dividers matching right card dividers -->
+  <line x1="398" y1="401" x2="718" y2="401" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="398" y1="477" x2="718" y2="477" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="398" y1="575" x2="718" y2="575" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- Step 1 code -->
+  <text x="404" y="367" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">const</tspan> xs = <tspan fill="#C4B5FD">await</tspan> git.<tspan fill="#38BDF8">changedFiles</tspan>();</text>
+  <text x="404" y="389" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">await</tspan> world.<tspan fill="#38BDF8">run</tspan>(<tspan fill="#6EE7B7">"pnpm"</tspan>, [<tspan fill="#6EE7B7">"typecheck"</tspan>]);</text>
+
+  <!-- Step 2 code -->
+  <text x="404" y="421" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">const</tspan> w = <tspan fill="#34D399">agent</tspan>(<tspan fill="#6EE7B7">"审查员"</tspan>, <tspan fill="#6EE7B7">"角色设定"</tspan>);</text>
+  <text x="404" y="443" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">const</tspan> r = <tspan fill="#C4B5FD">await</tspan> Promise.<tspan fill="#38BDF8">all</tspan>(xs.<tspan fill="#38BDF8">map</tspan>(x =&gt;</text>
+  <text x="418" y="465" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0">w.<tspan fill="#34D399">ask</tspan>&lt;<tspan fill="#FDE68A">ReviewResult</tspan>&gt;(<tspan fill="#6EE7B7">"任务"</tspan>)));</text>
+
+  <!-- Step 3 code -->
+  <text x="404" y="502" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#FBBF24">phase</tspan>(<tspan fill="#6EE7B7">"阶段名"</tspan>);</text>
+  <text x="404" y="526" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">const</tspan> ch = <tspan fill="#FBBF24">channel</tspan>&lt;<tspan fill="#FDE68A">Item</tspan>&gt;();</text>
+  <text x="404" y="550" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">const</tspan> p = <tspan fill="#C4B5FD">await</tspan> <tspan fill="#FBBF24">hole</tspan>&lt;<tspan fill="#FDE68A">Plan</tspan>&gt;(<tspan fill="#6EE7B7">"留白"</tspan>);</text>
+
+  <!-- Step 4 code -->
+  <text x="404" y="595" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">await</tspan> artifact.<tspan fill="#A78BFA">markdown</tspan>(<tspan fill="#6EE7B7">"report"</tspan>, md);</text>
+  <text x="404" y="617" font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" fill="#E2E8F0"><tspan fill="#C4B5FD">return</tspan> { summary: <tspan fill="#6EE7B7">"完成"</tspan>, items: r };</text>
+
+  <!-- Connector cues across gutter x=728..740 -->
+  <line x1="728" y1="374" x2="739" y2="374" stroke="#3B82F6" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="728" y1="440" x2="739" y2="440" stroke="#3B82F6" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="728" y1="526" x2="739" y2="526" stroke="#3B82F6" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <line x1="728" y1="604" x2="739" y2="604" stroke="#3B82F6" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+
+  <!-- Bottom Right: Unified 4-Step Plain-Chinese Annotation Card (x=742..1148, y=342..637) -->
+  <rect x="742" y="342" width="406" height="295" rx="8" fill="#FFFFFF" stroke="#93C5FD" stroke-width="1.5"/>
+
+  <!-- Step 1 annotation -->
+  <text x="756" y="367" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="700" fill="#1E40AF">第 1 步 · 先看现场与跑安检门</text>
+  <text x="756" y="389" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">先查 git 改动、files 搜索，或用 world.run 跑真实编译/单测摸底</text>
+
+  <line x1="756" y1="401" x2="1134" y2="401" stroke="#DBEAFE" stroke-width="1.5"/>
+
+  <!-- Step 2 annotation -->
+  <text x="756" y="421" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="700" fill="#1E40AF">第 2 步 · 多人分头干 + 必填验收表</text>
+  <text x="756" y="443" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">agent() 建独立房间子员工不串记忆；Promise.all 多人同时干；</text>
+  <text x="756" y="465" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">.ask&lt;ReviewResult&gt;() 交必填 JSON，填错自动打回重填</text>
+
+  <line x1="756" y1="477" x2="1134" y2="477" stroke="#DBEAFE" stroke-width="1.5"/>
+
+  <!-- Step 3 annotation -->
+  <text x="756" y="497" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="700" fill="#1E40AF">第 3 步 · 进度分段 / 传送带 / 剧本填空题</text>
+  <text x="756" y="519" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">phase() 标进度条；channel() 像传送带边出边修；</text>
+  <text x="756" y="541" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">没法提前写死的步骤放 hole&lt;Plan&gt;() 先占坑，</text>
+  <text x="756" y="563" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">跑出结果后主 AI 现场补代码接着跑</text>
+
+  <line x1="756" y1="575" x2="1134" y2="575" stroke="#DBEAFE" stroke-width="1.5"/>
+
+  <!-- Step 4 annotation -->
+  <text x="756" y="595" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="700" fill="#1E40AF">第 4 步 · 交付可见成果：<tspan font-family="'SFMono-Regular', Menlo, Monaco, Consolas, monospace" font-size="13" font-weight="600" fill="#1D4ED8">artifact.markdown / file</tspan></text>
+  <text x="756" y="617" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">或 chart / table 发布右侧预览卡片与图表，return 汇总结论</text>
+
+  <!-- Bottom Takeaway Banner (y=666..718, x=36..1164) -->
+  <rect x="36" y="666" width="1128" height="52" rx="10" fill="#0F172A" stroke="#1E293B" stroke-width="1.5"/>
+  <text x="600" y="697" text-anchor="middle" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" font-size="14">
+    <tspan fill="#FBBF24" font-weight="700">口诀：</tspan><tspan fill="#F8FAFC" font-weight="500">interface 当必填验收表，agent().ask() 是派人「填数据」，hole() 是看清现场再「补代码」，普通 if/for/Promise.all 串起来！</tspan>
+  </text>
+</svg>

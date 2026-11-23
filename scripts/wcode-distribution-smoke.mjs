@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -28,6 +28,12 @@ let web;
 let terminal;
 try {
   await exec("tar", ["-xzf", resolve(archive), "-C", directory]);
+  for (const file of ["SKILL.md", "patterns.md", "examples.md"]) {
+    const skillAsset = await stat(
+      join(root, "agent/packages/bundled-skills/skills/dynamic-workflows", file),
+    );
+    assert.ok(skillAsset.isFile(), `Expected bundled skill asset: ${file}`);
+  }
   await mkdir(workspace);
   await exec(process.execPath, [runner, "--help"], { cwd: workspace, env });
   const version = (

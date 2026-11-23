@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { promisify } from "node:util";
 import { test } from "node:test";
-import { patchNodePtyPrebuilds } from "./wcode-distribution/assets.mjs";
+import { patchNodePtyPrebuilds, stageBundledSkills } from "./wcode-distribution/assets.mjs";
 import { installScriptSource } from "./wcode-distribution/installer.mjs";
 
 const exec = promisify(execFile);
@@ -190,4 +190,41 @@ test("node-pty prebuild patch keeps the official native that matches the officia
   assert.equal(await readFile(join(prebuilds, "darwin-arm64/pty.node"), "utf8"), "official-1.1.0");
   // 官方包缺失的平台仍由平台包补齐。
   assert.ok((await readFile(join(prebuilds, "linux-x64/pty.node"))).length > 0);
+});
+
+test("stageBundledSkills stages dynamic-workflows skill pack and rejects missing required assets", async (t) => {
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "wcode-distribution-skills-")));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const packageRoot = join(directory, "wcode");
+  await mkdir(packageRoot, { recursive: true });
+  await stageBundledSkills(packageRoot);
+  for (const relativePath of [
+    "README.md",
+    "skills/dynamic-workflows/SKILL.md",
+    "skills/dynamic-workflows/patterns.md",
+    "skills/dynamic-workflows/examples.md",
+  ]) {
+    const content = await readFile(
+      join(packageRoot, "agent/packages/bundled-skills", relativePath),
+      "utf8",
+    );
+    assert.ok(content.length > 0, `expected non-empty staged asset ${relativePath}`);
+  }
+
+  const brokenCliRoot = join(directory, "broken-cli");
+  await mkdir(join(brokenCliRoot, "packages/bundled-skills/skills/dynamic-workflows"), {
+    recursive: true,
+  });
+  await writeFile(
+    join(brokenCliRoot, "packages/bundled-skills/skills/dynamic-workflows/SKILL.md"),
+    "skill",
+  );
+  await writeFile(
+    join(brokenCliRoot, "packages/bundled-skills/skills/dynamic-workflows/patterns.md"),
+    "patterns",
+  );
+  await assert.rejects(
+    stageBundledSkills(join(directory, "broken-package"), { cliRoot: brokenCliRoot }),
+    /Missing bundled skill pack required asset/,
+  );
 });

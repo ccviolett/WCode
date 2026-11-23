@@ -77,6 +77,12 @@ interface WorkflowArtifactBodyProps {
   resolvedTheme: "light" | "dark";
   /** html 的「在浏览器中打开」；缺席即只显示提示。 */
   onOpenBrowserUrl?: (url: string) => void;
+  /**
+   * html 产物卡片的「在浏览器中打开」动作；传入 null 表示当前宿主无法在浏览器中打开本地 html
+   * （例如远端 Web 部署，`window.open("file://...")` 会被浏览器拦截），不再回退到 `onOpenBrowserUrl`，
+   * 同时保留 `onOpenBrowserUrl` 供 PPTX / Office 查看器打开文档内 http(s) 外链。
+   */
+  onOpenHtmlBrowserUrl?: ((url: string) => void) | null;
   /** 本地文件系统上的绝对路径（desktop-local ∧ `sourcePath` 在场时才有）。 */
   localSourcePath?: string;
   /** 「在工作区显示」：已绑定好路径的文件树 reveal；缺席即无渲染器的卡片上不出这个按钮。 */
@@ -153,6 +159,7 @@ function WorkflowArtifactContent({
   theme,
   resolvedTheme,
   onOpenBrowserUrl,
+  onOpenHtmlBrowserUrl,
   onReveal,
   localSourcePath,
   isLatestVersion,
@@ -276,13 +283,15 @@ function WorkflowArtifactContent({
   }
 
   if (contentType === "text/html") {
+    const htmlBrowserOpener =
+      onOpenHtmlBrowserUrl === undefined ? onOpenBrowserUrl : (onOpenHtmlBrowserUrl ?? undefined);
     return (
       <WorkflowArtifactHtmlCard
         artifact={artifact}
         bytes={bytes.length}
         isLatestVersion={isLatestVersion}
         {...(localSourcePath === undefined ? {} : { localSourcePath })}
-        {...(onOpenBrowserUrl === undefined ? {} : { onOpenBrowserUrl })}
+        {...(htmlBrowserOpener === undefined ? {} : { onOpenBrowserUrl: htmlBrowserOpener })}
         {...(onReveal === undefined ? {} : { onReveal })}
       />
     );
