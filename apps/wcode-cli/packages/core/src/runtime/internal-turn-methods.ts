@@ -1,3 +1,4 @@
+import type { ToolSearchDelivery } from "@wcode/contracts";
 import type { BackgroundBashOutputResult } from "@wcode/shared";
 import type { ModelToolContract, RuntimeInputPresentation } from "@wcode/contracts";
 import type {
@@ -363,10 +364,12 @@ export interface AgentRuntimeTurnMethods {
     compactBoundary: CompactBoundaryPayload,
     traceContext: TraceContext,
     options?: {
+      created?: number;
       model?: Model;
       operationId?: string;
       leadingReminderEntries?: readonly RuntimeMessageEntry[];
       postCompactReminderEntries?: readonly RuntimeMessageEntry[];
+      toolSearchDelivery?: ToolSearchDelivery;
     },
   ): Promise<void>;
   persistUserPrompt(
@@ -430,6 +433,7 @@ export interface AgentRuntimeTurnMethods {
           finish?: string;
           tokens?: unknown;
           signedReasoningReset?: boolean;
+          toolSearchDelivery?: ToolSearchDelivery;
         }
       | undefined,
     traceContext: TraceContext,

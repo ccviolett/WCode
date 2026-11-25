@@ -12,6 +12,8 @@ export const WCODE_TOOL_ENV_PASSTHROUGH_ENV_KEY = "WCODE_TOOL_ENV_PASSTHROUGH_JS
 export const WCODE_DESKTOP_CONTEXT_PROMPT_ENABLED_ENV = "WCODE_DESKTOP_CONTEXT_PROMPT_ENABLED";
 export const WCODE_CUA_PRODUCT_HELPER_ENV_KEY = "WCODE_CUA_PRODUCT_HELPER";
 export const WCODE_CUA_BROKER_SOCKET_ENV_KEY = "WCODE_CUA_PERMISSION_BROKER_SOCKET";
+/** 独立 CLI 自签凭据组时的 socket 哨兵值：node_repl 见到它就在本进程内运行 broker。 */
+export const WCODE_CUA_IN_PROCESS_BROKER_SOCKET = "in-process";
 // 官方命令端点（agent 侧代理，技术方案 5.8）：地址与 session token 只由 agent 按 session 注入
 // Bash/tool 子进程，不随 agent 全局 env 继承。
 export const WCODE_OFFICIAL_ENDPOINT_ENV_KEY = "WCODE_OFFICIAL_ENDPOINT";
@@ -196,6 +198,15 @@ export function readWCodeAgentTelemetryEnv(
 
 export function getCapturedWCodeAgentTelemetryEnv(): Record<string, string> {
   return { ...capturedWCodeAgentTelemetryEnv };
+}
+
+export function mintStandaloneWCodeCuaBrokerCredentials(): boolean {
+  if (capturedCuaBrokerCredentials) return false;
+  capturedCuaBrokerCredentials = Object.freeze({
+    socket: WCODE_CUA_IN_PROCESS_BROKER_SOCKET,
+    pluginAuthority: globalThis.crypto.randomUUID().replaceAll("-", ""),
+  });
+  return true;
 }
 
 export function getCapturedWCodeCuaBrokerCredentials(): {

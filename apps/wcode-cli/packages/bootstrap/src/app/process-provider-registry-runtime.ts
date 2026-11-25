@@ -71,7 +71,7 @@ export async function startProcessProviderRegistryRuntime(
               "wcode-builtin-refresh.json",
             ),
             resolveEndpointKey: () => resolveRuntimeWCodeEndpointOrigin(env),
-            fetchRelease: (endpointOrigin, signal) =>
+            fetchRelease: (endpointOrigin, signal, { reuseUrl }) =>
               downloadWCodeBuiltinRelease({
                 endpointOrigin,
                 signal,
@@ -79,6 +79,7 @@ export async function startProcessProviderRegistryRuntime(
                 platform: resolveWCodeBuiltinClientPlatform(),
                 request: options.standalone?.request ?? globalThis.fetch,
                 resolveWcodeJwtToken: () => credentialStore?.load("wcodejwttoken"),
+                ...(reuseUrl ? { reuseUrl } : {}),
               }),
             onRefreshResult: options.standalone?.onBuiltinRefreshResult,
           },

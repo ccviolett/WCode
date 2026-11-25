@@ -47,7 +47,7 @@ function Composer() {
         onValueChange={setModel}
         composerOptions={{
           providerLabel: "Provider",
-          modelsLabel: "Models",
+          modelsLabel: params.get("locale") === "zh-CN" ? "模型" : "Models",
           effortLabel: "Effort",
           selectModelLabel: "Select model",
           levels: [
@@ -116,7 +116,7 @@ function Fixture() {
   );
 }
 createRoot(document.getElementById("root")!).render(
-  <WCodeIntlProvider initialLocale="en-US">
+  <WCodeIntlProvider initialLocale={params.get("locale") === "zh-CN" ? "zh-CN" : "en-US"}>
     <TooltipProvider>
       <Fixture />
     </TooltipProvider>

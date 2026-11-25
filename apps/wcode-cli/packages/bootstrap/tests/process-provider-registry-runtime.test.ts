@@ -72,8 +72,10 @@ describe("process provider registry runtime", () => {
       await wait;
       return new Response(JSON.stringify(builtin));
     });
+    // 此用例验证 Registry 更新。使用测试密钥可在未解锁系统凭据库的机器上写入夹具令牌。
     const credentialStore = createSharedWCodeCredentialStore({
-      env: { WCODE_DATA_BASE_DIR: root },
+      baseDir: root,
+      env: { WCODE_CREDENTIAL_SECRET: "process-registry-test" },
     });
     await credentialStore.save("wcodejwttoken", "fixture-cli-config");
     const env = {

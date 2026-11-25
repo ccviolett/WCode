@@ -7,5 +7,9 @@
   "packages/wcode-server-cli/test/packaging.test.ts",
   "packages/wcode-server-cli/test/stageRemoteAssetsCli.test.ts",
   "packages/wcode-server-cli/test/tsupConfig.test.ts",
-  "packages/wcode-server-cli/test/verifyRemoteSshTarget.test.ts"
+  "packages/wcode-server-cli/test/verifyRemoteSshTarget.test.ts",
+  "scripts/check-document-libreoffice.test.ts",
+  "scripts/check-document-python.test.ts",
+  "scripts/preinstalled-tools/catalog.test.ts",
+  "scripts/test/audit-conversation-session-json-out.test.mjs"
 ]

@@ -15,7 +15,8 @@ WCode is an AI coding workspace with desktop, browser, and terminal interfaces. 
 
 ## Updates
 
-- **2026-11-12**: Updated to WCode v3.18.2.
+- **2026-11-23**: Updated to WCode v4.0.0.
+- 2026-11-12: Updated to WCode v3.18.2.
 - 2026-11-12: Updated to WCode v3.18.1.
 - 2026-11-11: Updated to WCode v3.18.0.
 - 2026-11-03: Updated to WCode v3.17.2.

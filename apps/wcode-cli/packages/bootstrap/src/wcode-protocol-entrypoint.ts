@@ -10,8 +10,15 @@ import type { McpElicitationPort, McpNotificationPort } from "@wcode/contracts";
 import { createNodeModelSelectionFacade } from "@wcode/provider-node";
 import { createNodeLoggerFactory } from "@wcode/adapters/logging";
 import {
+  createSkillCatalogSourceRegistry,
+  type SkillCatalogSourceRegistry,
+} from "@wcode/adapters/skills/catalog";
+import {
+  createInMemoryMcpToolCatalog,
   createMcpAdapterConnectionPool,
+  createMcpConfigSourceRegistry,
   createMcpTelemetryTracker,
+  type McpConfigSourceRegistry,
   type McpConnectionPool,
   type McpTelemetryTracker,
 } from "@wcode/adapters/mcp";
@@ -22,7 +29,7 @@ import {
 } from "@wcode/shared";
 import { createNodeSessionDataFiles, type SqliteSessionStore } from "@wcode/adapters/storage";
 import { traceContextToLogContext, createRootTraceContext } from "@wcode/contracts";
-import type { McpPort, ModelSelection } from "@wcode/contracts";
+import type { McpPort, McpToolCatalogPort, ModelSelection } from "@wcode/contracts";
 import type { PresentationSurface } from "@wcode/core";
 import type { RunWCodeProtocolAgentOptions, WCodeAppOptions } from "./app/types.js";
 import { createWCodeApp } from "./app/create-app.js";
@@ -150,6 +157,9 @@ export async function runWCodeProtocolAgent(
   let mcpConnectionPool: McpConnectionPool | undefined;
   let credentialCipherBridge: ReturnType<typeof createProtocolCredentialCipher> | undefined;
   let mcpPort: McpPort | undefined;
+  let mcpToolCatalogPort: McpToolCatalogPort | undefined;
+  let mcpConfigSourceRegistry: McpConfigSourceRegistry | undefined;
+  let skillCatalogSourceRegistry: SkillCatalogSourceRegistry | undefined;
   let mcpTelemetryTracker: McpTelemetryTracker | undefined;
   let mcpResourceSink: ((samples: WCodeMcpResourceSample[]) => void) | undefined;
   let mcpTelemetrySink: ((event: WCodeMcpTelemetryEvent) => void) | undefined;
@@ -340,6 +350,13 @@ export async function runWCodeProtocolAgent(
             workingDirectory: options.cwd,
           });
     mcpPort = mcpConnectionPool?.acquireLease({ leaseId: "protocol-settings" });
+    mcpToolCatalogPort = mcpConnectionPool
+      ? createInMemoryMcpToolCatalog({ platform: process.platform })
+      : undefined;
+    // 同一 CLI 进程内的会话共用 MCP 配置 watcher 与读盘结果；修复前每个会话各建一份。
+    mcpConfigSourceRegistry = createMcpConfigSourceRegistry({ logger });
+    // 同一 CLI 进程内同一 workspace 的会话共用 skill 目录 watcher 与读盘结果，规则与 MCP 配置源相同。
+    skillCatalogSourceRegistry = createSkillCatalogSourceRegistry({ logger });
     const activeProviderRegistryRuntime = providerRegistryRuntime;
     const protocolCliStorageRoot = getCliStorageRoot(resolvePath(configResult.config.storage.dir));
     const modelSelectionFacade = createNodeModelSelectionFacade(
@@ -377,6 +394,11 @@ export async function runWCodeProtocolAgent(
                   }),
               }
             : {}),
+          mcpToolCatalogPort,
+          mcpConfigSourceRegistry,
+          skillCatalogSourceRegistry,
+          // 桌面交互入口：首个请求不等全部 MCP server，自动任务轮次仍由 runtime 改为等待。
+          mcpStartupPolicy: "background",
           providerEndpointRoutingPort,
           officialCommandEnv: (sessionId, workspace, observer) =>
             activeOfficialCommandEndpoint.envForSession(sessionId, workspace, observer),
@@ -493,6 +515,9 @@ export async function runWCodeProtocolAgent(
       sessionStore,
       providerRegistryRuntime,
     });
+    // 会话关闭步骤有时限，未关完的会话不会释放配置 view；在清理之后强制关闭，watcher 句柄不阻止进程退出。
+    mcpConfigSourceRegistry?.close();
+    skillCatalogSourceRegistry?.close();
     logger.info("WCode Protocol agent shutdown completed", {
       ...traceContextToLogContext(traceContext),
       event: "wcode_protocol.shutdown.completed",
