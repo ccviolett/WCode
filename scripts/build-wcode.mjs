@@ -163,6 +163,10 @@ async function buildOutputs(skipBuild) {
     return;
   }
 
+  // Bug 原因：@wcode/shared 没有 package.json build 脚本；冷检出（CI / Docker）未先跑 typecheck 时
+  // 缺少 packages/shared/dist，stageTuiRuntime 校验 TUI 闭包会直接报错 Missing @wcode/shared dist files。
+  // 与 package.json 的 build:sea:prepare 保持一致，打包前显式编译 @wcode/shared。
+  run("pnpm", ["exec", "tsc", "-b", "packages/shared", "--force"]);
   run("pnpm", ["--filter", "@wcode/cli...", "build"]);
   await rm(resolve(root, "packages", "server", "dist"), {
     force: true,
