@@ -12,6 +12,7 @@ import type {
   IntranetProbeTcpTargetResult,
   SystemInfo,
 } from "@wcode/shared";
+import type { WindowsGitBashDiscoveryOptions } from "@wcode/shared/node";
 import type { ISystemService } from "./system.js";
 import type { HostEditor, HostPathActionResult } from "./systemHostReveal.js";
 import { listIntegratedTerminalShellOptions } from "./integratedTerminalShells.js";
@@ -48,7 +49,8 @@ interface TcpProbeParams {
 
 interface CreateSystemServiceOptions {
   env?: NodeJS.ProcessEnv;
-  isExecutable?: (path: string) => boolean;
+  gitBashDiscovery?: Omit<WindowsGitBashDiscoveryOptions, "env" | "platform" | "isExecutable">;
+  isExecutable?: WindowsGitBashDiscoveryOptions["isExecutable"];
   platform?: NodeJS.Platform;
   tcpProbe?: (params: TcpProbeParams) => Promise<number>;
   serviceProbe?: (params: ServiceProbeParams) => Promise<ServiceProbeResult>;
@@ -392,6 +394,7 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
     async listIntegratedTerminalShells(): Promise<IntegratedTerminalShellOption[]> {
       return listIntegratedTerminalShellOptions({
         env,
+        gitBashDiscovery: options.gitBashDiscovery,
         isExecutable: options.isExecutable,
         platform,
       });

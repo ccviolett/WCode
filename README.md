@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  基于 <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a>（<code>v3.18.2</code>）派生的纯 Web、独立 Server 与 Agent CLI/TUI 轻量化分支
+  基于 <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a>（<code>v4.0.0</code>）派生的纯 Web、独立 Server 与 Agent CLI/TUI 轻量化分支
 </p>
 
 ---
@@ -212,7 +212,7 @@ node dist/wcode/debug/wcode/bin/wcode.mjs --web --workspace "$PWD" --port 3030 -
 
 ## 许可证与上游声明
 
-本项目基于 [zai-org/ZCode](https://github.com/zai-org/ZCode)（`v3.18.2`，基线提交 `fec97590`）修改并沿用 **Apache License 2.0**（见 [LICENSE](LICENSE)）。
+本项目基于 [zai-org/ZCode](https://github.com/zai-org/ZCode)（`v4.0.0`，基线提交 `a4b44451`）修改并沿用 **Apache License 2.0**（见 [LICENSE](LICENSE)）。
 
 分发源码、发行包或镜像时，请一并保留以下合规文件（`pnpm build:wcode` 已自动打包至发行包根目录）：
 

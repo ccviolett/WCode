@@ -1,4 +1,4 @@
-import type { RuntimeInputPresentation } from "@wcode/contracts";
+import type { RuntimeInputPresentation, ToolSearchDelivery } from "@wcode/contracts";
 import { createModelId, createModelProviderId } from "@wcode/contracts";
 import { SessionEventType, createPartId, traceContextToLogContext } from "../deps.js";
 import { withConversationQuotes } from "../helpers/conversation-quotes.js";
@@ -292,6 +292,7 @@ export async function persistAssistantMessage(
   created: number,
   update:
     | {
+        toolSearchDelivery?: ToolSearchDelivery;
         completed?: number;
         error?: { name: string; data?: Record<string, unknown> };
         finish?: string;
@@ -319,6 +320,9 @@ export async function persistAssistantMessage(
       id: messageID,
       sessionID: this.sessionId,
       role: "assistant",
+      ...(update?.toolSearchDelivery
+        ? { metadata: { toolSearchDelivery: update.toolSearchDelivery } }
+        : {}),
       time: {
         created,
         completed: update?.completed,

@@ -6,7 +6,7 @@ import {
   type WorkspaceRef,
 } from "@wcode/shared/extension-host";
 import type {
-  ConversationTelemetryFact,
+  ConversationTelemetryInput,
   ModelRequestMetricsFact,
 } from "@wcode/shared/wcode-protocol-v4";
 import type { IWCodeAgentService } from "#src/wcode-agent/wcodeAgent.js";
@@ -53,7 +53,7 @@ export function createGenerationPump(deps: {
   /** stream.chunk 不带 requestId：按会话记当前进行中的主轮请求（来自 model.request.status）。 */
   const streams = new Map<string, StreamState>();
 
-  const handleFact = (workspace: WorkspaceRef, fact: ConversationTelemetryFact) => {
+  const handleFact = (workspace: WorkspaceRef, fact: ConversationTelemetryInput) => {
     if (fact.kind === "model.request.status") {
       const current = streams.get(fact.sessionId);
       if (fact.status === "model_request_started") {

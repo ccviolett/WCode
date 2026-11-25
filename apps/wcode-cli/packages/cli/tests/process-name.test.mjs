@@ -8,7 +8,9 @@ const execFileAsync = promisify(execFile);
 const cli = resolve(import.meta.dirname, "../dist/wcode.cjs");
 
 test("sets the visible process name before running commands", async () => {
-  const { stdout } = await execFileAsync(process.execPath, [cli, "doctor", "--json"]);
+  const { stdout } = await execFileAsync(process.execPath, [cli, "doctor", "--json"], {
+    env: { ...process.env, WCODE_PLUGIN_ID: "documents@wcode-plugins-official" },
+  });
   const payload = JSON.parse(stdout);
 
   assert.equal(payload.cli.name, "wcode");

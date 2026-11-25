@@ -1,5 +1,9 @@
 import { migrateApplicationStorage, createSettingService } from "@wcode/services/node";
-import { disposeServiceResourcesAndWait, getAppConfigDir } from "@wcode/services/node";
+import {
+  disposeServiceResourcesAndWait,
+  getAppConfigDir,
+  getCredentialsFilePath,
+} from "@wcode/services/node";
 import type { IChannel } from "@wcode/rpc";
 import {
   WCODE_VERSION,
@@ -11,7 +15,6 @@ import {
 } from "@wcode/shared";
 import type { HelloMessage, HelloAckMessage } from "@wcode/shared";
 import { prepareServerCredentialStorage } from "@wcode/shared/credential-security";
-import { join } from "node:path";
 import { createStdioServer } from "./stdio.js";
 import { registerStdioProcessLifecycle } from "./stdio-lifecycle.js";
 import { createStdioServices } from "./stdioServices.js";
@@ -61,7 +64,7 @@ async function main() {
   // 生命周期所有者，必须在 services 创建前确保 deviceMid 存在（详见 stdioDeviceMid.ts）。
   await ensureRemoteServerDeviceMid({ log });
   if (process.argv.includes("--prepare-credentials")) {
-    await prepareServerCredentialStorage({ filePath: join(getAppConfigDir(), "credentials.json") });
+    await prepareServerCredentialStorage({ filePath: getCredentialsFilePath() });
   }
 
   // Phase 3: Initialize services and start stdio RPC server

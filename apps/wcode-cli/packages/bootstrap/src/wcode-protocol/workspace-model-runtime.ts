@@ -2,7 +2,10 @@
 import { createInMemorySessionEventStore } from "@wcode/adapters/storage";
 import type { ModelSelection } from "@wcode/contracts";
 import {
+  WCODE_REPLY_LANGUAGE_REQUEST_TIMEOUT_MS,
+  wcodeProtocolMethods,
   wcodeProviderTestModelConnectivityParamsSchema,
+  wcodeSessionReadReplyLanguageResultSchema,
   wcodeWorkspaceReadPresentationParamsSchema,
   type WCodeWorkspaceRef,
 } from "@wcode/shared";
@@ -10,6 +13,7 @@ import type { WCodeApp, WCodeAppOptions } from "../app/types.js";
 import { listProtocolSlashCommands } from "./slash-commands.js";
 import {
   parseParams,
+  protocolTraceFromTraceContext,
   type WCodeProtocolAgentServerContext,
   type WCodeProtocolSessionRecord,
 } from "./server-types.js";
@@ -78,6 +82,7 @@ export async function createWorkspaceWCodeApp(
 ): Promise<WCodeApp> {
   const providerRuntimeHeadersPort =
     options.providerRuntimeHeadersPort ?? createProviderRuntimeHeadersPort(context, workspace);
+  const readReplyLanguage = options.readReplyLanguage ?? createReplyLanguageReader(context);
   return context.deps.createWCodeApp({
     ...options,
     // Hook Trust 等对外字段用会话所属 workspace 的 key；受管 worktree 会话 = 项目 key。
@@ -90,6 +95,7 @@ export async function createWorkspaceWCodeApp(
     includeVisualize: true,
     platform: context.deps.platform,
     providerRuntimeHeadersPort,
+    readReplyLanguage,
     runtimeConfig: {
       ...options.runtimeConfig,
       // createWCodeApp 会把 workingDirectory 规范化为执行 cwd。把协议入口的
@@ -130,4 +136,27 @@ export function resolveSessionModelContextWindow(
   const selection = record.app.runtime.getSessionModelSelection() ?? record.restoredModelSelection;
   const value = selection && record.app.getModelOption?.(selection)?.contextWindow;
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/**
+ * 回复语言的独立反向请求（docs/i18n/agent-reply-language.md）：Host 从内存同步应答，
+ * 单独的方法与短超时让这次读取的耗时可控，不受其他反向请求排队影响。
+ * 只做传输：失败原样抛出，由 core 统一跳过本次公告。
+ */
+function createReplyLanguageReader(
+  context: WCodeProtocolAgentServerContext,
+): NonNullable<WCodeAppOptions["readReplyLanguage"]> {
+  return async ({ sessionId, signal, traceContext }) => {
+    const result = await context.requestClient(
+      wcodeProtocolMethods.sessionReadReplyLanguage,
+      { sessionId },
+      wcodeSessionReadReplyLanguageResultSchema,
+      {
+        signal,
+        trace: protocolTraceFromTraceContext(traceContext),
+        timeoutMs: WCODE_REPLY_LANGUAGE_REQUEST_TIMEOUT_MS,
+      },
+    );
+    return result.language;
+  };
 }

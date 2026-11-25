@@ -6,7 +6,10 @@ import type {
   RemoteWorkspaceRecoveryStatus,
 } from "@/app-shell/types.js";
 import type { Theme } from "@/useTheme.js";
-export { LEGACY_SINGLE_ROOT_PROJECT_PREFIX } from "@wcode/services";
+export {
+  LEGACY_SINGLE_ROOT_PROJECT_PREFIX,
+  isArchivedTaskDeletionBatchUnsupported,
+} from "@wcode/services";
 export type { WebRemoteControlMobileTaskView, WebRemoteControlStatus } from "@wcode/shared";
 export interface ProjectDevice {
   id: string;

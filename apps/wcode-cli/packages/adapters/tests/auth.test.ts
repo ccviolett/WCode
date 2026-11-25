@@ -12,6 +12,7 @@ import {
   createCodingPlanApiKeyResolver,
   createSharedWCodeCredentialStore,
   loadSharedWCodeCredential,
+  resolveSharedWCodeCredentialsPath,
 } from "../src/auth/index.js";
 
 const TEST_ENV = {
@@ -383,6 +384,70 @@ describe("shared WCode credentials", () => {
   });
 });
 
+// ZCT-2120452663971209216：同机 Desktop 把共享库固定为系统库来源时，Source Server Core
+// 改用自有凭据库，并通过 WCODE_CREDENTIALS_FILE 让其拉起的 Agent 读写同一文件。
+describe("shared WCode credentials path", () => {
+  const credentialsFileEnv = "WCODE_CREDENTIALS_FILE";
+
+  it("uses the host-assigned credentials file before the data base dir", () => {
+    const assigned = join(tmpdir(), "wcode-server-root", "credentials", "credentials.json");
+    expect(
+      resolveSharedWCodeCredentialsPath({
+        env: { [credentialsFileEnv]: assigned, WCODE_DATA_BASE_DIR: join(tmpdir(), "other") },
+      }),
+    ).toBe(assigned);
+  });
+
+  it("keeps explicit caller paths ahead of the host-assigned file", () => {
+    const assigned = join(tmpdir(), "assigned", "credentials.json");
+    const baseDir = join(tmpdir(), "explicit-base");
+    const filePath = join(tmpdir(), "explicit", "credentials.json");
+    const env = { [credentialsFileEnv]: assigned };
+    expect(resolveSharedWCodeCredentialsPath({ baseDir, env })).toBe(
+      join(baseDir, ".wcode", "v2", "credentials.json"),
+    );
+    expect(resolveSharedWCodeCredentialsPath({ baseDir, env, filePath })).toBe(filePath);
+  });
+
+  it("treats an empty host-assigned file as unset", () => {
+    const dataBaseDir = join(tmpdir(), "wcode-data-base");
+    expect(
+      resolveSharedWCodeCredentialsPath({
+        env: { [credentialsFileEnv]: "  ", WCODE_DATA_BASE_DIR: dataBaseDir },
+      }),
+    ).toBe(join(dataBaseDir, ".wcode", "v2", "credentials.json"));
+  });
+
+  it("rejects a relative host-assigned file instead of resolving it against cwd", () => {
+    const env = { [credentialsFileEnv]: join("relative", "credentials.json") };
+    expect(() => resolveSharedWCodeCredentialsPath({ env })).toThrow(credentialsFileEnv);
+    expect(() => createSharedWCodeCredentialStore({ env })).toThrow(credentialsFileEnv);
+  });
+
+  it("reads and writes only the host-assigned file", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "wcode-auth-assigned-file-"));
+    const assigned = join(dir, "server", "credentials", "credentials.json");
+    const dataBaseDir = join(dir, "home");
+    const env = { ...TEST_ENV, [credentialsFileEnv]: assigned, WCODE_DATA_BASE_DIR: dataBaseDir };
+    try {
+      await mkdir(join(dir, "server", "credentials"), { recursive: true });
+      const store = createSharedWCodeCredentialStore({ env });
+      expect(store.filePath).toBe(assigned);
+      await store.save("wcodejwttoken", "server-owned-token");
+
+      expect(await createSharedWCodeCredentialStore({ env }).load("wcodejwttoken")).toBe(
+        "server-owned-token",
+      );
+      expect(JSON.parse(await readFile(assigned, "utf-8"))).toHaveProperty("wcodejwttoken");
+      await expect(
+        stat(join(dataBaseDir, ".wcode", "v2", "credentials.json")),
+      ).rejects.toMatchObject({ code: "ENOENT" });
+    } finally {
+      await rm(dir, { force: true, recursive: true });
+    }
+  });
+});
+
 async function runConcurrentCredentialWorkers(
   filePath: string,
   processCount: number,
@@ -458,6 +523,7 @@ describe("CLI OAuth client", () => {
           poll_token: "poll-token",
           authorize_url: "https://chat.z.ai/oauth/authorize?state=state",
           expires_at: 1735000000,
+          server_time: 1734999700,
           poll_interval_sec: 2,
         },
       }),
@@ -485,6 +551,8 @@ describe("CLI OAuth client", () => {
     });
 
     const init = await client.init({ pollToken: "poll-token" });
+    // server_time 原样透出，登录入口用它与 expires_at 计算与本机时钟无关的剩余寿命。
+    expect(init).toMatchObject({ expires_at: 1735000000, server_time: 1734999700 });
     const poll = await client.poll({
       flowId: init.flow_id,
       pollToken: "poll-token",

@@ -8,13 +8,13 @@
 | 项         | 值                                                                |
 | ---------- | ----------------------------------------------------------------- |
 | 上游项目   | [zai-org/ZCode](https://github.com/zai-org/ZCode)                 |
-| 上游版本   | v3.18.2（`package.json` version `3.18.2`）                        |
-| 基线提交   | `fec97590`（`chore: sync ZCode source v3.18.2`）                  |
+| 上游版本   | v4.0.0（`package.json` version `4.0.0`）                          |
+| 基线提交   | `a4b44451`（`chore: sync ZCode source v4.0.0`）                   |
 | 许可证     | Apache License 2.0（见 [LICENSE](LICENSE)），本分支沿用同一许可证 |
 | 本分支名称 | WCode                                                             |
 
 本仓库是上游源码的修改版，不是 Z.ai 官方项目，未获得其背书或赞助。
-上一版 fork 基于 v3.17.2；本版是**重新派生**（在新基线上重放改动），不是与旧分支 merge。
+自 v4.0.0 起，上游同步改用确定性翻译基线分支 `upstream/wcode-base`（`scripts/sync-upstream.mjs`）+ 标准 `git merge` 维护，保留上游全部非桌面新能力且不再人工重放补丁。
 
 ## 一、平台裁剪
 

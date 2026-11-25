@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  A lightweight Web-only, standalone Server, and Agent CLI/TUI fork of <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a> (<code>v3.18.2</code>)
+  A lightweight Web-only, standalone Server, and Agent CLI/TUI fork of <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a> (<code>v4.0.0</code>)
 </p>
 
 ---
@@ -212,7 +212,7 @@ Further reading:
 
 ## License & Attribution
 
-WCode is derived from [zai-org/ZCode](https://github.com/zai-org/ZCode) (`v3.18.2`, baseline commit `fec97590`) and remains licensed under the **Apache License 2.0** (see [LICENSE](LICENSE)).
+WCode is derived from [zai-org/ZCode](https://github.com/zai-org/ZCode) (`v4.0.0`, baseline commit `a4b44451`) and remains licensed under the **Apache License 2.0** (see [LICENSE](LICENSE)).
 
 When redistributing source, packages, or container images, include all four compliance files (automatically placed at the archive root by `pnpm build:wcode`):
 

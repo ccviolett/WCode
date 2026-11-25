@@ -21,7 +21,7 @@ WCode bundles this package as the official
 `android-emulator@wcode-plugins-official` plugin. Enable the plugin to project
 its skill, slash command, and MCP server into the session.
 At startup WCode copies the packaged plugin files into
-`~/.wcode/cli/plugins/cache/wcode-plugins-official/android-emulator/0.1.1/`
+`~/.wcode/cli/plugins/cache/wcode-plugins-official/android-emulator/0.1.3/`
 and runs the MCP server from that cache directory. SEA builds rewrite the
 official plugin's WCode manifest to launch the cached MCP server through WCode's
 internal plugin host, so the server uses the embedded Node.js runtime.

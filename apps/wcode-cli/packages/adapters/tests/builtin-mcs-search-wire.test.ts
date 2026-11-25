@@ -20,14 +20,14 @@ describe("Published MCS and search final Anthropic wire", () => {
   it.each([
     [
       "account:zai-start-plan",
-      "https://zcode.z.ai/api/v1/wcode-plan/anthropic",
+      "https://zcode.z.ai/api/v1/zcode-plan/anthropic",
       "GLM-5.3-Flash",
       true,
       true,
     ],
     [
       "account:bigmodel-start-plan",
-      "https://zcode.z.ai/api/v1/wcode-plan/anthropic",
+      "https://zcode.z.ai/api/v1/zcode-plan/anthropic",
       "GLM-5.3-Flash",
       true,
       true,
