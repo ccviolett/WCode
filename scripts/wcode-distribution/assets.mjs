@@ -14,9 +14,12 @@ import { supportedTargets } from "../../apps/wcode-cli/packages/cli/scripts/sea-
 const root = resolve(import.meta.dirname, "../..");
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
 
-const runtimePackageNames = [
+export const runtimePackageNames = [
   "@hono/node-server",
   "@hono/node-ws",
+  // Bug 原因：v4.0.0 Server 启动凭据库将 @napi-rs/keyring 设为 external，此前遗漏在此列表外，
+  // 导致脱离源码仓库运行发行包 wcode --web 时触发 ERR_MODULE_NOT_FOUND / CREDENTIAL_SECURE_STORAGE_UNAVAILABLE。
+  "@napi-rs/keyring",
   "ssh2",
   "node-pty",
   "undici",

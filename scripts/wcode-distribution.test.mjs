@@ -2,13 +2,27 @@ import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { once } from "node:events";
-import { chmod, cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { promisify } from "node:util";
 import { test } from "node:test";
-import { patchNodePtyPrebuilds, stageBundledSkills } from "./wcode-distribution/assets.mjs";
+import {
+  patchNodePtyPrebuilds,
+  runtimePackageNames,
+  stageBundledSkills,
+} from "./wcode-distribution/assets.mjs";
 import { installScriptSource } from "./wcode-distribution/installer.mjs";
 
 const exec = promisify(execFile);
@@ -404,4 +418,80 @@ test("installer downloads isolated private Node 24 when host PATH lacks Node >= 
     })
   ).stdout.trim();
   assert.equal(versionOutput, "1.2.3");
+});
+
+test("runtimePackageNames covers every external dependency of @wcode/server HTTP bundle", async () => {
+  // Bug 回归：v4.0.0 将 @napi-rs/keyring 加入 server external，但发行包拷贝列表遗漏，
+  // 导致脱离仓库运行 wcode --web 启动即报 ERR_MODULE_NOT_FOUND。
+  const tsupConfig = await readFile(
+    new URL("../packages/server/tsup.config.ts", import.meta.url),
+    "utf8",
+  );
+  const blockMatch = tsupConfig.match(
+    /export const SERVER_HTTP_EXTERNAL_DEPENDENCIES\s*=\s*\[([\s\S]*?)\];/,
+  );
+  assert.ok(
+    blockMatch,
+    "SERVER_HTTP_EXTERNAL_DEPENDENCIES not found in packages/server/tsup.config.ts",
+  );
+  const codeWithoutComments = blockMatch[1].replace(/\/\/[^\n]*/g, "");
+  const externals = [...new Set([...codeWithoutComments.matchAll(/"([^"]+)"/g)].map((m) => m[1]))];
+  assert.ok(
+    externals.includes("@napi-rs/keyring"),
+    "expected @napi-rs/keyring in server externals",
+  );
+  const missing = externals.filter((pkg) => !runtimePackageNames.includes(pkg));
+  assert.deepEqual(
+    missing,
+    [],
+    `Missing server runtime packages in assets.mjs: ${missing.join(", ")}`,
+  );
+});
+
+test("docker entrypoint initializes 0600 credential-secret once and preserves existing state", async (t) => {
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "wcode-docker-entry-")));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const entrypoint = new URL("../deploy/docker/entrypoint.sh", import.meta.url).pathname;
+  const stubRunner = join(directory, "stub-runner.mjs");
+  await writeFile(stubRunner, "process.stdout.write(JSON.stringify(process.argv.slice(2)));\n");
+
+  const dataDir = join(directory, "data-fresh");
+  await exec("sh", [entrypoint], {
+    env: {
+      ...process.env,
+      WCODE_DATA_BASE_DIR: dataDir,
+      WCODE_RUNNER_BIN: stubRunner,
+      WCODE_CREDENTIAL_SECRET: "",
+      WCODE_CREDENTIAL_SECRET_FILE: "",
+    },
+  });
+  const secretPath = join(dataDir, ".wcode/v2/credential-secret");
+  const firstSecret = await readFile(secretPath);
+  assert.equal(firstSecret.length, 32);
+  assert.equal((await stat(secretPath)).mode & 0o777, 0o600);
+
+  // 二次启动必须复用既有密钥，绝不覆盖已有加密凭据的主密钥。
+  await exec("sh", [entrypoint], {
+    env: {
+      ...process.env,
+      WCODE_DATA_BASE_DIR: dataDir,
+      WCODE_RUNNER_BIN: stubRunner,
+      WCODE_CREDENTIAL_SECRET: "",
+      WCODE_CREDENTIAL_SECRET_FILE: "",
+    },
+  });
+  assert.deepEqual(await readFile(secretPath), firstSecret);
+
+  // 显式指定 WCODE_CREDENTIAL_SECRET_FILE 时不写入默认 credential-secret。
+  const dataExplicit = join(directory, "data-explicit");
+  await exec("sh", [entrypoint], {
+    env: {
+      ...process.env,
+      WCODE_DATA_BASE_DIR: dataExplicit,
+      WCODE_RUNNER_BIN: stubRunner,
+      WCODE_CREDENTIAL_SECRET: "",
+      WCODE_CREDENTIAL_SECRET_FILE: secretPath,
+    },
+  });
+  await assert.rejects(stat(join(dataExplicit, ".wcode/v2/credential-secret")));
 });

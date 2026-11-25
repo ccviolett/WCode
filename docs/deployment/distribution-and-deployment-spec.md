@@ -24,6 +24,7 @@
   - `nested`（默认，向后兼容既有静态托管）：产物写入 `dist/wcode/releases/<version>/wcode-<version>.tar.gz` 与 `sha256.txt`，`latest.json` 记录 `tarballPath: "releases/<version>/wcode-<version>.tar.gz"`。
   - `flat`（用于 GitHub Releases）：产物直接写入 `dist/wcode/wcode-<version>.tar.gz` 与 `dist/wcode/sha256.txt`（与 `latest.json`、`install.sh` 同层），`latest.json` 记录 `tarballPath: "wcode-<version>.tar.gz"`，便于直接上传为 GitHub Release 扁平资产。
 - 两种布局下，`latest.json` 均保留 `baseUrl`、`createdAt`、`name`、`sha256`、`tarball`、`tarballPath`、`version` 字段。
+- `scripts/wcode-distribution/assets.mjs` 的 `runtimePackageNames` 必须完整覆盖 `packages/server/tsup.config.ts` 的 `SERVER_HTTP_EXTERNAL_DEPENDENCIES`（含 `@napi-rs/keyring` 及其多平台原生绑定），由 `scripts/wcode-distribution.test.mjs` 回归门禁保证不会在上游升级时遗漏外部依赖。
 
 ### 2.2 一键安装脚本（`scripts/wcode-distribution/installer.mjs`）
 
@@ -51,12 +52,13 @@
 
 ### 2.4 Linux `systemd` 与反向代理模板（`deploy/`）
 
-- `deploy/systemd/wcode.service`：通过 `EnvironmentFile=-/etc/wcode/wcode.env` 注入工作区、数据目录和固定令牌，以 `wcode --web --host 127.0.0.1 --port 3030 --no-open` 或显式配置启动，配合反代对外提供 HTTPS。
+- `deploy/systemd/wcode.service`：通过 `EnvironmentFile=-/etc/wcode/wcode.env` 注入工作区、数据目录和固定令牌，以 `wcode --web --host 127.0.0.1 --port 3030 --no-open` 或显式配置启动，配合反代对外提供 HTTPS。无桌面 DBus Secret Service 的无头 Linux 主机需在数据目录预先创建 `0600` 的 32 字节 `credential-secret` 文件或显式配置 `WCODE_CREDENTIAL_SECRET_FILE`。
 - `deploy/nginx/wcode.conf` 与 `deploy/caddy/Caddyfile`：透传 `Host`、`X-Forwarded-For`、`X-Forwarded-Proto` 并开启 `/ws` WebSocket 升级与长连接超时，保证服务端正确识别 `deployment.mode = server` 与 TLS `Secure` Cookie。
 
 ### 2.5 Docker / `docker compose` 容器部署（`Dockerfile`、`docker-compose.yml`）
 
 - **多阶段构建**：builder 阶段在 `node:24.14.0-bookworm-slim` 中执行 `pnpm build:wcode --flat`，runtime 阶段仅保留解包后的 `/opt/wcode` 运行时与基础编码工具（`git`、`curl`、`ripgrep`、`python3`、`openssh-client`、`ca-certificates`、`bash`、`tini`），以非 root 用户 `node` 运行。
+- **无头容器凭据密钥初始化（`deploy/docker/entrypoint.sh`）**：未配置 `WCODE_CREDENTIAL_SECRET` / `WCODE_CREDENTIAL_SECRET_FILE` 且 `${WCODE_DATA_BASE_DIR:-/data}/.wcode/v2` 下尚无 `credential-secret`、`credential-source` 或 `credentials.json` 时，以排他模式（`wx`、`0600`）原子写入 32 字节随机密钥文件并随 `/data` 持久化；已有密钥或凭据文件时绝不覆盖。
 - **固定环境契约**：
   - `WCODE_DATA_BASE_DIR=/data`（持久化登录态、SQLite 会话与设置，数据位于 `/data/.wcode/`）。
   - `WCODE_SERVER_WORKSPACE=/workspace`（默认工作区挂载点）。

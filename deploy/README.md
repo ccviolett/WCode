@@ -72,6 +72,10 @@ curl -fsSL https://github.com/ccviolett/WCode/releases/latest/download/install.s
 
 ```bash
 sudo install -d -m 755 /etc/wcode /var/lib/wcode /srv/workspace
+sudo install -d -m 700 /var/lib/wcode/.wcode/v2
+# 无桌面 Linux 服务器没有 DBus Secret Service 时，为凭据加密库生成 0600 权限的 32 字节密钥文件（勿丢失）
+sudo sh -c 'umask 077 && openssl rand -out /var/lib/wcode/.wcode/v2/credential-secret 32'
+sudo chown -R wcode:wcode /var/lib/wcode
 sudo cp deploy/systemd/wcode.env.example /etc/wcode/wcode.env
 sudo chmod 600 /etc/wcode/wcode.env
 # 编辑 /etc/wcode/wcode.env：
