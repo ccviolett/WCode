@@ -1,15 +1,15 @@
-import { Emitter, type Event } from "@zcode/rpc";
-import { ESTIMATED_TOKEN_CHAR_DIVISOR, calculateOutputTps } from "@zcode/shared";
+import { Emitter, type Event } from "@wcode/rpc";
+import { ESTIMATED_TOKEN_CHAR_DIVISOR, calculateOutputTps } from "@wcode/shared";
 import {
   GENERATION_STREAMING_PUSH_INTERVAL_MS,
   type GenerationMetrics,
   type WorkspaceRef,
-} from "@zcode/shared/extension-host";
+} from "@wcode/shared/extension-host";
 import type {
   ConversationTelemetryFact,
   ModelRequestMetricsFact,
-} from "@zcode/shared/zcode-protocol-v4";
-import type { IZCodeAgentService } from "#src/zcode-agent/zcodeAgent.js";
+} from "@wcode/shared/wcode-protocol-v4";
+import type { IWCodeAgentService } from "#src/wcode-agent/wcodeAgent.js";
 import type { ServiceLogger } from "#src/logger/serviceLogger.js";
 import {
   createWorkspaceSubscriptions,
@@ -42,7 +42,7 @@ export interface GenerationPump {
 
 export function createGenerationPump(deps: {
   agent: Pick<
-    IZCodeAgentService,
+    IWCodeAgentService,
     "onDynamicConversationTelemetryFact" | "onDynamicModelRequestMetrics"
   >;
   workbench: WorkbenchState;

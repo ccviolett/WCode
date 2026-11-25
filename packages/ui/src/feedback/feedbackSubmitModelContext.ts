@@ -1,5 +1,5 @@
-import { decodeCustomModelValue } from "@zcode/shared";
-import type { ZCodeConfigOption } from "@zcode/shared";
+import { decodeCustomModelValue } from "@wcode/shared";
+import type { WCodeConfigOption } from "@wcode/shared";
 
 const FEEDBACK_MODEL_OPTIONS_PREVIEW_LIMIT = 12;
 
@@ -11,7 +11,7 @@ export interface FeedbackAgentModelContext {
 }
 
 export function readCurrentAgentModelContext(
-  configOptions?: readonly ZCodeConfigOption[] | null,
+  configOptions?: readonly WCodeConfigOption[] | null,
 ): FeedbackAgentModelContext {
   const modelOption = configOptions?.find(
     (option) => option.category === "model" && option.type === "select",

@@ -3,7 +3,7 @@ import type {
   ConversationRowsPartition,
   TurnHeaderRow,
   UserInputRow,
-} from "@zcode/shared/zcode-protocol-v4";
+} from "@wcode/shared/wcode-protocol-v4";
 import { memoizeByRows } from "@/v4/conversationProjectionStore.js";
 
 function sortedHighspeedExpiries(rows: readonly ConversationRow[]): number[] {

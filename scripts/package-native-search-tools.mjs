@@ -11,7 +11,7 @@ import { packSourceAsDeterministicTarGzip } from "./deterministic-tar-archive.mj
 import { resolveNativeSearchPrebuiltPlan } from "./native-search-tools-config.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const require = createRequire(join(repoRoot, "packages/desktop/package.json"));
+const require = createRequire(join(repoRoot, "package.json"));
 
 export function resolveNativeSearchPackagedArtifactPath({ artifact, artifactsDir }) {
   return join(
@@ -36,8 +36,8 @@ async function packWindowsZip(binaryPath, binaryName, archivePath) {
 }
 
 export async function packageNativeSearchTools({
-  platform = process.env.ZCODE_TARGET_OS || process.platform,
-  arch = process.env.ZCODE_TARGET_ARCH || process.arch,
+  platform = process.env.WCODE_TARGET_OS || process.platform,
+  arch = process.env.WCODE_TARGET_ARCH || process.arch,
   artifactsDir = join(repoRoot, "dist/native-search-tools-deps"),
   buildOutputDir,
   jobs,
@@ -90,8 +90,8 @@ function readJobs() {
 
 async function main() {
   await packageNativeSearchTools({
-    platform: readOption("platform") ?? process.env.ZCODE_TARGET_OS ?? process.platform,
-    arch: readOption("arch") ?? process.env.ZCODE_TARGET_ARCH ?? process.arch,
+    platform: readOption("platform") ?? process.env.WCODE_TARGET_OS ?? process.platform,
+    arch: readOption("arch") ?? process.env.WCODE_TARGET_ARCH ?? process.arch,
     artifactsDir: readOption("artifacts-dir"),
     buildOutputDir: readOption("build-output-dir"),
     jobs: readJobs(),

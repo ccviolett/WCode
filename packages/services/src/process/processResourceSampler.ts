@@ -3,10 +3,10 @@ import { readdir, readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import os from "node:os";
 import {
-  formatZCodeAgentProcessName,
+  formatWCodeAgentProcessName,
   type HostResourceUsageProcess,
-  type ZCodeProcessChildProcess,
-} from "@zcode/shared";
+  type WCodeProcessChildProcess,
+} from "@wcode/shared";
 
 /**
  * 资源管理器 Host 侧采样。
@@ -334,7 +334,7 @@ export interface HostResourceUsageAgent {
   provider: string;
   workspacePath: string;
   /** CLI `process/childProcesses` 的回报；请求失败时为空数组，非根后代按任务进程归类 */
-  children: readonly ZCodeProcessChildProcess[];
+  children: readonly WCodeProcessChildProcess[];
 }
 
 export interface AttributeHostProcessTreeOptions {
@@ -347,7 +347,7 @@ export interface AttributeHostProcessTreeOptions {
 
 type Owner =
   | { kind: "agent"; agent: HostResourceUsageAgent }
-  | { kind: "mcp"; child: ZCodeProcessChildProcess }
+  | { kind: "mcp"; child: WCodeProcessChildProcess }
   | { kind: "builtin"; pluginName: string };
 
 function commandDisplayName(command: string): string {
@@ -377,7 +377,7 @@ function ownerToRow(
     return {
       pid: sample.pid,
       name: isOwnerRoot
-        ? formatZCodeAgentProcessName(owner.agent.provider, owner.agent.workspacePath)
+        ? formatWCodeAgentProcessName(owner.agent.provider, owner.agent.workspacePath)
         : commandDisplayName(sample.command),
       // Agent 本身是基础开销；其非插件后代随用户任务变化，单独归入任务进程。
       category: isOwnerRoot ? "base" : "task",

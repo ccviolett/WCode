@@ -1,5 +1,5 @@
 import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
-import type { ProjectTask as ZCodeTaskMeta } from "@/project-sidebar/contract.js";
+import type { ProjectTask as WCodeTaskMeta } from "@/project-sidebar/contract.js";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
@@ -62,23 +62,23 @@ export function VirtualizedGroupedTaskList({
   activeDragTaskKey,
   tooltipsDisabled,
 }: {
-  tasks: ZCodeTaskMeta[];
+  tasks: WCodeTaskMeta[];
   groupId: string;
   groups: TaskGroupMenuItem[];
   activeWorkspacePath: string;
   activeWorkspaceIdentity?: string;
   activeTaskId: string | null;
   mobileActiveTaskKey?: string | null;
-  getTaskRemoteSessionId: (task: ZCodeTaskMeta) => string | undefined;
-  getTaskWorkspaceLabel: (task: ZCodeTaskMeta) => string;
+  getTaskRemoteSessionId: (task: WCodeTaskMeta) => string | undefined;
+  getTaskWorkspaceLabel: (task: WCodeTaskMeta) => string;
   onSelectTask: (workspacePath: string, taskId: string, workspaceIdentity?: string) => void;
-  onCloseTask: (task: ZCodeTaskMeta) => void;
-  onOpenFileTree?: (task: ZCodeTaskMeta) => void;
-  onMoveTaskToGroup: (task: ZCodeTaskMeta, groupId: string | null) => void;
-  onMoveTaskToTop: (task: ZCodeTaskMeta) => void;
-  onStartRenameTask: (task: ZCodeTaskMeta) => void;
-  onArchiveTask: (task: ZCodeTaskMeta) => void;
-  onMarkTaskAsUnread: (task: ZCodeTaskMeta) => void;
+  onCloseTask: (task: WCodeTaskMeta) => void;
+  onOpenFileTree?: (task: WCodeTaskMeta) => void;
+  onMoveTaskToGroup: (task: WCodeTaskMeta, groupId: string | null) => void;
+  onMoveTaskToTop: (task: WCodeTaskMeta) => void;
+  onStartRenameTask: (task: WCodeTaskMeta) => void;
+  onArchiveTask: (task: WCodeTaskMeta) => void;
+  onMarkTaskAsUnread: (task: WCodeTaskMeta) => void;
   activeDragTaskKey?: string | null;
   tooltipsDisabled?: boolean;
 }) {
@@ -153,7 +153,7 @@ export function VirtualizedGroupedTaskList({
   const measureElement = rowVirtualizer.measureElement;
 
   const renderTask = useCallback(
-    (task: ZCodeTaskMeta) => (
+    (task: WCodeTaskMeta) => (
       <GroupedTaskItem
         key={taskKey(task)}
         task={task}

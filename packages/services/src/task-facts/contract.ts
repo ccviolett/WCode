@@ -1,5 +1,5 @@
-import type { ZCodeTaskMeta, ZCodeWorkspaceTaskListChanged } from "@zcode/shared";
-import type { SessionSummary, SessionsIndexReconcileResult } from "@zcode/shared/zcode-protocol-v4";
+import type { WCodeTaskMeta, WCodeWorkspaceTaskListChanged } from "@wcode/shared";
+import type { SessionSummary, SessionsIndexReconcileResult } from "@wcode/shared/wcode-protocol-v4";
 
 export interface TaskWorkspace {
   workspacePath: string;
@@ -10,7 +10,7 @@ export interface TaskFactTarget extends TaskWorkspace {
 }
 export type TaskFactMutation = { type: "rename"; title: string } | { type: "delete" };
 export interface CliTaskFacts {
-  meta: ZCodeTaskMeta;
+  meta: WCodeTaskMeta;
   titleSource?: string;
   lastOutcome?: "completed" | "interrupted" | "error";
   deleted?: boolean;
@@ -18,13 +18,13 @@ export interface CliTaskFacts {
 
 /** 存储端口只接受 CLI 事实，不能据 Host 时钟或运行态推导会话事实。 */
 export interface TaskFactStore {
-  applyCliFacts(facts: CliTaskFacts): Promise<ZCodeTaskMeta>;
+  applyCliFacts(facts: CliTaskFacts): Promise<WCodeTaskMeta>;
   applyCliDeletion(target: TaskFactTarget): Promise<void>;
   markCliOrphan(target: TaskFactTarget): Promise<void>;
   listReconciliationRows(
     target: TaskWorkspace,
-  ): Promise<Array<{ meta: ZCodeTaskMeta; handoffPending: number }>>;
-  getTaskMeta(target: TaskFactTarget): Promise<ZCodeTaskMeta | null>;
+  ): Promise<Array<{ meta: WCodeTaskMeta; handoffPending: number }>>;
+  getTaskMeta(target: TaskFactTarget): Promise<WCodeTaskMeta | null>;
 }
 export interface TaskFactSource {
   reconcile(target: TaskWorkspace, sessionIds: string[]): Promise<SessionsIndexReconcileResult>;
@@ -32,14 +32,14 @@ export interface TaskFactSource {
 }
 export interface TaskFactChange {
   target: TaskFactTarget;
-  meta?: ZCodeTaskMeta;
-  reason: ZCodeWorkspaceTaskListChanged["reason"];
+  meta?: WCodeTaskMeta;
+  reason: WCodeWorkspaceTaskListChanged["reason"];
 }
 export interface TaskFactsContract {
-  ingest(target: TaskWorkspace, summary: SessionSummary): Promise<ZCodeTaskMeta>;
+  ingest(target: TaskWorkspace, summary: SessionSummary): Promise<WCodeTaskMeta>;
   removed(target: TaskFactTarget): Promise<void>;
-  refresh(target: TaskFactTarget): Promise<ZCodeTaskMeta | null>;
-  mutate(target: TaskFactTarget, intent: TaskFactMutation): Promise<ZCodeTaskMeta | null>;
+  refresh(target: TaskFactTarget): Promise<WCodeTaskMeta | null>;
+  mutate(target: TaskFactTarget, intent: TaskFactMutation): Promise<WCodeTaskMeta | null>;
   reconcile(
     target: TaskWorkspace,
     presentSessionIds: ReadonlySet<string>,

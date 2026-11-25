@@ -1,4 +1,4 @@
-import { redactFeedbackText } from "@zcode/shared";
+import { redactFeedbackText } from "@wcode/shared";
 export function buildErrorFeedbackDescription({
   message,
   detail,

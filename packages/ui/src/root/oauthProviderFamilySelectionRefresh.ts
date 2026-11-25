@@ -1,12 +1,12 @@
-import type { IServiceAccessor } from "@zcode/services";
-import type { AccountProviderState } from "@zcode/provider";
+import type { IServiceAccessor } from "@wcode/services";
+import type { AccountProviderState } from "@wcode/provider";
 import type {
   OAuthProviderId,
   UsageEntitlementSnapshot,
-  ZCodeAccountAccess,
-  ZCodeProviderAccountAccess,
-} from "@zcode/shared";
-import { getModelProviderFamilySpec } from "@zcode/shared";
+  WCodeAccountAccess,
+  WCodeProviderAccountAccess,
+} from "@wcode/shared";
+import { getModelProviderFamilySpec } from "@wcode/shared";
 import { logger } from "@/logger.js";
 import { resolveAccountProviderInspectionAccess } from "@/lib/accountProviderAccess.js";
 import {
@@ -19,7 +19,7 @@ import { getEnterprisePricingProductsOrEmpty } from "@/root/oauthTeamPricing.js"
 async function getUsageEntitlementSnapshotOrNull(params: {
   services: IServiceAccessor;
   providerId: string;
-  accountAccess?: ZCodeProviderAccountAccess | ZCodeAccountAccess;
+  accountAccess?: WCodeProviderAccountAccess | WCodeAccountAccess;
 }): Promise<UsageEntitlementSnapshot | null> {
   try {
     return await params.services.usageStatsService.getEntitlementSnapshot({
@@ -44,7 +44,7 @@ async function refreshAccountProviderAccesses(params: {
   providerIds: readonly string[];
   reason: string;
 }): Promise<{
-  accesses: ReadonlyMap<string, ZCodeProviderAccountAccess | ZCodeAccountAccess>;
+  accesses: ReadonlyMap<string, WCodeProviderAccountAccess | WCodeAccountAccess>;
   states: ReadonlyMap<string, AccountProviderState>;
   refreshed: boolean;
   error?: unknown;
@@ -60,7 +60,7 @@ async function refreshAccountProviderAccesses(params: {
         const access = resolved.access;
         // 登录/启动检查属于套餐只读查询。静态 mode 会经执行期 current 解析，
         // 把未选中或 pending 的 Start 当作当前 Coding 查询；此处必须明确查询套餐自身。
-        const query: ZCodeProviderAccountAccess | ZCodeAccountAccess =
+        const query: WCodeProviderAccountAccess | WCodeAccountAccess =
           access.mode === "start-plan" || access.mode === "individual-coding-plan"
             ? { type: "zhipu-account", family: access.accountType, planKind: access.mode }
             : access;

@@ -1,4 +1,4 @@
-import type { ISourceServerManagementService } from "@zcode/services";
+import type { ISourceServerManagementService } from "@wcode/services";
 import { logger } from "@/logger.js";
 
 export interface SourceServerDisplayNameRegistry {

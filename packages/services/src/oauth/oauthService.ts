@@ -1,6 +1,6 @@
 /* eslint-disable max-lines -- OAuthService 集中维护 OAuth 会话生命周期和 provider 切换边界，当前 review 修复只收窄后台迁移写入条件。 */
 import { randomBytes } from "node:crypto";
-import { Emitter } from "@zcode/rpc";
+import { Emitter } from "@wcode/rpc";
 import {
   ApiError,
   formatLogPrefix,
@@ -21,9 +21,9 @@ import {
   type OAuthUserProfile,
   type UserInfo,
   resolveJwtExpiration,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import type { ICredentialService } from "../credential/credential.js";
-import type { CredentialFileGuard } from "@zcode/shared/node";
+import type { CredentialFileGuard } from "@wcode/shared/node";
 import { createServiceLogger } from "../logger/serviceLogger.js";
 import { readApiJson } from "../providers/api/apiJson.js";
 import type { IOAuthService } from "./oauth.js";
@@ -43,14 +43,14 @@ import { OAuthCredentialRepo } from "./repo/oauthCredentialRepo.js";
 import { createOAuthRuntimeConfig } from "./runtimeConfig.js";
 import {
   buildDesktopOAuthRedirectUriFromEnv,
-  buildZCodeApiUrlFromEnv,
+  buildWCodeApiUrlFromEnv,
 } from "./providers/configUtils.js";
 
 /** OAuth 超时时间（5 分钟） */
 const OAUTH_TIMEOUT_MS = 5 * 60 * 1000;
 const OAUTH_PROFILE_TIMEOUT_MS = 10_000;
 const COMPLETED_POLLING_STATE_GRACE_MS = 30 * 1000;
-const ZCODE_JWT_TOKEN_KEY = "zcodejwttoken";
+const WCODE_JWT_TOKEN_KEY = "wcodejwttoken";
 const log = (...args: unknown[]) =>
   console.log(formatLogPrefix("oauthService", process.pid), ...args);
 const serviceLog = createServiceLogger("oauthService");
@@ -208,7 +208,7 @@ export class OAuthService implements IOAuthService {
     const provider = snapshot["oauth:active_provider"];
     const profile = provider ? this.repo.profileFromSnapshot(snapshot, provider) : null;
     const tokens = provider ? this.repo.tokenSetFromSnapshot(snapshot, provider) : null;
-    const jwt = tokens?.zcodeJwtToken;
+    const jwt = tokens?.wcodeJwtToken;
     // 拒绝来自旧业务请求的刷新：分类后可能已在另一进程完成重登或退出。
     if (
       expected &&
@@ -226,7 +226,7 @@ export class OAuthService implements IOAuthService {
     const refresh = (async () => {
       const response = await readApiJson<OAuthFlowEnvelope>(
         this.apiClient!,
-        buildZCodeApiUrlFromEnv(this.env, "/api/v1/oauth/profile"),
+        buildWCodeApiUrlFromEnv(this.env, "/api/v1/oauth/profile"),
         {
           headers: { Authorization: `Bearer ${jwt}` },
           authFailurePolicy: "caller-handled",
@@ -315,7 +315,7 @@ export class OAuthService implements IOAuthService {
     }
 
     const tokens = [
-      ZCODE_JWT_TOKEN_KEY,
+      WCODE_JWT_TOKEN_KEY,
       ...(activeProvider === ZAI_CN_PROVIDER_ID ? [] : [`oauth:${activeProvider}:access_token`]),
     ].map((key) => ({
       key,
@@ -324,7 +324,7 @@ export class OAuthService implements IOAuthService {
     const expired = tokens.find(
       ({ value }) => value && resolveJwtExpiration(value, this.now()).kind === "expired",
     );
-    const zcodeJwtToken = tokens[0]?.value ?? "";
+    const wcodeJwtToken = tokens[0]?.value ?? "";
     if (expired) {
       serviceLog.info("cached session invalidated because login JWT expired", {
         provider: activeProvider,
@@ -380,10 +380,10 @@ export class OAuthService implements IOAuthService {
     }
 
     if (isZaiOAuthProvider(activeProvider)) {
-      if (!zcodeJwtToken) {
-        // sidebar 登录入口之前只看缓存 user_info，会把“缺少 zcodejwttoken”的状态误判成已登录。
-        // 这里补充 zcodejwttoken 门槛，确保没有后端 JWT 时统一按未登录处理。
-        log("restoreCachedSession skipped: missing zcodejwttoken:", activeProvider);
+      if (!wcodeJwtToken) {
+        // sidebar 登录入口之前只看缓存 user_info，会把“缺少 wcodejwttoken”的状态误判成已登录。
+        // 这里补充 wcodejwttoken 门槛，确保没有后端 JWT 时统一按未登录处理。
+        log("restoreCachedSession skipped: missing wcodejwttoken:", activeProvider);
         return { status: "signed-out" };
       }
     }
@@ -398,7 +398,7 @@ export class OAuthService implements IOAuthService {
     expectedProfile: OAuthUserProfile,
     expectedJwt: string,
     expectedSnapshot: Readonly<Record<string, string | null>>,
-    credentialKey = ZCODE_JWT_TOKEN_KEY,
+    credentialKey = WCODE_JWT_TOKEN_KEY,
   ): Promise<boolean> {
     const invalidated = await this.runSessionMutation(async () => {
       const snapshot = await this.repo.loadSessionSnapshot();
@@ -680,7 +680,7 @@ export class OAuthService implements IOAuthService {
 
       const cachedProfile = this.repo.profileFromSnapshot(snapshot, activeProvider);
       // 显式恢复和后台资料迁移共用边界：上游userinfo只能更新展示，不能替换主身份。
-      // 缺少可信缓存时必须重新完成ZCode登录，不从customerNumber或sub构造主用户。
+      // 缺少可信缓存时必须重新完成WCode登录，不从customerNumber或sub构造主用户。
       if (
         (activeProvider === BIGMODEL_PROVIDER_ID || activeProvider === ZAI_PROVIDER_ID) &&
         (!cachedProfile || cachedProfile.id === "unknown")
@@ -704,7 +704,7 @@ export class OAuthService implements IOAuthService {
           activeProvider,
           {
             ...tokenSet,
-            zcodeJwtToken: tokenSet.zcodeJwtToken ?? snapshot[ZCODE_JWT_TOKEN_KEY] ?? undefined,
+            wcodeJwtToken: tokenSet.wcodeJwtToken ?? snapshot[WCODE_JWT_TOKEN_KEY] ?? undefined,
           },
           withProviderProfileSchema(activeProvider, profile),
         ))
@@ -765,7 +765,7 @@ export class OAuthService implements IOAuthService {
     if (this.oauthFlowStartGeneration !== startGeneration)
       throw new Error("OAuth flow 已被新的登录请求替换");
     const pollToken = randomBytes(32).toString("hex");
-    const initUrl = buildZCodeApiUrlFromEnv(this.env, "/api/v1/oauth/cli/init");
+    const initUrl = buildWCodeApiUrlFromEnv(this.env, "/api/v1/oauth/cli/init");
     const envelope = await readApiJson<OAuthFlowEnvelope>(this.apiClient, initUrl, {
       method: "POST",
       headers: {
@@ -802,7 +802,7 @@ export class OAuthService implements IOAuthService {
     }
     if (provider === BIGMODEL_PROVIDER_ID) {
       // BigModel CLI callback 的失败页会截断原有 Desktop deep link 回调体验。
-      // flow 仍由 Host 轮询，但浏览器回调恢复到官网中转页，再透传到 zcode://oauth/callback。
+      // flow 仍由 Host 轮询，但浏览器回调恢复到官网中转页，再透传到 wcode://oauth/callback。
       authorizeUrl.searchParams.set("redirect", buildDesktopOAuthRedirectUriFromEnv(this.env));
     } else if (isZaiOAuthProvider(provider)) {
       // 国内渠道曾漏过中转改写；显式传渠道，避免官网把国内授权码送往海外回调。
@@ -862,7 +862,7 @@ export class OAuthService implements IOAuthService {
         nextPollAt: this.monotonicNow(),
         pollIntervalMs,
         pollToken,
-        pollUrl: buildZCodeApiUrlFromEnv(
+        pollUrl: buildWCodeApiUrlFromEnv(
           this.env,
           `/api/v1/oauth/cli/poll/${encodeURIComponent(flowId)}`,
         ),
@@ -966,9 +966,9 @@ export class OAuthService implements IOAuthService {
         const providerAccessToken = isZaiOAuthProvider(pending.provider)
           ? readTrimmedString(zai?.access_token)
           : readTrimmedString(bigmodel?.access_token) || readTrimmedString(bigmodel?.accessToken);
-        const zcodeJwtToken = readTrimmedString(ready.token);
+        const wcodeJwtToken = readTrimmedString(ready.token);
         const userId = readTrimmedString(user?.user_id);
-        if (!zcodeJwtToken || !providerAccessToken || !userId) {
+        if (!wcodeJwtToken || !providerAccessToken || !userId) {
           throw new Error("OAuth flow 查询响应无效");
         }
         const username = readTrimmedString(user?.name) || readTrimmedString(user?.email) || userId;
@@ -992,13 +992,13 @@ export class OAuthService implements IOAuthService {
         const tokenSet = adapter.normalizePolledTokenSet
           ? await adapter.normalizePolledTokenSet({
               accessToken: providerAccessToken,
-              zcodeJwtToken,
+              wcodeJwtToken,
               linkedBigModel,
               ...(refreshToken ? { refreshToken } : {}),
             })
           : {
               accessToken: providerAccessToken,
-              zcodeJwtToken,
+              wcodeJwtToken,
               linkedBigModel,
               ...(refreshToken ? { refreshToken } : {}),
             };
@@ -1233,7 +1233,7 @@ export class OAuthService implements IOAuthService {
         {
           ...tokenSet,
           ...refreshed,
-          zcodeJwtToken: refreshed.zcodeJwtToken ?? tokenSet.zcodeJwtToken,
+          wcodeJwtToken: refreshed.wcodeJwtToken ?? tokenSet.wcodeJwtToken,
         },
         snapshot,
       );

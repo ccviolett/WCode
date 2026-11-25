@@ -7,12 +7,12 @@ import {
 import { loadBuiltinProviderConfig } from "../../scripts/builtin-provider-config.mjs";
 import { stageThirdPartyNotices } from "../../scripts/third-party-notices.mjs";
 
-const { version, zcodeCompatibility } = JSON.parse(readFileSync("../../package.json", "utf-8")) as {
+const { version, wcodeCompatibility } = JSON.parse(readFileSync("../../package.json", "utf-8")) as {
   version: string;
-  zcodeCompatibility?: { minCompatibleVersion?: string };
+  wcodeCompatibility?: { minCompatibleVersion?: string };
 };
-const minCompatibleVersion = zcodeCompatibility?.minCompatibleVersion ?? version;
-const { content: zcodeBuiltinProviderConfigJson } = await loadBuiltinProviderConfig();
+const minCompatibleVersion = wcodeCompatibility?.minCompatibleVersion ?? version;
+const { content: wcodeBuiltinProviderConfigJson } = await loadBuiltinProviderConfig();
 
 /**
  * Let esbuild bundle node-pty's JS code normally, but keep .node native
@@ -37,7 +37,7 @@ const nativeAddonPlugin: Plugin = {
 const buildResult = await build({
   entryPoints: ["src/entry-stdio.ts"],
   bundle: true,
-  outfile: "dist/remote/zcode-server.cjs",
+  outfile: "dist/remote/wcode-server.cjs",
   platform: "node",
   format: "cjs",
   target: "node22",
@@ -51,17 +51,17 @@ const buildResult = await build({
   define: {
     "import.meta.url": "__import_meta_url",
     "import.meta.dirname": "__import_meta_dirname",
-    __ZCODE_VERSION__: JSON.stringify(version),
-    __ZCODE_MIN_COMPATIBLE_VERSION__: JSON.stringify(minCompatibleVersion),
-    __ZCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(zcodeBuiltinProviderConfigJson),
+    __WCODE_VERSION__: JSON.stringify(version),
+    __WCODE_MIN_COMPATIBLE_VERSION__: JSON.stringify(minCompatibleVersion),
+    __WCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(wcodeBuiltinProviderConfigJson),
   },
   metafile: true,
 });
 
-const remoteBundleSource = readFileSync("dist/remote/zcode-server.cjs", "utf-8");
+const remoteBundleSource = readFileSync("dist/remote/wcode-server.cjs", "utf-8");
 const bundledInputs = Object.keys(buildResult.metafile.inputs);
 validateRemoteServerBundle({ bundledInputs, source: remoteBundleSource });
 // 修复：remote 单文件 bundle 内联第三方代码，dist/remote 也必须附完整声明。
 await stageThirdPartyNotices("dist/remote");
 
-console.log("Built dist/remote/zcode-server.cjs");
+console.log("Built dist/remote/wcode-server.cjs");

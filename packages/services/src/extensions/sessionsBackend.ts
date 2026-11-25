@@ -5,13 +5,13 @@ import {
   type ExtensionAuditEntry,
   type ExtensionErrorCode,
   type ExtensionGrant,
-} from "@zcode/shared/extension-host";
+} from "@wcode/shared/extension-host";
 import {
   SessionControlError,
   type AppSessionControl,
   type AppTrustedContext,
   type SessionControlErrorCode,
-} from "@zcode/session-control/contracts";
+} from "@wcode/session-control/contracts";
 import type {
   AppControlClientBinding,
   AppControlServiceHandle,

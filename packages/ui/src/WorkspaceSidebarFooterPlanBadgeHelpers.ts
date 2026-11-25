@@ -1,4 +1,4 @@
-import type { UsageEntitlementSnapshot } from "@zcode/shared";
+import type { UsageEntitlementSnapshot } from "@wcode/shared";
 import { hasActiveCodingPlanSnapshot } from "@/CodingPlanUsageRemainingPanel.js";
 
 export type SidebarFooterProfilePlanBadge =

@@ -1,4 +1,4 @@
-import type { BotOutboundMessage } from "@zcode/shared";
+import type { BotOutboundMessage } from "@wcode/shared";
 
 type ReplyTarget = Pick<BotOutboundMessage, "replyToMessageId" | "threadId" | "rootMessageId">;
 

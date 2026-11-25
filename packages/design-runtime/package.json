@@ -1,5 +1,5 @@
 {
-  "name": "@zcode/design-runtime",
+  "name": "@wcode/design-runtime",
   "private": true,
   "type": "module",
   "exports": {

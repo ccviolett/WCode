@@ -1,8 +1,8 @@
-import type { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import type { useWCodeIntl } from "@/i18n/IntlProvider.js";
 import type { ToolCallBlockRenderContext } from "@/ToolCallBlocks/shared.js";
 import { isSubagentColor } from "@/lib/subagentColors.js";
 
-type AgentIntl = ReturnType<typeof useZCodeIntl>["intl"];
+type AgentIntl = ReturnType<typeof useWCodeIntl>["intl"];
 type AgentToolCall = ToolCallBlockRenderContext["toolCallNode"]["toolCall"];
 const DEFAULT_AGENT_TYPE_LABEL = "general-purpose";
 
@@ -93,7 +93,7 @@ function readRecordFromUnknown(value: unknown): Record<string, unknown> | null {
 
 function readCodexSubagentNickname(toolCall: AgentToolCall): string | undefined {
   const rawNickname =
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "nickname"]) ??
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "nickname"]) ??
     readStringFromNestedRecord(toolCall.raw, ["nickname"]);
   if (rawNickname) {
     return rawNickname;
@@ -153,9 +153,9 @@ export function getAgentKindLabel(
   const inputRecord = isPlainRecord(toolCall.input) ? toolCall.input : null;
   const rawRecord = isPlainRecord(toolCall.raw) ? toolCall.raw : null;
   const rawName =
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "agentType"]) ??
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "agent_type"]) ??
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "subagent_type"]);
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "agentType"]) ??
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "agent_type"]) ??
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "subagent_type"]);
 
   // 流式 input 的半截 JSON 暂时读不到 subagent_type，若一读不到就按“模型省略字段”
   // 回退 general-purpose，首帧会误报、之后再跳成真实类型。只有 inputPreviewComplete 明确为 true
@@ -177,7 +177,7 @@ export function getAgentColor(toolCall: AgentToolCall) {
   const outputRecord = readRecordFromUnknown(toolCall.output);
   const inputRecord = isPlainRecord(toolCall.input) ? toolCall.input : null;
   const rawColor =
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "color"]) ??
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "color"]) ??
     readStringFromNestedRecord(toolCall.raw, ["color"]) ??
     readAgentColorFromRecord(inputRecord) ??
     readAgentColorFromRecord(outputRecord);
@@ -192,12 +192,12 @@ function readAgentColorFromRecord(value: Record<string, unknown> | null): string
 export function readBackgroundAgentInfo(toolCall: AgentToolCall) {
   const raw = isPlainRecord(toolCall.raw) ? toolCall.raw : null;
   const meta = raw && isPlainRecord(raw._meta) ? raw._meta : null;
-  const zcode = meta && isPlainRecord(meta.zcode) ? meta.zcode : null;
-  const zcodeBackgroundAgent =
-    zcode && isPlainRecord(zcode.backgroundAgent) ? zcode.backgroundAgent : null;
+  const wcode = meta && isPlainRecord(meta.wcode) ? meta.wcode : null;
+  const wcodeBackgroundAgent =
+    wcode && isPlainRecord(wcode.backgroundAgent) ? wcode.backgroundAgent : null;
   const taskNotification =
-    zcode && isPlainRecord(zcode.taskNotification) ? zcode.taskNotification : null;
-  const backgroundAgent = zcodeBackgroundAgent;
+    wcode && isPlainRecord(wcode.taskNotification) ? wcode.taskNotification : null;
+  const backgroundAgent = wcodeBackgroundAgent;
   const input = isPlainRecord(toolCall.input) ? toolCall.input : null;
   const outputText = readTextFromUnknown(toolCall.output);
   const outputFile =
@@ -214,8 +214,8 @@ export function readBackgroundAgentInfo(toolCall: AgentToolCall) {
 
 export function getAgentActivityContent(toolCall: AgentToolCall) {
   const taskNotificationResult =
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "taskNotification", "result"]) ??
-    readStringFromNestedRecord(toolCall.raw, ["_meta", "zcode", "taskNotification", "summary"]);
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "taskNotification", "result"]) ??
+    readStringFromNestedRecord(toolCall.raw, ["_meta", "wcode", "taskNotification", "summary"]);
   if (taskNotificationResult) {
     // background Agent 的 output_file 是完整 sidechain transcript，
     // task-notification result 才是适合用户阅读的完成摘要。优先展示摘要，避免展开后被 JSONL 淹没。

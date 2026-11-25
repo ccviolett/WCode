@@ -1,4 +1,4 @@
-import type { IProviderSettingsService, ProviderSettingsView } from "@zcode/services";
+import type { IProviderSettingsService, ProviderSettingsView } from "@wcode/services";
 
 export async function persistPersonalProviderDeletion(params: {
   providerId: string;

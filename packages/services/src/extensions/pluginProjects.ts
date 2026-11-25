@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join, normalize } from "node:path";
-import { ExtensionError } from "@zcode/shared/extension-host";
-import type { AppProjectRef } from "@zcode/session-control/contracts";
+import { ExtensionError } from "@wcode/shared/extension-host";
+import type { AppProjectRef } from "@wcode/session-control/contracts";
 import type { IProjectService, VirtualProject } from "#src/project/contract.js";
 import type { ServiceLogger } from "#src/logger/serviceLogger.js";
 

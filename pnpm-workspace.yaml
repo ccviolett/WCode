@@ -1,9 +1,9 @@
 packages:
   - apps/dev-docs
   - packages/*
-  - apps/zcode-cli
-  - apps/zcode-cli/packages/*
-  - apps/zcode-cli/tools/*
+  - apps/wcode-cli
+  - apps/wcode-cli/packages/*
+  - apps/wcode-cli/tools/*
 supportedArchitectures:
   os:
     - current

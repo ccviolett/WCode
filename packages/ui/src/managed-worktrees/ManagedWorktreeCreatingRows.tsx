@@ -2,12 +2,12 @@
 // 行集合只来自 Host 的创建记录；点击后切到项目 workspace，并在主区展示这条记录。
 import { LoaderCircle, TriangleAlertIcon } from "lucide-react";
 import { memo, useCallback } from "react";
-import type { ManagedWorktreeCreation } from "@zcode/shared";
-import { TID_WORKTREE_CREATING_ROW } from "@zcode/shared/test-ids";
+import type { ManagedWorktreeCreation } from "@wcode/shared";
+import { TID_WORKTREE_CREATING_ROW } from "@wcode/shared/test-ids";
 import { cn } from "@/components/lib/utils.js";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useWCodeIntl } from "@/i18n/IntlProvider.js";
 import { useTabStoreApi } from "@/store/TabStoreProvider.js";
-import { useZCodeSessionStore } from "@/store/zcodeSessionStore.js";
+import { useWCodeSessionStore } from "@/store/wcodeSessionStore.js";
 import { useManagedWorktreeCreations } from "./useManagedWorktreeCreations.js";
 
 export const ManagedWorktreeCreatingRows = memo(function ManagedWorktreeCreatingRows({
@@ -29,10 +29,10 @@ export const ManagedWorktreeCreatingRows = memo(function ManagedWorktreeCreating
 });
 
 function CreatingRow({ creation }: { creation: ManagedWorktreeCreation }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useWCodeIntl();
   const tabStore = useTabStoreApi();
-  const viewWorktreeCreation = useZCodeSessionStore((state) => state.viewWorktreeCreation);
-  const active = useZCodeSessionStore((state) => {
+  const viewWorktreeCreation = useWCodeSessionStore((state) => state.viewWorktreeCreation);
+  const active = useWCodeSessionStore((state) => {
     const workspace = state.getWorkspaceState(creation.workspacePath);
     return workspace.activeTaskId === null && workspace.draftWorktreeCreationId === creation.id;
   });

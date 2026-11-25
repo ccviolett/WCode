@@ -2,7 +2,7 @@ import type {
   NetworkCaptureBridge,
   ResourceUsageSnapshot,
   StorageManagementBridge,
-} from "@zcode/shared";
+} from "@wcode/shared";
 
 export type ResourceManagerTab = "cpu" | "memory" | "storage" | "network";
 

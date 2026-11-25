@@ -1,0 +1,113 @@
+// S08：skills/referenceCatalog 的 workspace/session authority 契约。
+// session 直读 runtime 冻结目录；draft 重新扫描 workspace；未知 session fail closed。
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { wcodeSkillsReferenceCatalogResultSchema } from "@wcode/shared";
+import type { SkillLoadOutcome } from "@wcode/contracts";
+import { getSkillReferenceCatalog } from "../src/wcode-protocol/skill-reference-catalog.js";
+import type {
+  WCodeProtocolAgentServerContext,
+  WCodeProtocolSessionRecord,
+} from "../src/wcode-protocol/server-types.js";
+
+const SESSION_CATALOG: SkillLoadOutcome = {
+  skills: [
+    {
+      name: "frozen",
+      description: "Frozen session skill",
+      path: "/workspace/.wcode/skills/frozen/SKILL.md",
+      directory: "/workspace/.wcode/skills/frozen",
+      rootPath: "/workspace/.wcode/skills",
+      scope: "project",
+      source: "wcode",
+      safeToAutoLoad: true,
+      frontmatterKeys: ["name", "description"],
+    },
+  ],
+  diagnostics: [],
+  totalDiscovered: 1,
+};
+
+function contextWithSession(sessionId: string): WCodeProtocolAgentServerContext {
+  const record = {
+    app: {
+      getSkillCatalog: async () => SESSION_CATALOG,
+    },
+  } as unknown as WCodeProtocolSessionRecord;
+  return {
+    deps: { env: {} },
+    sessions: new Map([[sessionId, record]]),
+  } as unknown as WCodeProtocolAgentServerContext;
+}
+
+describe("skills/referenceCatalog protocol", () => {
+  it("serves the Session runtime frozen catalog", async () => {
+    const result = await getSkillReferenceCatalog(contextWithSession("session-a"), {
+      workspace: { workspacePath: "/workspace", workspaceKey: "/workspace" },
+      sessionId: "session-a",
+    });
+
+    expect(result).toEqual({
+      authority: "session",
+      skills: [
+        {
+          id: "glm:workspace:/workspace/.wcode/skills/frozen/SKILL.md",
+          name: "frozen",
+          description: "Frozen session skill",
+          path: "/workspace/.wcode/skills/frozen/SKILL.md",
+          scope: "workspace",
+          enabled: true,
+        },
+      ],
+    });
+    expect(() => wcodeSkillsReferenceCatalogResultSchema.parse(result)).not.toThrow();
+  });
+
+  it("fails closed for an unknown Session instead of falling back to workspace discovery", async () => {
+    await expect(
+      getSkillReferenceCatalog(contextWithSession("session-a"), {
+        workspace: { workspacePath: "/workspace", workspaceKey: "/workspace" },
+        sessionId: "missing",
+      }),
+    ).rejects.toThrow(/Session is not active/);
+  });
+
+  it("rescans the current workspace catalog for a draft request", async () => {
+    const root = await mkdtemp(join(tmpdir(), "wcode-skill-reference-workspace-"));
+    const skillDirectory = join(root, ".wcode", "skills", "manual-added");
+    await mkdir(skillDirectory, { recursive: true });
+    await writeFile(
+      join(skillDirectory, "SKILL.md"),
+      ["---", "name: manual-added", "description: Added outside the app.", "---"].join("\n"),
+    );
+    try {
+      const result = await getSkillReferenceCatalog(
+        {
+          deps: {
+            env: {
+              HOME: root,
+              WCODE_STORAGE_DIR: join(root, "cli"),
+            },
+          },
+          sessions: new Map(),
+        } as unknown as WCodeProtocolAgentServerContext,
+        { workspace: { workspacePath: root, workspaceKey: root } },
+      );
+
+      expect(result.authority).toBe("workspace");
+      expect(result.skills).toContainEqual(
+        expect.objectContaining({
+          name: "manual-added",
+          description: "Added outside the app.",
+          scope: "workspace",
+          enabled: true,
+        }),
+      );
+      expect(() => wcodeSkillsReferenceCatalogResultSchema.parse(result)).not.toThrow();
+    } finally {
+      await rm(root, { force: true, recursive: true });
+    }
+  });
+});

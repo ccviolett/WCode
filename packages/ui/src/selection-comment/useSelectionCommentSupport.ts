@@ -9,16 +9,16 @@ export function useSelectionCommentSupport(
   workspaceIdentity: string | undefined,
   enabled: boolean,
 ): boolean {
-  const { zcodeAgentService } = useServices();
+  const { wcodeAgentService } = useServices();
   const key = `${workspaceIdentity?.trim() ?? ""}\0${workspacePath}`;
   const [state, setState] = useState<{ key: string; supported: boolean } | null>(null);
   useEffect(() => {
     if (!enabled) return;
     let disposed = false;
-    const query = zcodeAgentService.supportsConversationQuoteComment;
+    const query = wcodeAgentService.supportsConversationQuoteComment;
     if (typeof query !== "function") return;
     query
-      .call(zcodeAgentService, {
+      .call(wcodeAgentService, {
         workspacePath,
         ...(workspaceIdentity ? { workspaceIdentity } : {}),
       })
@@ -34,6 +34,6 @@ export function useSelectionCommentSupport(
     return () => {
       disposed = true;
     };
-  }, [enabled, key, workspaceIdentity, workspacePath, zcodeAgentService]);
+  }, [enabled, key, workspaceIdentity, workspacePath, wcodeAgentService]);
   return enabled && state?.key === key && state.supported;
 }

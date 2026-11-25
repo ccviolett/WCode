@@ -1,4 +1,4 @@
-// Window Host 侧实现入口，由 @zcode/services/node 转出。
+// Window Host 侧实现入口，由 @wcode/services/node 转出。
 export {
   createWindowHostExtensions,
   type WindowHostExtensions,

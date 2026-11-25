@@ -1,4 +1,4 @@
-import type { Event } from "@zcode/rpc";
+import type { Event } from "@wcode/rpc";
 import type {
   RemoteTarget,
   SourceServerUpdateRequest,
@@ -9,8 +9,8 @@ import type {
   SourceServerManagementStateDelta,
   SourceServerOperationLog,
   SourceServerRunningTasksResult,
-} from "@zcode/shared";
-import { ServiceChannels } from "@zcode/shared";
+} from "@wcode/shared";
+import { ServiceChannels } from "@wcode/shared";
 import { createServiceDescriptor } from "../descriptors.js";
 
 export interface UpdateConnectionProfileInput {

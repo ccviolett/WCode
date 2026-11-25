@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 /**
- * ZCode agent 提供方的单一真源。
+ * WCode agent 提供方的单一真源。
  *
- * 类型 ZCodeProvider、运行时 schema zcodeProviderSchema 都从这里派生,
+ * 类型 WCodeProvider、运行时 schema wcodeProviderSchema 都从这里派生,
  * 避免各处内联 z.enum([...]) 副本随新增/删除 provider 漂移。
- * 本模块只依赖 zod(叶子),可被 validation / zcode-protocol 等无环引用。
+ * 本模块只依赖 zod(叶子),可被 validation / wcode-protocol 等无环引用。
  */
-export const ZCODE_PROVIDERS = ["glm"] as const;
+export const WCODE_PROVIDERS = ["glm"] as const;
 
-export const zcodeProviderSchema = z.enum(ZCODE_PROVIDERS);
+export const wcodeProviderSchema = z.enum(WCODE_PROVIDERS);
 
-export type ZCodeProvider = (typeof ZCODE_PROVIDERS)[number];
+export type WCodeProvider = (typeof WCODE_PROVIDERS)[number];

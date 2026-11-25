@@ -6,13 +6,13 @@ import {
   REWARDS_PARTITION,
   resolveRewardsOrigin,
   toZhOrEnLocale,
-  ZCODE_ENV,
+  WCODE_ENV,
   type RewardsContext,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import { useServices } from "@/hooks/useServices.js";
 import { usePlatform } from "@/hooks/usePlatform.js";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
-import { useZCodeStore } from "@/store/StoreProvider.js";
+import { useWCodeIntl } from "@/i18n/IntlProvider.js";
+import { useWCodeStore } from "@/store/StoreProvider.js";
 import { resolveTheme } from "@/useTheme.js";
 import { logger } from "@/logger.js";
 import { Button } from "@/components/ui/button.js";
@@ -21,11 +21,11 @@ import { EmbeddedWebsiteHeader } from "@/components/EmbeddedWebsiteHeader.js";
 export function RewardsWebview({ onClose }: { onClose: () => void }) {
   const { oauthService } = useServices();
   const platform = usePlatform();
-  const { intl, locale: uiLocale } = useZCodeIntl();
+  const { intl, locale: uiLocale } = useWCodeIntl();
   // 奖励页是外部网页，只有中英两套；非中文界面语言打开英文页。
   const locale = toZhOrEnLocale(uiLocale);
-  const themePreference = useZCodeStore((s) => s.theme);
-  const userId = useZCodeStore((s) => s.user?.id ?? null);
+  const themePreference = useWCodeStore((s) => s.theme);
+  const userId = useWCodeStore((s) => s.user?.id ?? null);
   const [systemDark, setSystemDark] = useState(
     () => matchMedia("(prefers-color-scheme: dark)").matches,
   );
@@ -41,12 +41,12 @@ export function RewardsWebview({ onClose }: { onClose: () => void }) {
     ? "zai-dark"
     : "zai-light";
   const env = import.meta.env;
-  const policy = { dev: env.DEV, e2e: env.VITE_ZCODE_E2E_STORE_BRIDGE === "1" };
+  const policy = { dev: env.DEV, e2e: env.VITE_WCODE_E2E_STORE_BRIDGE === "1" };
   const [url] = useState(() =>
     buildRewardsUrl(
       resolveRewardsOrigin({
         ...policy,
-        env: ZCODE_ENV,
+        env: WCODE_ENV,
         override:
           typeof env.VITE_REWARDS_WEBVIEW_ORIGIN === "string"
             ? env.VITE_REWARDS_WEBVIEW_ORIGIN
@@ -105,7 +105,7 @@ export function RewardsWebview({ onClose }: { onClose: () => void }) {
               ? "bigmodel"
               : null;
       const oauth = session?.legacyOAuthToken ?? null;
-      const jwt = session?.zcodeJwtToken ?? null;
+      const jwt = session?.wcodeJwtToken ?? null;
       const current = await oauthService.getAccountAvailability();
       if (
         view.current !== element ||

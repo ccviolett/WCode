@@ -1,4 +1,4 @@
-import type { IGitService } from "@zcode/services";
+import type { IGitService } from "@wcode/services";
 import {
   buildWorkspaceFileGitStatusByPath,
   isWorkspaceFileTreeGitStatusAvailable,

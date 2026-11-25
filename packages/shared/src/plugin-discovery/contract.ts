@@ -2,4 +2,4 @@ export { isDiscoverableOfficialPlugin, isPluginStoreVisible } from "../plugin-st
 export {
   pluginInstallRequestPayloadSchema,
   type PluginInstallRequestPayload,
-} from "../zcode-protocol-v4/pluginInstall.js";
+} from "../wcode-protocol-v4/pluginInstall.js";

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { isRemoteWorkspaceIdentity } from "@zcode/shared";
+import { isRemoteWorkspaceIdentity } from "@wcode/shared";
 import {
   MENTION_ITEMS_ERROR_CODES,
   slotScopeKey,
   type MentionItemsResult,
-} from "@zcode/shared/extension-host";
+} from "@wcode/shared/extension-host";
 import { logger } from "@/logger.js";
 import {
   composerCommandScope,

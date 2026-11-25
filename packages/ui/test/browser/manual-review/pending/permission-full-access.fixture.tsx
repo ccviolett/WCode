@@ -4,23 +4,23 @@ import {
   type V4ConversationContextValue,
 } from "@/v4/V4ConversationContext.js";
 import { initializeNewTaskDraft } from "@/v4/composer/newTaskDraft.js";
-import type { ConversationSnapshot } from "@zcode/shared/zcode-protocol-v4";
+import type { ConversationSnapshot } from "@wcode/shared/wcode-protocol-v4";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ConfirmDialogHost } from "@/ConfirmDialog.js";
 import { PermissionDialog } from "@/PermissionDialog.js";
-import { ZCodeIntlProvider } from "@/i18n/IntlProvider.js";
-import { isLocale, type ZCodePermissionRequest } from "@zcode/shared";
+import { WCodeIntlProvider } from "@/i18n/IntlProvider.js";
+import { isLocale, type WCodePermissionRequest } from "@wcode/shared";
 import "@/styles.css";
 import { pendingCommandRegistry } from "@/v4/pendingCommandRegistry.js";
-import type { CommandAck } from "@zcode/shared/zcode-protocol-v4";
+import type { CommandAck } from "@wcode/shared/wcode-protocol-v4";
 const params = new URLSearchParams(location.search);
 const requestedLocale = params.get("locale");
 const scopeGate = Promise.withResolvers<void>();
 document.documentElement.classList.add(
   params.get("theme") === "light" ? "theme-zai-light" : "theme-zai-dark",
 );
-const request: ZCodePermissionRequest = {
+const request: WCodePermissionRequest = {
   type: "permission_request",
   taskId: "s",
   traceId: "trace",
@@ -180,7 +180,7 @@ function Fixture() {
   );
 }
 createRoot(document.getElementById("root")!).render(
-  <ZCodeIntlProvider initialLocale={isLocale(requestedLocale) ? requestedLocale : "zh-CN"}>
+  <WCodeIntlProvider initialLocale={isLocale(requestedLocale) ? requestedLocale : "zh-CN"}>
     {params.has("grant") ? <MobileProjectApproval /> : <Fixture />}
-  </ZCodeIntlProvider>,
+  </WCodeIntlProvider>,
 );

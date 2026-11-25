@@ -6,12 +6,12 @@ import {
   ChannelServer,
   ChannelClient,
   type ISocket,
-} from "@zcode/rpc";
+} from "@wcode/rpc";
 import {
-  IZCodeAgentService,
-  createZCodeAgentConnectionScope,
+  IWCodeAgentService,
+  createWCodeAgentConnectionScope,
   type ServiceCollection,
-} from "@zcode/services";
+} from "@wcode/services";
 
 /**
  * Wrap process.stdin/stdout as an ISocket for RPC communication.
@@ -69,9 +69,9 @@ export function createStdioServer(
   const channelServer = new ChannelServer(protocol, "stdio");
   const reverseClient = onReverseClientReady ? new ChannelClient(protocol) : undefined;
   if (reverseClient) onReverseClientReady?.(reverseClient);
-  const agentService = services.getOptional(IZCodeAgentService);
+  const agentService = services.getOptional(IWCodeAgentService);
   const connectionScope = agentService
-    ? createZCodeAgentConnectionScope(agentService, {
+    ? createWCodeAgentConnectionScope(agentService, {
         connectionId: `server-stdio-${randomUUID()}`,
         clientMode: "desktop-continuous",
         role: "trusted-host-relay",
@@ -80,7 +80,7 @@ export function createStdioServer(
   services.exposeOnChannelServer(
     channelServer,
     connectionScope
-      ? new Map([[IZCodeAgentService.channelName, connectionScope.service]])
+      ? new Map([[IWCodeAgentService.channelName, connectionScope.service]])
       : new Map(),
   );
   let stopPromise: Promise<void> | undefined;

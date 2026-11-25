@@ -11,7 +11,7 @@ import type {
   SaveCliMcpToUserDirectoryRequest,
   SettingsDirectoryLocation,
   SettingsDirectorySource,
-} from "@zcode/shared";
+} from "@wcode/shared";
 import type { IMcpSyncService } from "./mcpSync.js";
 import { createMcpDataSyncMethods } from "../data-sync/node.js";
 import { createServiceLogger } from "../logger/serviceLogger.js";
@@ -37,11 +37,11 @@ export interface UserMcpRecord {
   path: string;
 }
 
-const ZCODE_MCP_DESCRIPTOR: DirectoryMcpDescriptor = {
-  source: "zcode",
-  directorySource: "zcode",
-  userConfigDirSegments: [".zcode", "cli"],
-  workspaceConfigDirSegments: [".zcode"],
+const WCODE_MCP_DESCRIPTOR: DirectoryMcpDescriptor = {
+  source: "wcode",
+  directorySource: "wcode",
+  userConfigDirSegments: [".wcode", "cli"],
+  workspaceConfigDirSegments: [".wcode"],
   fileName: "config.json",
   configKeyName: "mcp.servers",
 };
@@ -62,7 +62,7 @@ const ENABLED_KEY = "enabled";
 const LEGACY_ENABLE_KEY = "enable";
 const SECRET_CONFIG_FILE_MODE = 0o600;
 const DIRECTORY_MCP_DESCRIPTORS: readonly DirectoryMcpDescriptor[] = [
-  ZCODE_MCP_DESCRIPTOR,
+  WCODE_MCP_DESCRIPTOR,
   AGENTS_MCP_DESCRIPTOR,
 ];
 
@@ -124,8 +124,8 @@ function buildUserConfigPath(descriptor: DirectoryMcpDescriptor): string {
   return buildDirectoryConfigPath(descriptor, "user");
 }
 
-export function getUserZcodeMcpConfigPath(): string {
-  return buildUserConfigPath(ZCODE_MCP_DESCRIPTOR);
+export function getUserWcodeMcpConfigPath(): string {
+  return buildUserConfigPath(WCODE_MCP_DESCRIPTOR);
 }
 
 function buildDirectoryMcpLocation(
@@ -153,9 +153,9 @@ function findDescriptorByLocation(location: SettingsDirectoryLocation): Director
 }
 
 export async function collectEffectiveUserMcpRecords(): Promise<UserMcpRecord[]> {
-  const zcodeRecords = await readUserMcpRecordsFromFile(ZCODE_MCP_DESCRIPTOR);
-  if (zcodeRecords.length > 0) {
-    return sortMcpRecords(zcodeRecords);
+  const wcodeRecords = await readUserMcpRecordsFromFile(WCODE_MCP_DESCRIPTOR);
+  if (wcodeRecords.length > 0) {
+    return sortMcpRecords(wcodeRecords);
   }
   return sortMcpRecords(await readUserMcpRecordsFromFile(AGENTS_MCP_DESCRIPTOR));
 }
@@ -181,7 +181,7 @@ async function saveMcpToUserDirectory(payload: SaveCliMcpToUserDirectoryRequest)
     const scope: Exclude<McpScope, "common"> = payload.projectPath ? "workspace" : "user";
     const location =
       payload.location ??
-      buildDirectoryMcpLocation(ZCODE_MCP_DESCRIPTOR, scope, payload.projectPath);
+      buildDirectoryMcpLocation(WCODE_MCP_DESCRIPTOR, scope, payload.projectPath);
     await writeServerEnabledToFile(
       findDescriptorByLocation(location),
       location,
@@ -194,7 +194,7 @@ async function saveMcpToUserDirectory(payload: SaveCliMcpToUserDirectoryRequest)
 
   const scope: Exclude<McpScope, "common"> = payload.projectPath ? "workspace" : "user";
   const existingServers = await readDirectoryServersFromFile(
-    ZCODE_MCP_DESCRIPTOR,
+    WCODE_MCP_DESCRIPTOR,
     scope,
     payload.projectPath,
   );
@@ -211,7 +211,7 @@ async function saveMcpToUserDirectory(payload: SaveCliMcpToUserDirectoryRequest)
     delete nextServers[payload.name];
   }
 
-  await writeZCodeServersToFile(scope, nextServers, payload.projectPath);
+  await writeWCodeServersToFile(scope, nextServers, payload.projectPath);
 }
 
 function sortMcpRecords(records: UserMcpRecord[]): UserMcpRecord[] {
@@ -222,13 +222,13 @@ async function readDirectoryServersFromPreferredSources(
   scope: Exclude<McpScope, "common">,
   workspacePath?: string,
 ): Promise<NativeMcpServerRecord[]> {
-  const zcodeServers = await readDirectoryServersFromFile(
-    ZCODE_MCP_DESCRIPTOR,
+  const wcodeServers = await readDirectoryServersFromFile(
+    WCODE_MCP_DESCRIPTOR,
     scope,
     workspacePath,
   );
-  if (zcodeServers.length > 0) {
-    return zcodeServers;
+  if (wcodeServers.length > 0) {
+    return wcodeServers;
   }
   return readDirectoryServersFromFile(AGENTS_MCP_DESCRIPTOR, scope, workspacePath);
 }
@@ -250,7 +250,7 @@ async function readDirectoryServersFromFile(
   );
   const location = buildDirectoryMcpLocation(descriptor, scope, workspacePath);
   return Object.entries(serverMap).map(([name, config]) => ({
-    source: "zcodeagentmcp",
+    source: "wcodeagentmcp",
     scope,
     name,
     config: config as McpServerConfig,
@@ -264,23 +264,23 @@ async function readDirectoryServersFromFile(
   }));
 }
 
-async function writeZCodeServersToFile(
+async function writeWCodeServersToFile(
   scope: Exclude<McpScope, "common">,
   servers: Record<string, Record<string, unknown>>,
   workspacePath?: string,
 ): Promise<void> {
-  const filePath = buildDirectoryConfigPath(ZCODE_MCP_DESCRIPTOR, scope, workspacePath);
+  const filePath = buildDirectoryConfigPath(WCODE_MCP_DESCRIPTOR, scope, workspacePath);
   const current = (await readJsonObject(filePath)) ?? {};
-  const next = writeServerMapToJson(current, ZCODE_MCP_DESCRIPTOR.configKeyName, servers);
+  const next = writeServerMapToJson(current, WCODE_MCP_DESCRIPTOR.configKeyName, servers);
   await writeTextAtomic(filePath, `${JSON.stringify(next, null, 2)}\n`);
 }
 
 async function readUserCliConfig(): Promise<Record<string, unknown>> {
-  return (await readJsonObject(getUserZcodeMcpConfigPath())) ?? {};
+  return (await readJsonObject(getUserWcodeMcpConfigPath())) ?? {};
 }
 
 async function writeUserCliConfig(config: Record<string, unknown>): Promise<void> {
-  await writeTextAtomic(getUserZcodeMcpConfigPath(), `${JSON.stringify(config, null, 2)}\n`);
+  await writeTextAtomic(getUserWcodeMcpConfigPath(), `${JSON.stringify(config, null, 2)}\n`);
 }
 
 function removeLegacyMcpEnabledOverride(
@@ -487,18 +487,18 @@ function writeServerMapToJson(
 }
 
 /** 读取 `config.json` 的 `mcp.servers`（已折叠历史 enable 字段），供数据同步在写前重读后使用。 */
-export function readZcodeServerMap(
+export function readWcodeServerMap(
   config: Record<string, unknown>,
 ): Record<string, Record<string, unknown>> {
-  return migrateLegacyEnableFlag(readServerMapFromJson(config, ZCODE_MCP_DESCRIPTOR.configKeyName))
+  return migrateLegacyEnableFlag(readServerMapFromJson(config, WCODE_MCP_DESCRIPTOR.configKeyName))
     .servers;
 }
 
-export function writeZcodeServerMap(
+export function writeWcodeServerMap(
   config: Record<string, unknown>,
   servers: Record<string, Record<string, unknown>>,
 ): Record<string, unknown> {
-  return writeServerMapToJson(config, ZCODE_MCP_DESCRIPTOR.configKeyName, servers);
+  return writeServerMapToJson(config, WCODE_MCP_DESCRIPTOR.configKeyName, servers);
 }
 
 export interface McpPathRewrite {

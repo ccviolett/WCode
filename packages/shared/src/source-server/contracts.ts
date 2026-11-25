@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { RemoteTarget } from "#src/remoteTarget.js";
-import { publicZCodeErrorCodeSchema } from "./errorCodes.js";
+import { publicWCodeErrorCodeSchema } from "./errorCodes.js";
 import { REMOTE_ASSET_INSTALL_MODES } from "../remoteAssetInstallMode.js";
 import { isKnownRemoteResourcePackageId } from "../remoteResourcePackages.js";
 import { wslUserSchema } from "../wslUserValidation.js";
@@ -348,7 +348,7 @@ export const sourceServerConnectionStateSnapshotSchema = z
     downgradedFrom: nonEmptyStringSchema.optional(),
     /** 更新处于本机阶段（probe、release 解析与本机下载），`cancelSourceUpdate` 可取消（R3 §6.3）。 */
     updateCancelable: z.literal(true).optional(),
-    errorCode: publicZCodeErrorCodeSchema.optional(),
+    errorCode: publicWCodeErrorCodeSchema.optional(),
     retryable: z.boolean().optional(),
     installPreview: sourceServerInstallPreviewSchema.optional(),
     runningTasks: sourceServerRunningTasksSchema.optional(),
