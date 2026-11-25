@@ -1065,6 +1065,9 @@ function requiresProviderRegistryRefresh(commandType: string): boolean {
     case "createSelectionSideSession":
     case "sendText":
     case "sendGoalCommand":
+    // Bug 原因：resumeGoal 在 CLI 侧会先校验当前 Worker Registry 模型再启动目标续跑；
+    // 遗漏刷新屏障会导致 Worker 重启或供应商配置更新后误报 modelUnavailable。
+    case "resumeGoal":
     case "compact":
     case "forkAssistant":
     case "editUserQuery":

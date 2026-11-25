@@ -6069,6 +6069,73 @@ describe("goal 状态机", () => {
     expect(snapshot.availability.resumeGoal).toEqual({ allowed: true });
   });
 
+  it("verify 失败（failed_closed）—— goal=failed 时 pauseGoal 与 resumeGoal 均放行，恢复可从 failed 迁回 active", () => {
+    const log = new EventLog();
+    log.push(SessionEventType.SessionCreated, { mode: "default", contextWindow: 1000 });
+    log.push(SessionEventType.TargetChanged, {
+      action: "set",
+      source: "command",
+      target: goalTarget("active"),
+    });
+    log.push(SessionEventType.TargetCompletionVerification, {
+      targetId: "target-1",
+      status: "started",
+      verificationId: "verify-fail-1",
+      goalIteration: 1,
+    });
+    log.push(SessionEventType.TargetCompletionVerification, {
+      targetId: "target-1",
+      status: "failed_closed",
+      verificationId: "verify-fail-1",
+      goalIteration: 1,
+      verification: {
+        passed: false,
+        reason: "Completion verifier request failed: timeout",
+      },
+    });
+    const { projection } = runAll(log.events);
+    const failedSnapshot = projection.getSnapshot();
+    expect(failedSnapshot.goal).toMatchObject({ status: "failed" });
+    expect(failedSnapshot.availability.pauseGoal).toEqual({ allowed: true });
+    expect(failedSnapshot.availability.resumeGoal).toEqual({ allowed: true });
+
+    // resumeGoal 写回 active 时必须从 failed 迁回 active（不得因底层仍是 active 被 conflate 吞掉）。
+    const resumedDeltas = projection.applyEvent(
+      new EventLog().push(SessionEventType.TargetChanged, {
+        action: "status_updated",
+        source: "command",
+        target: goalTarget("active"),
+      }),
+    );
+    expect(resumedDeltas.length).toBeGreaterThan(0);
+    expect(projection.getSnapshot().goal).toMatchObject({ status: "active" });
+
+    // 再次进入 failed_closed 后，pauseGoal 也能收口到 paused。
+    projection.applyEvent(
+      new EventLog().push(SessionEventType.TargetCompletionVerification, {
+        targetId: "target-1",
+        status: "failed_closed",
+        verificationId: "verify-fail-2",
+        goalIteration: 2,
+        verification: { passed: false, reason: "verifier error" },
+      }),
+    );
+    expect(projection.getSnapshot().goal).toMatchObject({ status: "failed" });
+    projection.applyEvent(
+      new EventLog().push(SessionEventType.TargetChanged, {
+        action: "status_updated",
+        source: "command",
+        target: goalTarget("paused"),
+      }),
+    );
+    expect(projection.getSnapshot().goal).toMatchObject({ status: "paused" });
+    expect(projection.getSnapshot().availability.pauseGoal).toEqual({
+      allowed: false,
+      reasonCode: "goalNotActive",
+    });
+    expect(projection.getSnapshot().availability.resumeGoal).toEqual({ allowed: true });
+  });
+
   it("goal cleared → GoalState=null；重复 status_updated 值未变不下发（conflation）", () => {
     const log = new EventLog();
     log.push(SessionEventType.SessionCreated, { mode: "default", contextWindow: 1000 });

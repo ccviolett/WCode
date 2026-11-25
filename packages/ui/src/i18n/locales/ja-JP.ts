@@ -6424,6 +6424,14 @@ const jaJP: Record<string, string> = {
   "chat.goal.runningBlocked": "現在のタスクが終了してからゴールを設定してください。",
   "chat.goal.planModeBlocked":
     "プランモードではゴールを使用できません。続行するにはモードを切り替えてください。",
+  "chat.goal.emptyObjective": "ゴールの内容を入力してください（例: /goal ログイン画面を実装）。",
+  "chat.goal.unsupportedSubcommand": "/goal {action} コマンドは現在サポートされていません。",
+  "chat.goal.attachmentsUnsupported":
+    "ゴールコマンドでは添付ファイルやコンテキストを利用できません。削除して再試行してください。",
+  "chat.goal.noGoalToPause": "一時停止できる進行中のゴールはありません。",
+  "chat.goal.noGoalToResume": "再開できるゴールはありません。",
+  "chat.goal.staleStateRetry": "会話の状態が更新されました。もう一度お試しください。",
+  "chat.goal.commandFailed": "ゴールコマンドの実行に失敗しました。もう一度お試しください。",
   "chat.slash.app.plan.label": "プランモード",
   "chat.slash.app.plan.description": "プランモードを有効にする",
   "chat.compact.runningBlocked": "現在のタスクが終了してからコンテキストを圧縮してください。",

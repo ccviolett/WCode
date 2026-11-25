@@ -6404,6 +6404,14 @@ const ruRU: Record<string, string> = {
   "chat.goal.runningBlocked": "Задайте цель после завершения текущей задачи.",
   "chat.goal.planModeBlocked":
     "Цель недоступна в режиме планирования. Смените режим, чтобы продолжить.",
+  "chat.goal.emptyObjective": "Укажите текст цели, например: /goal доработать страницу входа.",
+  "chat.goal.unsupportedSubcommand": "Команда /goal {action} пока не поддерживается.",
+  "chat.goal.attachmentsUnsupported":
+    "Команды цели не поддерживают вложения и элементы контекста. Удалите их и повторите попытку.",
+  "chat.goal.noGoalToPause": "Нет активной цели, которую можно поставить на паузу.",
+  "chat.goal.noGoalToResume": "Нет цели, которую можно возобновить.",
+  "chat.goal.staleStateRetry": "Состояние диалога обновилось. Повторите попытку.",
+  "chat.goal.commandFailed": "Не удалось выполнить команду цели. Повторите попытку.",
   "chat.slash.app.plan.label": "Режим планирования",
   "chat.slash.app.plan.description": "Включить режим планирования",
   "chat.compact.runningBlocked": "Сожмите контекст после завершения текущей задачи.",

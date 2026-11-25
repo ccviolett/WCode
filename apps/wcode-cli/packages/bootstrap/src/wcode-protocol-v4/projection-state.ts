@@ -170,15 +170,20 @@ export function computeAvailability(
       : running
         ? ALLOWED
         : denied("sendQueuedNowRequiresRunning"),
-    // 独立 pauseGoal 改变 target 产品态；verifier/notSatisfied 期间底层 target 仍是 active，
-    // 因此也允许暂停，不能要求当前一定存在 provider abort controller。
+    // 独立 pauseGoal 改变 target 产品态；verifier/notSatisfied/failed 期间底层 target 仍是 active，
+    // 不能要求当前一定存在 provider abort controller；failed_closed 后必须允许用户暂停收口，
+    // 否则后续普通消息会意外重新拉起原目标续跑。
     pauseGoal:
-      goalStatus === "active" || goalStatus === "verifying" || goalStatus === "notSatisfied"
+      goalStatus === "active" ||
+      goalStatus === "verifying" ||
+      goalStatus === "notSatisfied" ||
+      goalStatus === "failed"
         ? ALLOWED
         : denied(goalStatus === null ? "noGoalToPause" : "goalNotActive"),
-    // resumeGoal = stopPausesActiveGoalTarget 的逆操作：仅 paused 可恢复。
+    // resumeGoal = stopPausesActiveGoalTarget 的逆操作；failed_closed 后同样允许恢复重试，
+    // 避免校验失败时暂停与恢复按钮全部消失陷入死状态。
     resumeGoal:
-      goalStatus === "paused"
+      goalStatus === "paused" || goalStatus === "failed"
         ? ALLOWED
         : denied(goalStatus === null ? "noGoalToResume" : "goalNotPaused"),
     rewindFiles: compacting

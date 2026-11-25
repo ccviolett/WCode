@@ -135,6 +135,34 @@ describe("CommandInbox ACK 裁决", () => {
     }
   });
 
+  it("pauseGoal 免 CAS：运行期不带或携带旧 baseRevision 均放行，不被 proto.staleRevision 误拒", async () => {
+    const inbox = new CommandInbox(makeHost());
+    const withoutRevision = await inbox.handle(
+      envelope({
+        commandId: "cmd-pause-no-rev",
+        type: "pauseGoal",
+        payload: {},
+      }),
+    );
+    expect(withoutRevision.kind).toBe("execute");
+    if (withoutRevision.kind === "execute") {
+      withoutRevision.settle({ status: "accepted" });
+    }
+
+    const withStaleRevision = await inbox.handle(
+      envelope({
+        commandId: "cmd-pause-stale-rev",
+        type: "pauseGoal",
+        payload: {},
+        baseRevision: 1,
+      }),
+    );
+    expect(withStaleRevision.kind).toBe("execute");
+    if (withStaleRevision.kind === "execute") {
+      withStaleRevision.settle({ status: "accepted" });
+    }
+  });
+
   it("row target entity mismatch stale；当前 entity 但 action 不可用 rejected", async () => {
     const inbox = new CommandInbox(
       makeHost({

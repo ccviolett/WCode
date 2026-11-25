@@ -6271,6 +6271,14 @@ const koKR: Record<string, string> = {
   "chat.goal.runningBlocked": "현재 작업이 끝난 후 목표를 설정하세요.",
   "chat.goal.planModeBlocked":
     "계획 모드에서는 목표를 사용할 수 없습니다. 계속하려면 모드를 전환하세요.",
+  "chat.goal.emptyObjective": "목표 내용을 입력해 주세요. 예: /goal 로그인 페이지 완성",
+  "chat.goal.unsupportedSubcommand": "/goal {action} 명령은 아직 지원되지 않습니다.",
+  "chat.goal.attachmentsUnsupported":
+    "목표 명령은 첨부 파일이나 컨텍스트를 지원하지 않습니다. 제거한 뒤 다시 시도해 주세요.",
+  "chat.goal.noGoalToPause": "일시 중지할 진행 중인 목표가 없습니다.",
+  "chat.goal.noGoalToResume": "재개할 수 있는 목표가 없습니다.",
+  "chat.goal.staleStateRetry": "대화 상태가 변경되었습니다. 다시 시도해 주세요.",
+  "chat.goal.commandFailed": "목표 명령을 실행하지 못했습니다. 다시 시도해 주세요.",
   "chat.slash.app.plan.label": "계획 모드",
   "chat.slash.app.plan.description": "계획 모드 사용",
   "chat.compact.runningBlocked": "현재 작업이 끝난 후 컨텍스트를 압축하세요.",

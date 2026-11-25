@@ -328,6 +328,7 @@ import { reportAppTelemetryEvent } from "@/lib/appTelemetry.js";
 import { useSessionSubscriptionErrorTelemetry } from "@/v4/telemetry/useSessionSubscriptionErrorTelemetry.js";
 import { useSessionOpenArmsTelemetry } from "@/v4/telemetry/useSessionOpenArmsTelemetry.js";
 import {
+  isGoalSlashCommandText,
   parseV4VisibleSlashCommand,
   parseSelectionSideSlashCommand,
   type V4VisibleSlashCommand,
@@ -564,6 +565,50 @@ export function composerEditQueueKindMismatch(
   if (inputKind === "sendGoalCommand" && !isGoal) return "goal";
   if (inputKind === "sendText" && isGoal) return "text";
   return null;
+}
+
+/**
+ * 将 Goal / Compact 斜杠命令及控制按钮的拒绝原因映射为本地化提示。
+ * Bug 原因：此前 dispatchSlashCommand 与 handlePauseGoal/handleResumeGoal 在非 accepted ACK
+ * 仅记录开发日志并静默返回，导致 Web 端用户看到点击无反应或输入被清空却无任何反馈。
+ */
+function resolveGoalSlashRejectionMessage(
+  intl: ReturnType<typeof useWCodeIntl>["intl"],
+  kind: "compact" | "sendGoalCommand" | "pauseGoal" | "resumeGoal",
+  reasonCode?: string,
+): string {
+  if (kind === "compact") {
+    if (reasonCode === "compactOperationLock") {
+      return intl.formatMessage({ id: "chat.compact.duplicateBlocked" });
+    }
+    if (reasonCode === "activeTurn") {
+      return intl.formatMessage({ id: "chat.compact.runningBlocked" });
+    }
+    if (reasonCode === "modelUnavailable") {
+      return intl.formatMessage({ id: "wcode.error.WCODE_RUNTIME_MODEL_UNAVAILABLE" });
+    }
+    return intl.formatMessage({ id: "chat.error.sendFailed" });
+  }
+  switch (reasonCode) {
+    case "activeTurn":
+      return intl.formatMessage({ id: "chat.goal.runningBlocked" });
+    case "guard.planGoalMutuallyExclusive":
+      return intl.formatMessage({ id: "chat.goal.planModeBlocked" });
+    case "modelUnavailable":
+      return intl.formatMessage({ id: "wcode.error.WCODE_RUNTIME_MODEL_UNAVAILABLE" });
+    case "emptyObjective":
+      return intl.formatMessage({ id: "chat.goal.emptyObjective" });
+    case "noGoalToPause":
+    case "goalNotActive":
+      return intl.formatMessage({ id: "chat.goal.noGoalToPause" });
+    case "noGoalToResume":
+    case "goalNotPaused":
+      return intl.formatMessage({ id: "chat.goal.noGoalToResume" });
+    case "proto.staleRevision":
+      return intl.formatMessage({ id: "chat.goal.staleStateRetry" });
+    default:
+      return intl.formatMessage({ id: "chat.goal.commandFailed" });
+  }
 }
 
 /**
@@ -3740,10 +3785,17 @@ export function SessionPane({
       expectedHeldQueueItemIds?: readonly string[],
       submission?: ComposerSubmissionConfig,
       onAccepted?: (messageId: string) => void,
-    ): Promise<boolean | "confirmationRequired"> => {
+      commandOptions?: {
+        telemetrySeed?: ConversationPromptTelemetrySeed;
+        onCommandCreated?: (commandId: string) => void;
+        submittedDraftText?: string;
+        createSource?: SessionCreateSource;
+        taskGroupId?: string | null;
+      },
+    ): Promise<"sent" | "blocked" | "confirmationRequired" | false> => {
       let type: CommandType | null = null;
       let payload: Record<string, unknown> = {};
-      // compact 是可排队 input command，不走 CAS；resumeGoal 仍是 CAS。
+      // compact / sendGoalCommand 是可排队 input command，pauseGoal 运行期免 CAS，resumeGoal 仍是 CAS。
       let withBaseRevision = false;
       const currentRoutingMode = snapshotRef.current?.inputRouting.mode;
       const compactExpectedToQueue =
@@ -3770,49 +3822,97 @@ export function SessionPane({
             ...(expectedHeldQueueItemIds ? { expectedHeldQueueItemIds } : {}),
           };
           break;
+        case "pauseGoal":
+          if (snapshotRef.current && !snapshotRef.current.availability.pauseGoal.allowed) {
+            toast(intl.formatMessage({ id: "chat.goal.noGoalToPause" }));
+            return "blocked";
+          }
+          type = "pauseGoal";
+          break;
         case "resumeGoal":
+          if (snapshotRef.current && !snapshotRef.current.availability.resumeGoal.allowed) {
+            toast(intl.formatMessage({ id: "chat.goal.noGoalToResume" }));
+            return "blocked";
+          }
           type = "resumeGoal";
           withBaseRevision = true;
           break;
         case "emptyGoal":
+          // Bug 原因：此前仅写 logger.warn 且返回 true，导致 Composer 静默清空输入。
           logger.warn("[v4-pane] /goal 需要目标文本");
-          return true;
+          toast(intl.formatMessage({ id: "chat.goal.emptyObjective" }));
+          return "blocked";
         case "unsupportedGoal":
+          // Bug 原因：此前仅写 logger.warn 且返回 true，导致 Composer 静默清空输入且无提示。
           logger.warn(`[v4-pane] 暂不支持 /goal ${command.action}`);
-          return true;
+          toast(
+            intl.formatMessage(
+              { id: "chat.goal.unsupportedSubcommand" },
+              { action: command.action },
+            ),
+          );
+          return "blocked";
         default:
           return false;
       }
       if (withBaseRevision && baseRevision === undefined) {
-        logger.warn(`[v4-pane] slash ${command.kind} 缺少 baseRevision`);
-        return true;
+        logger.lifecycle.warn(`[v4-pane] slash ${command.kind} 缺少 baseRevision`);
+        toast(intl.formatMessage({ id: "chat.goal.staleStateRetry" }));
+        return "blocked";
       }
+      const isGoalInput = command.kind === "sendGoalCommand";
       const ack = await dispatchCommand(
         type,
         payload,
         targetSessionId,
-        withBaseRevision ? baseRevision : undefined,
+        // pauseGoal 在新 CLI 免 CAS，仍保留可选 baseRevision 以兼容尚未升级的旧 CLI。
+        withBaseRevision || type === "pauseGoal" ? baseRevision : undefined,
+        undefined,
+        isGoalInput ? commandOptions?.telemetrySeed : undefined,
+        undefined,
+        isGoalInput && commandOptions?.onCommandCreated
+          ? (envelope) => {
+              if (envelope.type === "sendGoalCommand") {
+                commandOptions.onCommandCreated?.(envelope.commandId);
+              }
+            }
+          : undefined,
+        undefined,
+        isGoalInput ? commandOptions?.createSource : undefined,
+        undefined,
+        isGoalInput ? commandOptions?.taskGroupId : undefined,
+        isGoalInput ? commandOptions?.submittedDraftText : undefined,
       );
       if (ack.status === "accepted") onAccepted?.(ack.commandId);
       if (ack.reasonCode === "guard.heldQueueConfirmationStale") {
         return "confirmationRequired";
       }
       if (ack.status !== "accepted" && ack.status !== "noop") {
-        logger.warn(
+        // Bug 原因：此前 sendGoalCommand/resumeGoal 被拒绝时仅 logger.warn 且返回 true，
+        // 导致外层误判已消费、清空用户输入，并在草稿态错误晋升空会话。
+        logger.lifecycle.warn(
           `[v4-pane] slash ${command.kind} 被拒绝: ${ack.status} ${ack.reasonCode ?? ""}`,
         );
-        if (command.kind === "compact" && ack.reasonCode === "compactOperationLock") {
-          toast(intl.formatMessage({ id: "chat.compact.duplicateBlocked" }));
-        } else if (command.kind === "compact" && ack.reasonCode === "activeTurn") {
-          // 兼容尚未升级的 CLI：旧端仍会返回 activeTurn，不能再次无声清空命令。
-          toast(intl.formatMessage({ id: "chat.compact.runningBlocked" }));
-        }
-      } else if (command.kind === "compact" && compactExpectedToQueue) {
+        toast(resolveGoalSlashRejectionMessage(intl, command.kind, ack.reasonCode));
+        return "blocked";
+      }
+      if (
+        ack.status === "noop" &&
+        (command.kind === "pauseGoal" || command.kind === "resumeGoal") &&
+        (ack.reasonCode === "noGoalToPause" ||
+          ack.reasonCode === "goalNotActive" ||
+          ack.reasonCode === "noGoalToResume" ||
+          ack.reasonCode === "goalNotPaused")
+      ) {
+        toast(resolveGoalSlashRejectionMessage(intl, command.kind, ack.reasonCode));
+        return "blocked";
+      }
+      if (command.kind === "compact" && compactExpectedToQueue) {
         toast(intl.formatMessage({ id: "chat.compact.queued" }));
       } else if (heldQueueDisposition === "clearQueueAndSend") {
         settleCurrentQueueInputs(targetSessionId);
       }
-      return true;
+      return "sent";
     },
     [dispatchCommand, intl, settleCurrentQueueInputs],
   );
@@ -4013,6 +4113,17 @@ export function SessionPane({
       const slashCommand = parseV4VisibleSlashCommand(text, readyAttachments, {
         contextAttachmentCount,
       });
+      // Bug 原因：携带附件或结构化上下文提交 `/goal` 时，parseV4VisibleSlashCommand 返回 null，
+      // 此前会静默降级为普通单轮 sendText（无 Goal 胶囊、无续跑与校验）。这里在发送边界显式拦截并提示，
+      // 保留草稿与附件供用户调整，不影响历史气泡解析与 /compact 行为。
+      if (
+        slashCommand === null &&
+        (readyAttachments.length > 0 || contextAttachmentCount > 0) &&
+        isGoalSlashCommandText(text)
+      ) {
+        toast(intl.formatMessage({ id: "chat.goal.attachmentsUnsupported" }));
+        return "blocked" as const;
+      }
 
       if (!draftProjectReady || !(await ensureDraftModelReadyForSend())) {
         return "blocked" as const;
@@ -4124,7 +4235,6 @@ export function SessionPane({
         await ensureDraftPrewarmConfigBeforeSendRef.current(prewarmTargetBeforeSend);
       }
       // slash 命令优先：已有 session 直接消费；draft 首发 /goal 先建空会话再发命令。
-      // 携带附件或网页元素上下文时不消费为 v4 原生命令（compact/goal 等无附件语义），随 sendText 直发。
       if (sessionId && slashCommand) {
         const consumed = await dispatchSlashCommand(
           slashCommand,
@@ -4133,15 +4243,22 @@ export function SessionPane({
           heldQueueDisposition,
           expectedHeldQueueItemIds,
           submission,
+          undefined,
+          {
+            telemetrySeed: options?.telemetrySeed,
+            onCommandCreated: options?.onCommandCreated,
+            submittedDraftText: options?.submittedDraftText ?? text,
+          },
         );
-        if (consumed === "confirmationRequired") return consumed;
-        if (consumed) {
+        if (consumed === "confirmationRequired" || consumed === "blocked") return consumed;
+        if (consumed === "sent") {
           onAcceptedSelection?.();
-          return;
+          return "sent" as const;
         }
       }
       const draftSlashCommand =
         slashCommand?.kind === "sendGoalCommand" ||
+        slashCommand?.kind === "pauseGoal" ||
         slashCommand?.kind === "resumeGoal" ||
         slashCommand?.kind === "emptyGoal" ||
         slashCommand?.kind === "unsupportedGoal"
@@ -4152,7 +4269,7 @@ export function SessionPane({
           draftSlashCommand.kind === "emptyGoal" ||
           draftSlashCommand.kind === "unsupportedGoal"
         ) {
-          await dispatchSlashCommand(
+          const consumed = await dispatchSlashCommand(
             draftSlashCommand,
             prewarmBindingRef.current?.sessionId ?? "__draft__",
             undefined,
@@ -4160,7 +4277,20 @@ export function SessionPane({
             expectedHeldQueueItemIds,
             submission,
           );
-          return;
+          return consumed === "blocked" ? ("blocked" as const) : ("sent" as const);
+        }
+        // Bug 原因：新草稿不存在任何目标，此前输入 `/goal resume` 或 `/goal pause` 会先等待预热会话、
+        // 派发命令后仍晋升成空会话。无目标时直接在创建前拦截并返回 blocked。
+        if (draftSlashCommand.kind === "pauseGoal" || draftSlashCommand.kind === "resumeGoal") {
+          toast(
+            intl.formatMessage({
+              id:
+                draftSlashCommand.kind === "pauseGoal"
+                  ? "chat.goal.noGoalToPause"
+                  : "chat.goal.noGoalToResume",
+            }),
+          );
+          return "blocked" as const;
         }
       }
       // Bug 根因：首发曾把 binding=null 当成无预热，绕过 owner 再建一个会话。
@@ -4180,9 +4310,17 @@ export function SessionPane({
           expectedHeldQueueItemIds,
           submission,
           (messageId) => reportDraftCreated(targetSessionId, createSourceAtSend, messageId),
+          {
+            telemetrySeed: options?.telemetrySeed,
+            onCommandCreated: options?.onCommandCreated,
+            submittedDraftText: options?.submittedDraftText ?? text,
+            createSource: createSourceAtSend,
+            taskGroupId: taskGroupIdAtSend,
+          },
         );
-        if (consumed === "confirmationRequired") return consumed;
-        if (consumed) {
+        if (consumed === "confirmationRequired" || consumed === "blocked") return consumed;
+        if (consumed === "sent") {
+          onAcceptedSelection?.();
           draftBinding.promote();
           await handleDraftSessionCreated(
             targetSessionId,
@@ -4190,7 +4328,7 @@ export function SessionPane({
             undefined,
             taskGroupIdAtSend,
           );
-          return;
+          return "sent" as const;
         }
       }
       // admission 写出后的失败或 transport error 不能证明 CLI 没有执行；保留原 binding
@@ -5353,22 +5491,52 @@ export function SessionPane({
   const handlePauseGoal = useCallback(() => {
     const current = snapshotRef.current;
     if (!sessionId || !current?.availability.pauseGoal.allowed) return;
-    void dispatchCommand("pauseGoal", {}, sessionId, current.revision).then((ack) => {
-      if (ack.status !== "accepted" && ack.status !== "noop") {
-        logger.warn(`[v4-pane] pauseGoal 被拒绝: ${ack.status} ${ack.reasonCode ?? ""}`);
-      }
-    });
-  }, [dispatchCommand, sessionId]);
+    // pauseGoal 已免 CAS；保留可选 revision 以兼容尚未升级的旧 CLI，被拒或传输异常时显式 toast。
+    void dispatchCommand("pauseGoal", {}, sessionId, current.revision)
+      .then((ack) => {
+        if (ack.status !== "accepted" && ack.status !== "noop") {
+          logger.lifecycle.warn(
+            `[v4-pane] pauseGoal 被拒绝: ${ack.status} ${ack.reasonCode ?? ""}`,
+          );
+          toast(resolveGoalSlashRejectionMessage(intl, "pauseGoal", ack.reasonCode));
+        }
+      })
+      .catch((error) => {
+        logger.lifecycle.warn(`[v4-pane] pauseGoal 失败: ${String(error)}`);
+        toast(intl.formatMessage({ id: "chat.goal.commandFailed" }));
+      });
+  }, [dispatchCommand, intl, sessionId]);
 
   const handleResumeGoal = useCallback(() => {
     const current = snapshotRef.current;
     if (!sessionId || !current?.availability.resumeGoal.allowed) return;
-    void dispatchCommand("resumeGoal", {}, sessionId, current.revision).then((ack) => {
-      if (ack.status !== "accepted" && ack.status !== "noop") {
-        logger.warn(`[v4-pane] resumeGoal 被拒绝: ${ack.status} ${ack.reasonCode ?? ""}`);
+    void (async () => {
+      try {
+        let ack = await dispatchCommand("resumeGoal", {}, sessionId, current.revision);
+        // Bug 原因：后台事件或刚收口的流式帧可能在点击恢复瞬间推进 revision；
+        // 若本地投影已更新且仍允许恢复，按最新 revision 立即重试一次，其余拒绝统一 toast 反馈。
+        if (ack.status === "stale" && ack.reasonCode === "proto.staleRevision") {
+          const latest = snapshotRef.current;
+          if (
+            latest &&
+            latest.revision !== current.revision &&
+            latest.availability.resumeGoal.allowed
+          ) {
+            ack = await dispatchCommand("resumeGoal", {}, sessionId, latest.revision);
+          }
+        }
+        if (ack.status !== "accepted" && ack.status !== "noop") {
+          logger.lifecycle.warn(
+            `[v4-pane] resumeGoal 被拒绝: ${ack.status} ${ack.reasonCode ?? ""}`,
+          );
+          toast(resolveGoalSlashRejectionMessage(intl, "resumeGoal", ack.reasonCode));
+        }
+      } catch (error) {
+        logger.lifecycle.warn(`[v4-pane] resumeGoal 失败: ${String(error)}`);
+        toast(intl.formatMessage({ id: "chat.goal.commandFailed" }));
       }
-    });
-  }, [dispatchCommand, sessionId]);
+    })();
+  }, [dispatchCommand, intl, sessionId]);
 
   // 主、辅对话可同时 focused（各自布局的可见态），不能据此争抢窗口 Esc。
   // 面板打开时按 DOM 归属隔离；关闭时由 Shell 授权主区接收对话外 Esc，避免焦点离开输入框后无法停止。

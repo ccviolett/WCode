@@ -418,7 +418,9 @@ export const COMMANDS_REQUIRING_BASE_REVISION: ReadonlySet<CommandType> = new Se
   "switchModelConfig",
   "switchCollaborationMode",
   "setFollowupMode",
-  "pauseGoal",
+  // Bug 原因：pauseGoal 在 Goal 运行/校验期间触发，流式行与状态变更会持续递增 revision，
+  // 经 WebSocket / 远端传输极易被 proto.staleRevision 误拒。CLI handler 在会话 FIFO 门内
+  // 幂等校验 target.status === "active"，与 stop / editQueueItem 同理免 CAS（仍允许可选携带 baseRevision 兼容旧 CLI）。
   "resumeGoal",
 ]);
 

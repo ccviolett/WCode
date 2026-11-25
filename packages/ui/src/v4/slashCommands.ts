@@ -9,6 +9,10 @@ export type V4VisibleSlashCommand =
       displayText: string;
     }
   | {
+      kind: "pauseGoal";
+      displayText: string;
+    }
+  | {
       kind: "resumeGoal";
       displayText: string;
     }
@@ -66,12 +70,23 @@ export function parseV4VisibleSlashCommand(
 
   const action = args.split(/\s+/, 1)[0]?.toLowerCase() ?? "";
   if (action === "resume") return { kind: "resumeGoal", displayText };
-  if (action === "pause" || action === "clear" || action === "show") {
+  // Bug 原因：V4 协议已原生支持 pauseGoal，此前将 `/goal pause` 归为 unsupportedGoal 并静默吞掉。
+  if (action === "pause") return { kind: "pauseGoal", displayText };
+  if (action === "clear" || action === "show") {
     return { kind: "unsupportedGoal", action, displayText };
   }
   const objective = action === "replace" ? args.replace(/^replace\s*/i, "").trim() : args;
   if (!objective) return { kind: "emptyGoal", displayText };
   return { kind: "sendGoalCommand", objective, displayText };
+}
+
+/**
+ * 判断输入正文是否以 `/goal` 或 `/target` 开头（不受附件/上下文过滤影响）。
+ * 发送边界用于拦截携带附件/结构化上下文时的 Goal 命令，避免静默降级为普通 sendText；
+ * 历史气泡渲染继续通过 parseV4VisibleSlashCommand 保持原有判定。
+ */
+export function isGoalSlashCommandText(content: string): boolean {
+  return GOAL_COMMAND_RE.test(content.trim());
 }
 
 /**

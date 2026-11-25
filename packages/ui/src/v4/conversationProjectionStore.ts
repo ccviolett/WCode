@@ -48,7 +48,9 @@ const RUNTIME_RECYCLE_RETRY_DELAYS_MS = [250, 1_000, 3_000] as const;
  * 延迟，又能尽快从“CLI 继续工作、订阅完全静默”的半开通道自愈。超时只恢复订阅，不重放命令。
  */
 export const ACCEPTED_INPUT_PROJECTION_GRACE_MS = 2_000;
-const ACCEPTED_INPUT_COMMAND_TYPES = new Set(["sendText", "editUserQuery"]);
+// Bug 原因：sendGoalCommand 也会产生 realUser 输入行或队列项，此前遗漏在此集合之外，
+// Web WS 偶发丢帧/半开时既不展示 pending 态，也不会触发 2s acceptedInputSilent 自动重订阅自愈。
+const ACCEPTED_INPUT_COMMAND_TYPES = new Set(["sendText", "sendGoalCommand", "editUserQuery"]);
 
 export function requiresAcceptedInputProjection(type: string): boolean {
   return ACCEPTED_INPUT_COMMAND_TYPES.has(type);

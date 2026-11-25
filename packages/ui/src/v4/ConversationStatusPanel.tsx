@@ -402,6 +402,7 @@ function GoalStatusSection({
   const isPausable =
     goal?.status === "active" || goal?.status === "verifying" || goal?.status === "notSatisfied";
   const isPaused = goal?.status === "paused";
+  const isFailed = goal?.status === "failed";
   const isDone = goal?.status === "verified";
   const iterationRows = useMemo(
     () => (goal ? buildConversationGoalIterationSummaries(goal) : []),
@@ -418,7 +419,7 @@ function GoalStatusSection({
     getConversationGoalElapsedSeconds(goal, now),
     intl.formatMessage,
   );
-  const control = isPausable ? (
+  const pauseButton = (
     <ControlHintTooltip title={intl.formatMessage({ id: "chat.target.pause" })}>
       <Button
         type="button"
@@ -434,7 +435,8 @@ function GoalStatusSection({
         {intl.formatMessage({ id: "chat.target.pause" })}
       </Button>
     </ControlHintTooltip>
-  ) : isPaused ? (
+  );
+  const resumeButton = (
     <ControlHintTooltip title={intl.formatMessage({ id: "chat.target.resume" })}>
       <Button
         type="button"
@@ -450,6 +452,18 @@ function GoalStatusSection({
         {intl.formatMessage({ id: "chat.target.resume" })}
       </Button>
     </ControlHintTooltip>
+  );
+  // Bug 原因：校验进入 failed_closed 后底层 target 仍为 active，原先 UI 既不展示继续也不展示暂停，
+  // 导致用户陷入无法操作的死状态。failed 态同时提供继续（重试续跑）与暂停（收口目标）按钮。
+  const control = isPausable ? (
+    pauseButton
+  ) : isPaused ? (
+    resumeButton
+  ) : isFailed ? (
+    <div className="flex shrink-0 items-center gap-1">
+      {resumeButton}
+      {pauseButton}
+    </div>
   ) : isDone ? (
     <CircleCheckBigIcon
       aria-label={intl.formatMessage({ id: "chat.goalVerification.complete" })}
