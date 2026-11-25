@@ -378,11 +378,14 @@ test("installer downloads isolated private Node 24 when host PATH lacks Node >= 
   );
 
   // 构造仅含基础系统工具且不含 node 的最小 PATH，强制触发私有 Node 兜底分支。
+  // Bug 原因：Linux GNU tar -xzf 需要从 PATH 调用外部 gzip，而 macOS BSD tar 内置 libz；
+  // 此前遗漏 gzip 导致 ubuntu-latest CI 在解包隔离 Node 时报 tar (child): gzip: Cannot exec。
   const cleanPathDir = join(directory, "clean-path");
   await mkdir(cleanPathDir, { recursive: true });
   for (const tool of [
     "curl",
     "tar",
+    "gzip",
     "uname",
     "mktemp",
     "mkdir",

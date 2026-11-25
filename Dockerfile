@@ -19,7 +19,16 @@ ENV HUSKY=0 \
 
 WORKDIR /src
 
-RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
+# Bug 原因：Linux 下 pnpm install 会通过 node-gyp 源码编译 node-pty / cpu-features，
+# bookworm-slim 默认缺少 python3/make/g++；同时用 npm 直接安装固定版本 pnpm，避免 corepack 签名过期问题。
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      git \
+      python3 && \
+    rm -rf /var/lib/apt/lists/* && \
+    npm install -g pnpm@10.33.2
 
 COPY . .
 
